@@ -1,4 +1,5 @@
 // Test setup for React Responsive Easy Core
+import '@testing-library/jest-dom';
 
 // Mock ResizeObserver for responsive testing
 global.ResizeObserver = class ResizeObserver {

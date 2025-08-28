@@ -6,6 +6,10 @@ export * from './types';
 // Export core scaling engine
 export { ScalingEngine } from './scaling/ScalingEngine';
 
+// Export React runtime components
+export { ResponsiveProvider, useResponsiveContext } from './provider/ResponsiveContext';
+export * from './hooks';
+
 // Export configuration utilities
 export { 
   createDefaultConfig, 
