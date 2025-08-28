@@ -1,0 +1,28 @@
+{
+  "name": "react-responsive-easy",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Revolutionary responsive development for React",
+  "keywords": ["react", "responsive", "css", "ui", "scaling"],
+  "author": "naa-G",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "tools/*",
+    "configs/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "dev": "pnpm -r --parallel dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}
