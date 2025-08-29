@@ -23,26 +23,41 @@ export const useResponsiveContext = () => {
 // Props for the ResponsiveProvider
 export interface ResponsiveProviderProps {
   config: ResponsiveConfig;
-  children: React.ReactNode;
   // Optional: Override the current breakpoint for testing or SSR
-  initialBreakpoint?: Breakpoint;
+  initialBreakpoint?: Breakpoint | string;
   // Optional: Enable debug mode
   debug?: boolean;
 }
 
-// The main provider component
-export const ResponsiveProvider: React.FC<ResponsiveProviderProps> = ({
+// The main provider component  
+export const ResponsiveProvider = ({
   config,
-  children,
   initialBreakpoint,
-  debug = false
-}) => {
+  debug = false,
+  children
+}: React.PropsWithChildren<ResponsiveProviderProps>) => {
   // Create the scaling engine instance
   const scalingEngine = useMemo(() => new ScalingEngine(config), [config]);
   
+  // Resolve initial breakpoint
+  const resolvedInitialBreakpoint = useMemo(() => {
+    if (!initialBreakpoint) return config.base;
+    
+    // If initialBreakpoint is a string, find the matching breakpoint
+    if (typeof initialBreakpoint === 'string') {
+      const found = config.breakpoints.find(bp => 
+        bp.name === initialBreakpoint || bp.alias === initialBreakpoint
+      );
+      return found || config.base;
+    }
+    
+    // If it's already a Breakpoint object, use it
+    return initialBreakpoint;
+  }, [initialBreakpoint, config]);
+
   // State for current breakpoint
   const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>(
-    initialBreakpoint || config.base
+    resolvedInitialBreakpoint
   );
   
   // State for scaling ratios (pre-computed for performance)
@@ -90,11 +105,6 @@ export const ResponsiveProvider: React.FC<ResponsiveProviderProps> = ({
   
   // Update current breakpoint based on viewport
   useEffect(() => {
-    if (initialBreakpoint) {
-      setCurrentBreakpoint(initialBreakpoint);
-      return;
-    }
-    
     // Function to determine current breakpoint
     const updateBreakpoint = () => {
       const width = window.innerWidth;
@@ -119,10 +129,15 @@ export const ResponsiveProvider: React.FC<ResponsiveProviderProps> = ({
       setCurrentBreakpoint(bestMatch);
     };
     
-    // Initial update
-    updateBreakpoint();
+    // If we have an initialBreakpoint, use it first but still set up responsive behavior
+    if (initialBreakpoint) {
+      setCurrentBreakpoint(resolvedInitialBreakpoint);
+    } else {
+      // Initial update for dynamic detection
+      updateBreakpoint();
+    }
     
-    // Listen for resize events
+    // Always listen for resize events to enable responsive behavior
     const handleResize = () => {
       updateBreakpoint();
     };
@@ -133,7 +148,7 @@ export const ResponsiveProvider: React.FC<ResponsiveProviderProps> = ({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [config, initialBreakpoint]);
+  }, [config, initialBreakpoint, resolvedInitialBreakpoint]);
   
   // Debug logging
   useEffect(() => {

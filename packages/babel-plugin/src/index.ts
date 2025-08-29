@@ -63,14 +63,14 @@ function scaleValue(
       scaledValue = baseValue * tokenConfig.scale * ratio;
     }
     
-    // Apply constraints
-    if (tokenConfig.min && scaledValue < tokenConfig.min) {
+    // Apply constraints with proper type checking
+    if ('min' in tokenConfig && tokenConfig.min && scaledValue < tokenConfig.min) {
       scaledValue = tokenConfig.min;
     }
-    if (tokenConfig.max && scaledValue > tokenConfig.max) {
+    if ('max' in tokenConfig && tokenConfig.max && scaledValue > tokenConfig.max) {
       scaledValue = tokenConfig.max;
     }
-    if (tokenConfig.step) {
+    if ('step' in tokenConfig && tokenConfig.step) {
       scaledValue = Math.round(scaledValue / tokenConfig.step) * tokenConfig.step;
     }
   }
@@ -197,13 +197,9 @@ export default declare<BabelPluginOptions>((api, options) => {
             path.replaceWith(useMemoCall);
           }
         }
-      },
-      
-      // Transform useScaledStyle calls
-      CallExpression(path, state: PluginPass) {
-        const { node } = path;
         
-        if (
+        // Check if this is a useScaledStyle call
+        else if (
           node.type === 'CallExpression' &&
           node.callee.type === 'Identifier' &&
           node.callee.name === 'useScaledStyle' &&

@@ -64,7 +64,7 @@ export function withReactResponsiveEasy(
       ...nextConfig,
       
       // Webpack configuration
-      webpack: (config, { dev, isServer }) => {
+      webpack: (config: any, { dev, isServer }: any) => {
         // Update development mode
         options.development = dev;
         
@@ -137,7 +137,7 @@ export function withReactResponsiveEasy(
         
         // Call original webpack config if it exists
         if (typeof nextConfig.webpack === 'function') {
-          return nextConfig.webpack(config, { dev, isServer });
+          return nextConfig.webpack(config, { dev, isServer } as any);
         }
         
         return config;
@@ -155,7 +155,8 @@ export function withReactResponsiveEasy(
       experimental: {
         ...nextConfig.experimental,
         // Enable CSS-in-JS for responsive styles
-        appDir: nextConfig.experimental?.appDir,
+        // Conditionally add appDir if it exists (for backward compatibility)
+        ...((nextConfig.experimental as any)?.appDir !== undefined && { appDir: (nextConfig.experimental as any).appDir }),
         // Enable server components optimization
         serverComponentsExternalPackages: [
           ...(nextConfig.experimental?.serverComponentsExternalPackages || []),
