@@ -56,18 +56,6 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.3(@types/react@18.3.24)(react@18.3.1)
-      '@react-responsive-easy/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@react-responsive-easy/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@react-responsive-easy/performance-dashboard':
-        specifier: workspace:*
-        version: link:../../packages/performance-dashboard
-      '@react-responsive-easy/storybook-addon':
-        specifier: workspace:*
-        version: link:../../packages/storybook-addon
       '@tailwindcss/forms':
         specifier: ^0.5.7
         version: 0.5.10(tailwindcss@3.4.17)
@@ -77,6 +65,18 @@ importers:
       '@vercel/analytics':
         specifier: ^1.5.0
         version: 1.5.0(next@14.2.32(@playwright/test@1.55.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@yaseratiar/react-responsive-easy-cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@yaseratiar/react-responsive-easy-core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@yaseratiar/react-responsive-easy-performance-dashboard':
+        specifier: workspace:*
+        version: link:../../packages/performance-dashboard
+      '@yaseratiar/react-responsive-easy-storybook-addon':
+        specifier: workspace:*
+        version: link:../../packages/storybook-addon
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -234,13 +234,13 @@ importers:
 
   apps/example-vite:
     dependencies:
-      '@react-responsive-easy/ai-optimizer':
+      '@yaseratiar/react-responsive-easy-ai-optimizer':
         specifier: workspace:*
         version: link:../../packages/ai-optimizer
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@react-responsive-easy/performance-dashboard':
+      '@yaseratiar/react-responsive-easy-performance-dashboard':
         specifier: workspace:*
         version: link:../../packages/performance-dashboard
       chart.js:
@@ -265,9 +265,6 @@ importers:
         specifier: ^7.0.0
         version: 7.3.0
     devDependencies:
-      '@react-responsive-easy/vite-plugin':
-        specifier: workspace:*
-        version: link:../../packages/vite-plugin
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.24
@@ -277,6 +274,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.0
         version: 4.7.0(vite@5.4.19(@types/node@20.19.11)(terser@5.43.1))
+      '@yaseratiar/react-responsive-easy-vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
       autoprefixer:
         specifier: ^10.4.0
         version: 10.4.21(postcss@8.5.6)
@@ -310,7 +310,7 @@ importers:
 
   apps/test-app:
     dependencies:
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../../packages/core
       react:
@@ -338,15 +338,15 @@ importers:
 
   packages/ai-optimizer:
     dependencies:
-      '@react-responsive-easy/core':
-        specifier: workspace:*
-        version: link:../core
       '@tensorflow/tfjs':
         specifier: ^4.15.0
         version: 4.22.0(seedrandom@3.0.5)
       '@tensorflow/tfjs-node':
         specifier: ^4.15.0
         version: 4.22.0(seedrandom@3.0.5)
+      '@yaseratiar/react-responsive-easy-core':
+        specifier: workspace:*
+        version: link:../core
       react:
         specifier: '>=16.8.0'
         version: 18.3.1
@@ -393,7 +393,7 @@ importers:
       '@babel/types':
         specifier: ^7.23.0
         version: 7.28.2
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -439,7 +439,7 @@ importers:
 
   packages/browser-extension:
     dependencies:
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -485,7 +485,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
       chalk:
@@ -594,7 +594,7 @@ importers:
 
   packages/figma-plugin:
     dependencies:
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -628,13 +628,13 @@ importers:
 
   packages/next-plugin:
     dependencies:
-      '@react-responsive-easy/babel-plugin':
+      '@yaseratiar/react-responsive-easy-babel-plugin':
         specifier: workspace:*
         version: link:../babel-plugin
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
-      '@react-responsive-easy/postcss-plugin':
+      '@yaseratiar/react-responsive-easy-postcss-plugin':
         specifier: workspace:*
         version: link:../postcss-plugin
     devDependencies:
@@ -656,7 +656,7 @@ importers:
 
   packages/performance-dashboard:
     dependencies:
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
       chart.js:
@@ -723,7 +723,7 @@ importers:
 
   packages/postcss-plugin:
     dependencies:
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
       postcss:
@@ -763,12 +763,6 @@ importers:
 
   packages/storybook-addon:
     dependencies:
-      '@react-responsive-easy/core':
-        specifier: workspace:*
-        version: link:../core
-      '@react-responsive-easy/performance-dashboard':
-        specifier: workspace:*
-        version: link:../performance-dashboard
       '@storybook/addons':
         specifier: ^7.6.6
         version: 7.6.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -790,6 +784,12 @@ importers:
       '@storybook/types':
         specifier: ^7.6.6
         version: 7.6.20
+      '@yaseratiar/react-responsive-easy-core':
+        specifier: workspace:*
+        version: link:../core
+      '@yaseratiar/react-responsive-easy-performance-dashboard':
+        specifier: workspace:*
+        version: link:../performance-dashboard
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -833,13 +833,13 @@ importers:
 
   packages/vite-plugin:
     dependencies:
-      '@react-responsive-easy/babel-plugin':
+      '@yaseratiar/react-responsive-easy-babel-plugin':
         specifier: workspace:*
         version: link:../babel-plugin
-      '@react-responsive-easy/core':
+      '@yaseratiar/react-responsive-easy-core':
         specifier: workspace:*
         version: link:../core
-      '@react-responsive-easy/postcss-plugin':
+      '@yaseratiar/react-responsive-easy-postcss-plugin':
         specifier: workspace:*
         version: link:../postcss-plugin
     devDependencies:

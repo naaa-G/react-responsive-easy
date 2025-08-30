@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/example-vite",
+  "name": "@yaseratiar/react-responsive-easy-example-vite",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,9 +11,9 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@react-responsive-easy/core": "workspace:*",
-    "@react-responsive-easy/performance-dashboard": "workspace:*",
-    "@react-responsive-easy/ai-optimizer": "workspace:*",
+    "@yaseratiar/react-responsive-easy-core": "workspace:*",
+    "@yaseratiar/react-responsive-easy-performance-dashboard": "workspace:*",
+    "@yaseratiar/react-responsive-easy-ai-optimizer": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "framer-motion": "^10.16.4",
@@ -23,7 +23,7 @@
     "workbox-window": "^7.0.0"
   },
   "devDependencies": {
-    "@react-responsive-easy/vite-plugin": "workspace:*",
+    "@yaseratiar/react-responsive-easy-vite-plugin": "workspace:*",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
