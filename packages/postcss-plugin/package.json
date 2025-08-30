@@ -1,6 +1,6 @@
 {
   "name": "@react-responsive-easy/postcss-plugin",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "PostCSS plugin for React Responsive Easy CSS processing",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

@@ -1,0 +1,49 @@
+{
+  "name": "@react-responsive-easy/browser-extension",
+  "version": "1.0.0",
+  "description": "Visual debugging browser extension for React Responsive Easy",
+  "main": "dist/background.js",
+  "files": [
+    "dist",
+    "manifest.json"
+  ],
+  "scripts": {
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch",
+    "build:chrome": "npm run build && npm run package:chrome",
+    "build:firefox": "npm run build && npm run package:firefox",
+    "package:chrome": "web-ext build --source-dir=dist --artifacts-dir=packages/chrome",
+    "package:firefox": "web-ext build --source-dir=dist --artifacts-dir=packages/firefox",
+    "test": "jest",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist packages"
+  },
+  "keywords": [
+    "react",
+    "responsive",
+    "debugging",
+    "browser-extension",
+    "chrome",
+    "firefox"
+  ],
+  "author": "naa-G",
+  "license": "MIT",
+  "dependencies": {
+    "@react-responsive-easy/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.254",
+    "@types/node": "^20.10.6",
+    "@types/jest": "^29.5.11",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^6.8.1",
+    "html-webpack-plugin": "^5.6.0",
+    "jest": "^29.7.0",
+    "mini-css-extract-plugin": "^2.7.6",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "web-ext": "^7.9.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

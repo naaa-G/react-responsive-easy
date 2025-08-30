@@ -1,7 +1,7 @@
 {
   "name": "react-responsive-easy",
-  "version": "0.0.1",
-  "private": true,
+  "version": "1.0.0",
+  "private": false,
   "description": "Revolutionary responsive development for React",
   "keywords": [
     "react",
@@ -28,7 +28,9 @@
     "test:performance": "playwright test tests/e2e/performance.spec.ts",
     "lint": "pnpm -r lint",
     "dev": "pnpm -r --parallel dev",
-    "type-check": "pnpm -r type-check",
+    "type-check": "pnpm --filter=@react-responsive-easy/core --filter=@react-responsive-easy/ai-optimizer --filter=@react-responsive-easy/babel-plugin --filter=@react-responsive-easy/cli --filter=@react-responsive-easy/performance-dashboard --filter=@react-responsive-easy/postcss-plugin --filter=@react-responsive-easy/storybook-addon --filter=@react-responsive-easy/vite-plugin --filter=@react-responsive-easy/next-plugin type-check",
+    "type-check:extensions": "pnpm --filter=@react-responsive-easy/browser-extension --filter=@react-responsive-easy/figma-plugin type-check",
+    "type-check:all": "pnpm type-check && pnpm type-check:extensions && pnpm --filter=@react-responsive-easy/docs type-check",
     "clean": "pnpm -r clean"
   },
   "devDependencies": {

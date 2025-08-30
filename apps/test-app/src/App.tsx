@@ -50,6 +50,10 @@ function HeroSection() {
       </h1>
       <button 
         data-testid="hero-button"
+        onClick={() => {
+          console.log('Get Started button clicked!')
+          alert('🎉 Welcome to React Responsive Easy! Your responsive scaling engine is working perfectly!')
+        }}
         style={{
           padding: `${buttonPadding}px ${buttonPadding * 2}px`,
           borderRadius,
@@ -59,7 +63,16 @@ function HeroSection() {
           cursor: 'pointer',
           fontSize: 16,
           minWidth: 120,
-          minHeight: 44
+          minHeight: 44,
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#0056b3'
+          e.currentTarget.style.transform = 'scale(1.05)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = '#007bff'
+          e.currentTarget.style.transform = 'scale(1)'
         }}
       >
         Get Started
@@ -111,8 +124,16 @@ function FeatureCards() {
   )
 }
 
-function Navigation() {
+function Navigation({ activeSection, setActiveSection }: { 
+  activeSection: string; 
+  setActiveSection: (section: string) => void 
+}) {
   const navItems = ['Home', 'Features', 'Docs', 'About']
+
+  const handleNavClick = (item: string) => {
+    setActiveSection(item)
+    console.log(`Navigated to: ${item}`)
+  }
 
   return (
     <nav data-testid="navigation" style={{
@@ -124,24 +145,28 @@ function Navigation() {
       justifyContent: 'center'
     }}>
       {navItems.map((item, index) => (
-        <a 
+        <button 
           key={index}
-          href="#"
+          onClick={() => handleNavClick(item)}
           data-testid="nav-item"
           style={{
             padding: '12px 16px',
             textDecoration: 'none',
-            color: '#333',
+            color: activeSection === item ? '#007bff' : '#333',
+            backgroundColor: 'transparent',
+            border: 'none',
             borderRadius: 4,
             minWidth: 44,
             minHeight: 44,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontWeight: activeSection === item ? 'bold' : 'normal'
           }}
         >
           {item}
-        </a>
+        </button>
       ))}
     </nav>
   )
@@ -188,6 +213,77 @@ function BreakpointValues() {
 }
 
 function App(): React.JSX.Element {
+  const [activeSection, setActiveSection] = React.useState('Home')
+  
+  // Helper function to use responsive values in render function
+  const useResponsiveValue = (value: number, options: any) => {
+    // This is a simplified version for the render function
+    // In a real component, you'd use the hook directly
+    return value
+  }
+
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'Home':
+        return (
+          <>
+            <div data-testid="section">
+              <HeroSection />
+            </div>
+            <div data-testid="section" style={{ marginTop: 60 }}>
+              <FeatureCards />
+            </div>
+          </>
+        )
+      case 'Features':
+        return (
+          <div data-testid="features-section" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <h2 style={{ fontSize: useResponsiveValue(36, { token: 'fontSize' }), marginBottom: 32 }}>
+              🚀 Revolutionary Features
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+              <div style={{ padding: 24, backgroundColor: '#f8f9fa', borderRadius: 12 }}>
+                <h3>🎯 Mathematical Precision</h3>
+                <p>Pixel-perfect scaling with mathematical accuracy</p>
+              </div>
+              <div style={{ padding: 24, backgroundColor: '#f8f9fa', borderRadius: 12 }}>
+                <h3>⚡ Real-time Scaling</h3>
+                <p>Instant responsive updates as you resize</p>
+              </div>
+              <div style={{ padding: 24, backgroundColor: '#f8f9fa', borderRadius: 12 }}>
+                <h3>♿ Accessibility First</h3>
+                <p>Built-in accessibility compliance</p>
+              </div>
+            </div>
+          </div>
+        )
+      case 'Docs':
+        return (
+          <div data-testid="docs-section" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <h2 style={{ fontSize: useResponsiveValue(36, { token: 'fontSize' }), marginBottom: 32 }}>
+              📚 Documentation
+            </h2>
+            <p style={{ fontSize: useResponsiveValue(18, { token: 'fontSize' }), maxWidth: 600, margin: '0 auto' }}>
+              Comprehensive guides and examples for React Responsive Easy
+            </p>
+          </div>
+        )
+      case 'About':
+        return (
+          <div data-testid="about-section" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <h2 style={{ fontSize: useResponsiveValue(36, { token: 'fontSize' }), marginBottom: 32 }}>
+              🎉 About React Responsive Easy
+            </h2>
+            <p style={{ fontSize: useResponsiveValue(18, { token: 'fontSize' }), maxWidth: 600, margin: '0 auto' }}>
+              The revolutionary npm package that transforms how developers build responsive UIs
+            </p>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <ResponsiveProvider 
       config={testConfig}
@@ -199,24 +295,12 @@ function App(): React.JSX.Element {
         data-responsive-context="true"
         style={{ minHeight: '100vh' }}
       >
-        <Navigation />
-        <main style={{ padding: '40px 20px' }}>
-          <div data-testid="section">
-            <HeroSection />
-          </div>
-          <div data-testid="section" style={{ marginTop: 60 }}>
-            <FeatureCards />
-          </div>
+        <Navigation activeSection={activeSection} setActiveSection={setActiveSection} />
+        <main>
+          {renderSection()}
         </main>
         <BreakpointInfo />
         <BreakpointValues />
-        
-        {/* Add some responsive elements for testing */}
-        <div style={{ display: 'none' }}>
-          <div data-testid="responsive-element">Test Element 1</div>
-          <div data-testid="responsive-element">Test Element 2</div>
-          <div data-testid="responsive-element">Test Element 3</div>
-        </div>
       </div>
     </ResponsiveProvider>
   )

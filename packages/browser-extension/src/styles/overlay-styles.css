@@ -1,0 +1,444 @@
+/* React Responsive Easy Browser Extension - Overlay Styles */
+
+/* Main Debug Overlay */
+.rre-debug-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.rre-debug-panel {
+  background: rgba(0, 0, 0, 0.95);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 300px;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+.rre-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: move;
+}
+
+.rre-debug-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #00ff88;
+}
+
+.rre-debug-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.rre-debug-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.rre-debug-content {
+  padding: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.rre-debug-section {
+  margin-bottom: 16px;
+}
+
+.rre-debug-section:last-child {
+  margin-bottom: 0;
+}
+
+.rre-debug-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #00ff88;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+}
+
+/* Breakpoint Information */
+.rre-breakpoint-info {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.rre-breakpoint-info > div:first-child {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.rre-breakpoint-details {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Scaling Visualization */
+.rre-scaling-visualization {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.rre-scaling-bar {
+  background: rgba(255, 255, 255, 0.2);
+  height: 6px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.rre-scaling-indicator {
+  background: linear-gradient(90deg, #00ff88, #00d4aa);
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.rre-scaling-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.rre-scaling-details > div {
+  text-align: center;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Element Overlays */
+.rre-element-overlay {
+  pointer-events: none;
+  transition: all 0.2s ease;
+  animation: rre-highlight-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rre-highlight-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.rre-element-overlay:hover {
+  animation: none;
+  opacity: 1 !important;
+}
+
+/* Element Tooltips */
+.rre-element-tooltip {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  line-height: 1.3;
+  max-width: 250px;
+  word-break: break-word;
+}
+
+.rre-debug-tooltip {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  line-height: 1.3;
+  animation: rre-tooltip-fadein 0.2s ease-out;
+}
+
+@keyframes rre-tooltip-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-100%) scale(1);
+  }
+}
+
+/* Responsive Element Highlighting Colors */
+.rre-element-overlay[data-component-type="Button"] {
+  border-color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.15) !important;
+}
+
+.rre-element-overlay[data-component-type="Card"] {
+  border-color: #4ecdc4 !important;
+  background: rgba(78, 205, 196, 0.15) !important;
+}
+
+.rre-element-overlay[data-component-type="Header"] {
+  border-color: #45b7d1 !important;
+  background: rgba(69, 183, 209, 0.15) !important;
+}
+
+.rre-element-overlay[data-component-type="Navigation"] {
+  border-color: #f9ca24 !important;
+  background: rgba(249, 202, 36, 0.15) !important;
+}
+
+.rre-element-overlay[data-component-type="Main"] {
+  border-color: #6c5ce7 !important;
+  background: rgba(108, 92, 231, 0.15) !important;
+}
+
+/* Breakpoint Indicator */
+.rre-breakpoint-indicator {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 999998;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  animation: rre-indicator-slide 0.3s ease-out;
+}
+
+@keyframes rre-indicator-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Performance Indicators */
+.rre-performance-indicator {
+  position: absolute;
+  top: -20px;
+  right: 0;
+  background: rgba(255, 193, 7, 0.9);
+  color: black;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.rre-performance-indicator.good {
+  background: rgba(40, 167, 69, 0.9);
+  color: white;
+}
+
+.rre-performance-indicator.warning {
+  background: rgba(255, 193, 7, 0.9);
+  color: black;
+}
+
+.rre-performance-indicator.danger {
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+}
+
+/* Layout Shift Warning */
+.rre-layout-shift-warning {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  background: rgba(220, 53, 69, 0.95);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  animation: rre-warning-blink 1s ease-in-out infinite;
+}
+
+@keyframes rre-warning-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Scaling Information Badge */
+.rre-scaling-badge {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  background: rgba(0, 255, 136, 0.9);
+  color: black;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Grid Overlay */
+.rre-grid-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 999997;
+  background-image: 
+    linear-gradient(to right, rgba(0, 255, 136, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 255, 136, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: rre-grid-fade 0.5s ease-in-out;
+}
+
+@keyframes rre-grid-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Measurement Lines */
+.rre-measurement-line {
+  position: fixed;
+  background: rgba(255, 0, 100, 0.8);
+  z-index: 999998;
+  pointer-events: none;
+}
+
+.rre-measurement-line.horizontal {
+  height: 1px;
+  left: 0;
+  right: 0;
+}
+
+.rre-measurement-line.vertical {
+  width: 1px;
+  top: 0;
+  bottom: 0;
+}
+
+.rre-measurement-label {
+  position: absolute;
+  background: rgba(255, 0, 100, 0.9);
+  color: white;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+/* Scrollbar Styling */
+.rre-debug-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rre-debug-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.rre-debug-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.5);
+  border-radius: 3px;
+}
+
+.rre-debug-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 136, 0.7);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .rre-debug-overlay {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .rre-debug-panel {
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .rre-debug-content {
+    max-height: 300px;
+  }
+  
+  .rre-element-tooltip,
+  .rre-debug-tooltip {
+    max-width: 200px;
+    font-size: 11px;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .rre-debug-panel {
+    background: black;
+    border: 2px solid white;
+  }
+  
+  .rre-element-overlay {
+    border-width: 3px !important;
+  }
+  
+  .rre-debug-tooltip,
+  .rre-element-tooltip {
+    background: black !important;
+    border: 1px solid white;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .rre-element-overlay {
+    animation: none;
+  }
+  
+  .rre-scaling-indicator {
+    transition: none;
+  }
+  
+  .rre-debug-tooltip {
+    animation: none;
+  }
+  
+  .rre-breakpoint-indicator {
+    animation: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .rre-debug-overlay,
+  .rre-element-overlay,
+  .rre-grid-overlay,
+  .rre-measurement-line,
+  .rre-breakpoint-indicator {
+    display: none !important;
+  }
+}

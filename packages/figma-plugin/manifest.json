@@ -1,0 +1,29 @@
+{
+  "name": "React Responsive Easy",
+  "id": "react-responsive-easy",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "capabilities": ["inspect"],
+  "enableProposedApi": false,
+  "editorType": ["figma", "figjam"],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://api.react-responsive-easy.dev",
+      "https://cdn.react-responsive-easy.dev"
+    ]
+  },
+  "permissions": [
+    "currentuser"
+  ],
+  "parameters": [
+    {
+      "name": "Export Format",
+      "key": "exportFormat",
+      "allowFreeform": false,
+      "optional": false
+    }
+  ],
+  "parameterOnly": false,
+  "build": "0.0.1"
+}

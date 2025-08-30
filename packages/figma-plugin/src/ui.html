@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>React Responsive Easy</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 8h8v8H8z" fill="currentColor" opacity="0.3"/>
+          <circle cx="12" cy="12" r="2" fill="currentColor"/>
+        </svg>
+        <h1>React Responsive Easy</h1>
+      </div>
+      <div class="version">v0.0.1</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-button active" data-tab="extract">
+        🎨 Extract
+      </button>
+      <button class="tab-button" data-tab="configure">
+        ⚙️ Configure
+      </button>
+      <button class="tab-button" data-tab="preview">
+        👁️ Preview
+      </button>
+      <button class="tab-button" data-tab="export">
+        📤 Export
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Extract Tab -->
+      <div class="tab-panel active" data-panel="extract">
+        <div class="section">
+          <h2>🎨 Extract Design Tokens</h2>
+          <p class="description">
+            Select design elements to extract colors, typography, spacing, and other design tokens.
+          </p>
+          
+          <div class="selection-info">
+            <div class="selection-count">
+              <span id="selection-count">0</span> elements selected
+            </div>
+            <div id="selection-details" class="selection-details"></div>
+          </div>
+
+          <button id="extract-tokens" class="btn btn-primary" disabled>
+            🎨 Extract Design Tokens
+          </button>
+
+          <div id="extracted-tokens" class="tokens-preview" style="display: none;">
+            <h3>Extracted Tokens</h3>
+            <div class="tokens-grid">
+              <div class="token-category">
+                <h4>🎨 Colors</h4>
+                <div id="colors-preview" class="token-items"></div>
+              </div>
+              <div class="token-category">
+                <h4>📝 Typography</h4>
+                <div id="typography-preview" class="token-items"></div>
+              </div>
+              <div class="token-category">
+                <h4>📏 Spacing</h4>
+                <div id="spacing-preview" class="token-items"></div>
+              </div>
+              <div class="token-category">
+                <h4>🌫️ Shadows</h4>
+                <div id="shadows-preview" class="token-items"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>🔍 Analyze Selection</h2>
+          <p class="description">
+            Analyze selected elements for responsive design potential and get recommendations.
+          </p>
+          
+          <button id="analyze-selection" class="btn btn-secondary" disabled>
+            🔍 Analyze for Responsiveness
+          </button>
+
+          <div id="analysis-results" class="analysis-results" style="display: none;">
+            <div class="analysis-summary">
+              <div class="metric">
+                <span class="metric-label">Elements:</span>
+                <span id="total-elements" class="metric-value">0</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Responsive Candidates:</span>
+                <span id="responsive-candidates" class="metric-value">0</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Complexity:</span>
+                <span id="complexity" class="metric-value complexity-low">Low</span>
+              </div>
+            </div>
+            <div id="recommendations" class="recommendations"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configure Tab -->
+      <div class="tab-panel" data-panel="configure">
+        <div class="section">
+          <h2>⚙️ Responsive Configuration</h2>
+          <p class="description">
+            Configure breakpoints and scaling strategy for your responsive design system.
+          </p>
+
+          <div class="form-group">
+            <label>Base Breakpoint</label>
+            <div class="breakpoint-input">
+              <input type="text" id="base-name" placeholder="Desktop" value="Desktop">
+              <input type="number" id="base-width" placeholder="1920" value="1920">
+              <span>×</span>
+              <input type="number" id="base-height" placeholder="1080" value="1080">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Target Breakpoints</label>
+            <div id="breakpoints-list" class="breakpoints-list">
+              <div class="breakpoint-item">
+                <input type="text" placeholder="Tablet" value="Tablet">
+                <input type="number" placeholder="768" value="768">
+                <span>×</span>
+                <input type="number" placeholder="1024" value="1024">
+                <button class="btn-remove">×</button>
+              </div>
+              <div class="breakpoint-item">
+                <input type="text" placeholder="Mobile" value="Mobile">
+                <input type="number" placeholder="375" value="375">
+                <span>×</span>
+                <input type="number" placeholder="667" value="667">
+                <button class="btn-remove">×</button>
+              </div>
+            </div>
+            <button id="add-breakpoint" class="btn btn-ghost">+ Add Breakpoint</button>
+          </div>
+
+          <div class="form-group">
+            <label>Scaling Strategy</label>
+            <div class="strategy-options">
+              <label class="radio-option">
+                <input type="radio" name="scaling-mode" value="scale" checked>
+                <span>Scale (proportional)</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="scaling-mode" value="fit">
+                <span>Fit (container-based)</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="scaling-mode" value="custom">
+                <span>Custom (token-based)</span>
+              </label>
+            </div>
+          </div>
+
+          <button id="generate-config" class="btn btn-primary">
+            ⚙️ Generate Configuration
+          </button>
+
+          <div id="config-preview" class="config-preview" style="display: none;">
+            <h3>Generated Configuration</h3>
+            <pre id="config-json"></pre>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>📥 Import Configuration</h2>
+          <p class="description">
+            Import an existing React Responsive Easy configuration.
+          </p>
+          
+          <textarea id="import-config" placeholder="Paste your configuration JSON here..."></textarea>
+          <button id="import-config-btn" class="btn btn-secondary">
+            📥 Import Configuration
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Tab -->
+      <div class="tab-panel" data-panel="preview">
+        <div class="section">
+          <h2>👁️ Breakpoint Preview</h2>
+          <p class="description">
+            Preview how your selected elements will look across different breakpoints.
+          </p>
+
+          <div class="preview-options">
+            <label class="checkbox-option">
+              <input type="checkbox" id="show-labels" checked>
+              <span>Show breakpoint labels</span>
+            </label>
+            <label class="checkbox-option">
+              <input type="checkbox" id="show-grid">
+              <span>Show grid overlay</span>
+            </label>
+            <label class="checkbox-option">
+              <input type="checkbox" id="center-content" checked>
+              <span>Center content in frames</span>
+            </label>
+          </div>
+
+          <button id="preview-breakpoints" class="btn btn-primary" disabled>
+            👁️ Create Breakpoint Previews
+          </button>
+
+          <div class="preview-info">
+            <p><strong>Note:</strong> This will create new frames on your canvas showing how your selected elements will appear at different breakpoints.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>🧩 Create Responsive Component</h2>
+          <p class="description">
+            Create a Figma component with responsive variants for each breakpoint.
+          </p>
+
+          <div class="form-group">
+            <label>Component Name</label>
+            <input type="text" id="component-name" placeholder="ResponsiveCard">
+          </div>
+
+          <button id="create-component" class="btn btn-secondary">
+            🧩 Create Responsive Component
+          </button>
+        </div>
+      </div>
+
+      <!-- Export Tab -->
+      <div class="tab-panel" data-panel="export">
+        <div class="section">
+          <h2>📤 Export Design Tokens</h2>
+          <p class="description">
+            Export your design tokens in various formats for development use.
+          </p>
+
+          <div class="export-options">
+            <div class="format-grid">
+              <label class="format-option">
+                <input type="radio" name="export-format" value="json" checked>
+                <div class="format-card">
+                  <div class="format-icon">📄</div>
+                  <div class="format-name">JSON</div>
+                  <div class="format-desc">Standard JSON format</div>
+                </div>
+              </label>
+
+              <label class="format-option">
+                <input type="radio" name="export-format" value="css">
+                <div class="format-card">
+                  <div class="format-icon">🎨</div>
+                  <div class="format-name">CSS</div>
+                  <div class="format-desc">CSS custom properties</div>
+                </div>
+              </label>
+
+              <label class="format-option">
+                <input type="radio" name="export-format" value="scss">
+                <div class="format-card">
+                  <div class="format-icon">💎</div>
+                  <div class="format-name">SCSS</div>
+                  <div class="format-desc">Sass variables</div>
+                </div>
+              </label>
+
+              <label class="format-option">
+                <input type="radio" name="export-format" value="js">
+                <div class="format-card">
+                  <div class="format-icon">⚡</div>
+                  <div class="format-name">JavaScript</div>
+                  <div class="format-desc">JS/TS module</div>
+                </div>
+              </label>
+
+              <label class="format-option">
+                <input type="radio" name="export-format" value="rre-config">
+                <div class="format-card">
+                  <div class="format-icon">⚙️</div>
+                  <div class="format-name">RRE Config</div>
+                  <div class="format-desc">Complete configuration</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <button id="export-tokens" class="btn btn-primary" disabled>
+            📤 Export Tokens
+          </button>
+
+          <div id="export-result" class="export-result" style="display: none;">
+            <h3>Export Result</h3>
+            <div class="export-actions">
+              <button id="copy-export" class="btn btn-secondary">📋 Copy to Clipboard</button>
+              <button id="download-export" class="btn btn-secondary">💾 Download File</button>
+            </div>
+            <pre id="export-content"></pre>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>📚 Documentation</h2>
+          <p class="description">
+            Learn how to use the exported tokens in your React application.
+          </p>
+
+          <div class="docs-links">
+            <a href="#" class="doc-link" data-doc="installation">
+              📦 Installation Guide
+            </a>
+            <a href="#" class="doc-link" data-doc="usage">
+              🚀 Usage Examples
+            </a>
+            <a href="#" class="doc-link" data-doc="api">
+              📖 API Reference
+            </a>
+            <a href="#" class="doc-link" data-doc="best-practices">
+              ✨ Best Practices
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div id="status-message">Ready to extract design tokens</div>
+      <div class="status-actions">
+        <button id="close-plugin" class="btn btn-ghost btn-sm">Close</button>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <div class="loading-message">Processing...</div>
+    </div>
+  </div>
+
+  <script src="ui.js"></script>
+</body>
+</html>

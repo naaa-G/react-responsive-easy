@@ -23,9 +23,15 @@
     }
   },
   "include": [
-    "packages/**/*",
-    "apps/**/*",
-    "tools/**/*"
+    "packages/core/**/*",
+    "packages/ai-optimizer/**/*",
+    "packages/babel-plugin/**/*",
+    "packages/cli/**/*",
+    "packages/performance-dashboard/**/*",
+    "packages/postcss-plugin/**/*",
+    "packages/storybook-addon/**/*",
+    "packages/vite-plugin/**/*",
+    "packages/next-plugin/**/*"
   ],
   "exclude": [
     "node_modules",

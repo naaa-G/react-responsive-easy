@@ -1,0 +1,49 @@
+{
+  "name": "@react-responsive-easy/ai-optimizer",
+  "version": "1.0.0",
+  "description": "AI-powered optimization suggestions for React Responsive Easy",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "react",
+    "responsive",
+    "ai",
+    "optimization",
+    "machine-learning"
+  ],
+  "author": "naa-G",
+  "license": "MIT",
+  "dependencies": {
+    "@react-responsive-easy/core": "workspace:*",
+    "@tensorflow/tfjs": "^4.15.0",
+    "@tensorflow/tfjs-node": "^4.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "rollup": "^4.9.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "rollup-plugin-dts": "^6.1.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.1",
+    "@vitest/coverage-v8": "^1.1.1"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  }
+}

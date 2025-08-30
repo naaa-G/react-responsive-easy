@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Responsive Easy DevTools Panel</title>
+  <link rel="stylesheet" href="devtools-panel.css">
+</head>
+<body>
+  <div class="devtools-container">
+    <!-- Header -->
+    <div class="devtools-header">
+      <div class="logo">
+        <img src="icons/icon-32.png" alt="RRE" class="logo-icon">
+        <h1>React Responsive Easy DevTools</h1>
+      </div>
+      <div class="controls">
+        <button id="refresh-data" class="btn btn-primary">
+          <span class="btn-icon">🔄</span>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-label">Status:</span>
+        <span id="debugger-status" class="status-value">Loading...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Elements:</span>
+        <span id="element-count" class="status-value">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Breakpoint:</span>
+        <span id="current-breakpoint" class="status-value">Unknown</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="devtools-content">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <h3>Elements Tree</h3>
+          <div id="elements-tree" class="elements-tree">
+            <div class="loading">Loading elements...</div>
+          </div>
+        </div>
+        
+        <div class="sidebar-section">
+          <h3>Breakpoints</h3>
+          <div id="breakpoints-list" class="breakpoints-list">
+            <div class="loading">Loading breakpoints...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inspector Panel -->
+      <div class="inspector-panel">
+        <div class="inspector-header">
+          <h3>Element Inspector</h3>
+          <div class="inspector-controls">
+            <button id="highlight-element" class="btn btn-secondary">Highlight</button>
+            <button id="copy-styles" class="btn btn-secondary">Copy Styles</button>
+          </div>
+        </div>
+        
+        <div id="inspector-content" class="inspector-content">
+          <div class="no-selection">
+            Select an element from the tree to inspect its responsive properties
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Panel -->
+    <div class="bottom-panel">
+      <!-- Performance Tab -->
+      <div class="tab-container">
+        <div class="tab-header">
+          <button class="tab-button active" data-tab="performance">Performance</button>
+          <button class="tab-button" data-tab="console">Console</button>
+          <button class="tab-button" data-tab="network">Network</button>
+        </div>
+        
+        <div class="tab-content">
+          <div id="performance-tab" class="tab-panel active">
+            <div id="performance-metrics" class="performance-metrics">
+              <div class="loading">Loading performance data...</div>
+            </div>
+          </div>
+          
+          <div id="console-tab" class="tab-panel">
+            <div id="console-output" class="console-output">
+              <div class="console-message info">
+                React Responsive Easy DevTools Console
+              </div>
+            </div>
+          </div>
+          
+          <div id="network-tab" class="tab-panel">
+            <div id="network-requests" class="network-requests">
+              <div class="loading">Monitoring network requests...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="devtools-panel.js"></script>
+</body>
+</html>

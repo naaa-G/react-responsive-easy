@@ -1,0 +1,342 @@
+/* App-specific styles for React Responsive Easy Vite Example */
+
+/* App container */
+.app-container {
+  min-height: 100vh;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+/* Responsive container system */
+.app-container main {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Ensure content expands on larger screens */
+@media (min-width: 1280px) {
+  .app-container main {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .app-container main {
+    max-width: 1536px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-container main {
+    max-width: 1920px;
+  }
+}
+
+/* Header styles */
+.app-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.app-heading {
+  font-weight: 700;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-subheading {
+  color: #64748b;
+  margin-bottom: 32px;
+}
+
+/* Controls section */
+.app-controls {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+/* Button variants */
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+}
+
+.btn-outline:hover {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Card styles */
+.feature-card {
+  padding: 24px;
+  border-radius: 12px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-content {
+  font-size: 16px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Grid layout */
+.feature-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  padding: 24px;
+}
+
+/* Enhanced responsive grid */
+.responsive-feature-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .responsive-feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-feature-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-feature-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 48px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .responsive-feature-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 56px;
+  }
+}
+
+/* Footer */
+.app-footer {
+  margin-top: 64px;
+  text-align: center;
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer-text {
+  color: #64748b;
+}
+
+/* Dark theme overrides */
+.app-container.dark {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+.app-container.dark .app-subheading {
+  color: #94a3b8;
+}
+
+.app-container.dark .feature-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.app-container.dark .card-content {
+  color: #94a3b8;
+}
+
+.app-container.dark .app-footer {
+  border-top-color: #334155;
+}
+
+.app-container.dark .footer-text {
+  color: #94a3b8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-header {
+    margin-bottom: 32px;
+  }
+  
+  .app-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .feature-grid {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .feature-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-heading {
+    font-size: 32px;
+  }
+  
+  .app-subheading {
+    font-size: 18px;
+  }
+  
+  .feature-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  
+  .feature-card {
+    padding: 16px;
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Performance dashboard container */
+.dashboard-container {
+  margin-bottom: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Section headers */
+section h2 {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 32px;
+}
+
+.app-container.dark section h2 {
+  color: #f1f5f9;
+}
+
+/* Breakpoint indicator enhancements */
+.breakpoint-indicator {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 999;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.breakpoint-indicator:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #3b82f6;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

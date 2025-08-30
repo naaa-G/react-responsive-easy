@@ -1,0 +1,63 @@
+{
+  "name": "@react-responsive-easy/performance-dashboard",
+  "version": "1.0.0",
+  "description": "Real-time performance monitoring dashboard for React Responsive Easy",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "dashboard"
+  ],
+  "scripts": {
+    "build": "rollup -c && npm run build:dashboard",
+    "build:dashboard": "vite build",
+    "dev": "rollup -c -w",
+    "dev:dashboard": "vite",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist dashboard-dist",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "react",
+    "responsive",
+    "performance",
+    "monitoring",
+    "dashboard",
+    "analytics"
+  ],
+  "author": "naa-G",
+  "license": "MIT",
+  "dependencies": {
+    "@react-responsive-easy/core": "workspace:*",
+    "chart.js": "^4.4.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^3.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.3",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "rollup": "^4.9.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "rollup-plugin-dts": "^6.1.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vitest": "^1.1.1",
+    "@vitest/coverage-v8": "^1.1.1"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "React Responsive Easy Debugger",
+  "version": "0.0.1",
+  "description": "Visual debugging tools for React Responsive Easy - inspect breakpoints, scaling, and responsive behavior in real-time",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "css": ["content-styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "React Responsive Easy Debugger",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "devtools_page": "devtools.html",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "injected-script.js",
+        "overlay-styles.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

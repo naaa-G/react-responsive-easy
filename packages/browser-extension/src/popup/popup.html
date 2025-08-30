@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Responsive Easy Debugger</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="logo">
+        <img src="icons/icon-32.png" alt="RRE" class="logo-icon">
+        <h1>RRE Debugger</h1>
+      </div>
+      <div class="version">v0.0.1</div>
+    </div>
+
+    <!-- Status Section -->
+    <div class="status-section">
+      <div class="status-item">
+        <div class="status-label">Status:</div>
+        <div id="debugger-status" class="status-value">Loading...</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">React Responsive Easy:</div>
+        <div id="rre-status" class="status-value">Checking...</div>
+      </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="controls-section">
+      <button id="toggle-debugger" class="btn btn-primary" disabled>
+        <span class="btn-icon">🔍</span>
+        <span class="btn-text">Enable Debugger</span>
+      </button>
+      
+      <div class="control-row">
+        <button id="highlight-elements" class="btn btn-secondary" disabled>
+          <span class="btn-icon">✨</span>
+          Highlight Elements
+        </button>
+        
+        <button id="analyze-performance" class="btn btn-secondary" disabled>
+          <span class="btn-icon">⚡</span>
+          Analyze Performance
+        </button>
+      </div>
+    </div>
+
+    <!-- Information Section -->
+    <div class="info-section">
+      <!-- Breakpoint Info -->
+      <div class="info-card">
+        <h3>Current Breakpoint</h3>
+        <div id="breakpoint-info" class="info-content">
+          <div class="loading">Detecting...</div>
+        </div>
+      </div>
+
+      <!-- Elements Info -->
+      <div class="info-card">
+        <h3>Responsive Elements</h3>
+        <div id="elements-info" class="info-content">
+          <div class="loading">Scanning...</div>
+        </div>
+      </div>
+
+      <!-- Performance Info -->
+      <div class="info-card" id="performance-card" style="display: none;">
+        <h3>Performance Analysis</h3>
+        <div id="performance-info" class="info-content">
+          <div class="loading">Analyzing...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-section">
+      <div class="action-row">
+        <button id="reload-page" class="btn btn-ghost">
+          <span class="btn-icon">🔄</span>
+          Reload Page
+        </button>
+        
+        <button id="open-devtools" class="btn btn-ghost">
+          <span class="btn-icon">🛠️</span>
+          Open DevTools
+        </button>
+      </div>
+      
+      <div class="action-row">
+        <button id="export-data" class="btn btn-ghost" disabled>
+          <span class="btn-icon">📊</span>
+          Export Data
+        </button>
+        
+        <button id="settings" class="btn btn-ghost">
+          <span class="btn-icon">⚙️</span>
+          Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <div class="shortcuts">
+        <small>
+          <strong>Shortcuts:</strong><br>
+          Ctrl+Shift+R: Toggle Debugger<br>
+          Ctrl+Shift+H: Toggle Highlighting
+        </small>
+      </div>
+      
+      <div class="links">
+        <a href="https://react-responsive-easy.dev" target="_blank">Documentation</a>
+        <a href="https://github.com/naa-G/react-responsive-easy" target="_blank">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

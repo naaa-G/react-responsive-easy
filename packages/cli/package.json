@@ -1,6 +1,6 @@
 {
   "name": "@react-responsive-easy/cli",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Professional CLI tools for React Responsive Easy",
   "main": "./dist/index.js",
   "bin": {
