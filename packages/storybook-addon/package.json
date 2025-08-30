@@ -9,7 +9,8 @@
     "dist",
     "preset.js",
     "register.js",
-    "manager.js"
+    "manager.js",
+    "README.md"
   ],
   "scripts": {
     "build": "rollup -c",

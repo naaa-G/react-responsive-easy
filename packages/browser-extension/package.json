@@ -5,7 +5,8 @@
   "main": "dist/background.js",
   "files": [
     "dist",
-    "manifest.json"
+    "manifest.json",
+    "README.md"
   ],
   "scripts": {
     "build": "webpack --mode=production",
