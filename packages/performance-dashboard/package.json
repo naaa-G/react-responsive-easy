@@ -32,7 +32,7 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
-    "@react-responsive-easy/core": "workspace:*",
+    "@yaseratiar/react-responsive-easy-core": "workspace:*",
     "chart.js": "^4.4.1",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^3.0.6",

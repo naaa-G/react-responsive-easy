@@ -7,7 +7,8 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "rollup -c",
@@ -27,7 +28,7 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
-    "@react-responsive-easy/core": "workspace:*",
+    "@yaseratiar/react-responsive-easy-core": "workspace:*",
     "@tensorflow/tfjs": "^4.15.0",
     "@tensorflow/tfjs-node": "^4.15.0"
   },

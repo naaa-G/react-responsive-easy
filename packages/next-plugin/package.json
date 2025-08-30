@@ -36,9 +36,9 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
-    "@react-responsive-easy/babel-plugin": "workspace:*",
-    "@react-responsive-easy/postcss-plugin": "workspace:*",
-    "@react-responsive-easy/core": "workspace:*"
+    "@yaseratiar/react-responsive-easy-babel-plugin": "workspace:*",
+    "@yaseratiar/react-responsive-easy-postcss-plugin": "workspace:*",
+    "@yaseratiar/react-responsive-easy-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

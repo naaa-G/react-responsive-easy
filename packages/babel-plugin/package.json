@@ -40,7 +40,7 @@
     "@babel/core": "^7.23.0",
     "@babel/types": "^7.23.0",
     "@babel/helper-plugin-utils": "^7.22.5",
-    "@react-responsive-easy/core": "workspace:*"
+    "@yaseratiar/react-responsive-easy-core": "workspace:*"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.23.0",

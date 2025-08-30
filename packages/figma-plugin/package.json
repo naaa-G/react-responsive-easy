@@ -20,7 +20,7 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
-    "@react-responsive-easy/core": "workspace:*"
+    "@yaseratiar/react-responsive-easy-core": "workspace:*"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.98.0",

@@ -29,7 +29,7 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
-    "@react-responsive-easy/core": "workspace:*"
+    "@yaseratiar/react-responsive-easy-core": "workspace:*"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.254",

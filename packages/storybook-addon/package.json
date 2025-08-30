@@ -30,8 +30,8 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
-    "@react-responsive-easy/core": "workspace:*",
-    "@react-responsive-easy/performance-dashboard": "workspace:*",
+    "@yaseratiar/react-responsive-easy-core": "workspace:*",
+    "@yaseratiar/react-responsive-easy-performance-dashboard": "workspace:*",
     "@storybook/addons": "^7.6.6",
     "@storybook/api": "^7.6.6",
     "@storybook/components": "^7.6.6",

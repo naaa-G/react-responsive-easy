@@ -40,7 +40,7 @@
   "dependencies": {
     "postcss": "^8.4.0",
     "postcss-value-parser": "^4.2.0",
-    "@react-responsive-easy/core": "workspace:*"
+    "@yaseratiar/react-responsive-easy-core": "workspace:*"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
