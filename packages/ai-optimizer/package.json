@@ -1,6 +1,6 @@
 {
   "name": "@yaseratiar/react-responsive-easy-ai-optimizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered optimization suggestions for React Responsive Easy",
   "type": "module",
   "main": "dist/index.js",
