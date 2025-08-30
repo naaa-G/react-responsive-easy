@@ -1,6 +1,6 @@
 {
   "name": "@yaseratiar/react-responsive-easy-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core scaling engine for React Responsive Easy",
   "type": "module",
   "main": "./dist/index.js",
