@@ -1,6 +1,6 @@
 {
   "name": "@yaseratiar/react-responsive-easy-babel-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Babel plugin for React Responsive Easy build-time optimizations",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
