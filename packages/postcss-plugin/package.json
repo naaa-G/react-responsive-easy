@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/postcss-plugin",
+  "name": "@yaseratiar/react-responsive-easy-postcss-plugin",
   "version": "1.0.0",
   "description": "PostCSS plugin for React Responsive Easy CSS processing",
   "main": "dist/index.js",

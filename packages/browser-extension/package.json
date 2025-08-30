@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/browser-extension",
+  "name": "@yaseratiar/react-responsive-easy-browser-extension",
   "version": "1.0.0",
   "description": "Visual debugging browser extension for React Responsive Easy",
   "main": "dist/background.js",

@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/cli",
+  "name": "@yaseratiar/react-responsive-easy-cli",
   "version": "1.0.0",
   "description": "Professional CLI tools for React Responsive Easy",
   "main": "./dist/index.js",

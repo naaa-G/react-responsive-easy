@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/figma-plugin",
+  "name": "@yaseratiar/react-responsive-easy-figma-plugin",
   "version": "1.0.0",
   "description": "Figma plugin for React Responsive Easy design tokens and responsive preview",
   "main": "dist/code.js",

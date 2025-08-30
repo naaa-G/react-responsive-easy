@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/next-plugin",
+  "name": "@yaseratiar/react-responsive-easy-next-plugin",
   "version": "1.0.0",
   "description": "Next.js plugin for React Responsive Easy integration",
   "main": "src/index.ts",

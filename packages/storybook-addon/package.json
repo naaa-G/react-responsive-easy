@@ -1,5 +1,5 @@
 {
-  "name": "@react-responsive-easy/storybook-addon",
+  "name": "@yaseratiar/react-responsive-easy-storybook-addon",
   "version": "1.0.0",
   "description": "Storybook addon for React Responsive Easy component documentation and testing",
   "main": "dist/index.js",
