@@ -1,6 +1,6 @@
 {
   "name": "@yaseratiar/react-responsive-easy-performance-dashboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time performance monitoring dashboard for React Responsive Easy",
   "type": "module",
   "main": "dist/index.js",
