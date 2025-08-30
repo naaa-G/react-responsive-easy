@@ -1,6 +1,6 @@
 {
   "name": "@yaseratiar/react-responsive-easy-vite-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vite plugin for React Responsive Easy integration",
   "main": "src/index.ts",
   "types": "src/index.ts",
