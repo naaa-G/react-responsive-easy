@@ -3,7 +3,7 @@ import {
   useResponsiveValue, 
   useBreakpoint, 
   useScaledStyle 
-} from '@react-responsive-easy/core'
+} from '@yaseratiar/react-responsive-easy-core'
 
 // Responsive Navigation Component
 export const ResponsiveNavigation: React.FC = () => {
@@ -74,12 +74,17 @@ export const AdvancedResponsiveGrid: React.FC<{ children: React.ReactNode }> = (
   
   const gridStyle = useScaledStyle({
     gap: gap,
-    padding: padding,
-    gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`
+    padding: padding
   })
   
   return (
-    <div className="advanced-responsive-grid" style={gridStyle}>
+    <div 
+      className="advanced-responsive-grid" 
+      style={{
+        ...gridStyle,
+        gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`
+      }}
+    >
       {children}
     </div>
   )
@@ -87,12 +92,10 @@ export const AdvancedResponsiveGrid: React.FC<{ children: React.ReactNode }> = (
 
 // Responsive Masonry Layout Component
 export const ResponsiveMasonry: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const breakpoint = useBreakpoint()
   const gap = useResponsiveValue(16, { token: 'spacing' })
   
   const masonryStyle = useScaledStyle({
-    gap: gap,
-    columns: breakpoint.width < 768 ? 1 : breakpoint.width < 1024 ? 2 : 3
+    gap: gap
   })
   
   return (

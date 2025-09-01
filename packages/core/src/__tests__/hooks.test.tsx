@@ -19,9 +19,13 @@ import {
 } from '../hooks';
 
 // Wrapper component for testing hooks
-const createWrapper = (config: any) => {
+const createWrapper = (config: any, initialBreakpoint?: any) => {
   return ({ children }: { children: React.ReactNode }) => (
-    <ResponsiveProvider config={config}>
+    <ResponsiveProvider 
+      config={config}
+      initialBreakpoint={initialBreakpoint || config.base}
+      debug={false}
+    >
       {children}
     </ResponsiveProvider>
   );
@@ -46,6 +50,9 @@ describe('React Hooks', () => {
       writable: true,
       configurable: true 
     });
+    
+    // Ensure window properties are properly set
+    window.dispatchEvent(new Event('resize'));
   });
 
   describe('useResponsiveValue', () => {
@@ -59,13 +66,13 @@ describe('React Hooks', () => {
     });
 
     it('should scale value for non-base breakpoints', () => {
-      // Mock window size to mobile
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
       const { result } = renderHook(
         () => useResponsiveValue(24, { token: 'fontSize' }),
-        { wrapper }
+        { wrapper: mobileWrapper }
       );
 
       // Should apply min constraint (12px) for mobile
@@ -73,12 +80,13 @@ describe('React Hooks', () => {
     });
 
     it('should handle custom constraints', () => {
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
       const { result } = renderHook(
         () => useResponsiveValue(24, { token: 'fontSize', min: 16 }),
-        { wrapper }
+        { wrapper: mobileWrapper }
       );
 
       expect(result.current).toBe(16);
@@ -87,12 +95,13 @@ describe('React Hooks', () => {
 
   describe('useResponsiveValueWithUnit', () => {
     it('should add units to scaled values', () => {
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
       const { result } = renderHook(
         () => useResponsiveValueWithUnit(24, 'px', { token: 'fontSize' }),
-        { wrapper }
+        { wrapper: mobileWrapper }
       );
 
       expect(result.current).toBe('12px');
@@ -101,8 +110,9 @@ describe('React Hooks', () => {
 
   describe('useResponsiveValues', () => {
     it('should scale multiple values at once', () => {
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
       const { result } = renderHook(
         () => useResponsiveValues({
@@ -110,7 +120,7 @@ describe('React Hooks', () => {
           padding: 16,
           borderRadius: 8
         }, { token: 'fontSize' }),
-        { wrapper }
+        { wrapper: mobileWrapper }
       );
 
       expect(result.current.fontSize).toBe(12); // Min constraint applied
@@ -121,12 +131,13 @@ describe('React Hooks', () => {
 
   describe('useResponsiveValueInfo', () => {
     it('should return detailed scaling information', () => {
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
       const { result } = renderHook(
         () => useResponsiveValueInfo(24, { token: 'fontSize' }),
-        { wrapper }
+        { wrapper: mobileWrapper }
       );
 
       expect(result.current.original).toBe(24);
@@ -138,8 +149,9 @@ describe('React Hooks', () => {
 
   describe('useScaledStyle', () => {
     it('should scale entire style objects', () => {
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
       const { result } = renderHook(
         () => useScaledStyle({
@@ -147,7 +159,7 @@ describe('React Hooks', () => {
           padding: 16,
           margin: 8
         }, { token: 'fontSize' }),
-        { wrapper }
+        { wrapper: mobileWrapper }
       );
 
       expect(result.current.fontSize).toBe(12); // Min constraint
@@ -249,10 +261,11 @@ describe('React Hooks', () => {
     });
 
     it('should return false for non-base breakpoints', () => {
-      Object.defineProperty(window, 'innerWidth', { value: 390, configurable: true });
-      Object.defineProperty(window, 'innerHeight', { value: 844, configurable: true });
+      // Create a wrapper with mobile breakpoint
+      const mobileBreakpoint = config.breakpoints.find((bp: any) => bp.alias === 'mobile')!;
+      const mobileWrapper = createWrapper(config, mobileBreakpoint);
       
-      const { result } = renderHook(() => useIsBaseBreakpoint(), { wrapper });
+      const { result } = renderHook(() => useIsBaseBreakpoint(), { wrapper: mobileWrapper });
       expect(result.current).toBe(false);
     });
   });

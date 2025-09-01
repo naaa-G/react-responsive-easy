@@ -133,6 +133,8 @@ export interface ResponsiveContextValue {
   invalidateCache: () => void;
   /** Function to force re-computation */
   forceRecompute: () => void;
+  /** Function to scale values with options */
+  scaleValueWithOptions: (value: number, options?: ScaleOptions) => ScaledValue;
 }
 
 /**

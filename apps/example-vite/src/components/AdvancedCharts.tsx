@@ -14,7 +14,7 @@ import {
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { useResponsiveValue } from '@react-responsive-easy/core';
+import { useResponsiveValue } from '@yaseratiar/react-responsive-easy-core';
 
 // Register Chart.js components
 ChartJS.register(
@@ -36,7 +36,7 @@ interface ChartData {
     label: string;
     data: number[];
     borderColor?: string;
-    backgroundColor?: string;
+    backgroundColor?: string | string[];
     fill?: boolean;
   }[];
 }
@@ -55,9 +55,9 @@ const AdvancedCharts: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout>();
 
   // Responsive values
-  const chartHeight = useResponsiveValue([300, 400, 500, 600]);
-  const chartPadding = useResponsiveValue([16, 24, 32, 40]);
-  const fontSize = useResponsiveValue([12, 14, 16, 18]);
+  const chartHeight = useResponsiveValue(400, { token: 'spacing' });
+  const chartPadding = useResponsiveValue(24, { token: 'spacing' });
+  const fontSize = useResponsiveValue(14, { token: 'fontSize' });
 
   // Generate mock performance data
   const generatePerformanceData = (): PerformanceMetrics[] => {

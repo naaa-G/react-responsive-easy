@@ -1,7 +1,19 @@
 {
   "name": "@yaseratiar/react-responsive-easy-core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Core scaling engine for React Responsive Easy",
+  "keywords": ["react", "responsive", "scaling", "hooks", "typescript", "viewport", "breakpoints"],
+  "author": "naa-G <https://github.com/naaa-G>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naaa-G/react-responsive-easy.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/naaa-G/react-responsive-easy/issues"
+  },
+  "homepage": "https://github.com/naaa-G/react-responsive-easy#readme",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",

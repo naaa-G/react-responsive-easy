@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useResponsiveContext } from '../provider/ResponsiveContext';
 import { Breakpoint } from '../types';
 

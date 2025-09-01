@@ -98,9 +98,10 @@ export class ScalingEngine {
     
     // Check cache first
     const cached = this.cache.get(cacheKey);
+    
     if (cached && !options.bypassCache) {
       this.updatePerformanceMetrics(true, 0);
-      // Return cached result with updated cacheHit flag
+      // Return cached result with updated performance metrics
       return {
         ...cached,
         performance: {
@@ -110,71 +111,96 @@ export class ScalingEngine {
       };
     }
 
-    try {
-      // Perform scaling calculation
-      const scaledValue = this.performScaling(value, targetBreakpoint, options);
-      
-      // Apply constraints (min, max, step)
-      const { value: constrainedValue, constraints } = this.applyConstraints(scaledValue, options);
-      
-      // Create result object
-      const result: ScaledValue = {
-        original: value,
-        scaled: constrainedValue,
-        targetBreakpoint,
-        ratio: this.getScalingRatio(targetBreakpoint),
-        constraints: constraints,
-        performance: {
-          computationTime: performance.now() - startTime,
-          cacheHit: false
-        }
-      };
+    // Apply token-specific scaling rules if token is specified
+    const scaledValue = this.applyTokenScaling(value, targetBreakpoint, options);
+    
+    // Calculate the result
+    const result: ScaledValue = {
+      original: value,
+      scaled: scaledValue,
+      targetBreakpoint,
+      ratio: scaledValue / value,
+      constraints: this.getAppliedConstraints(value, scaledValue, options),
+      performance: {
+        computationTime: performance.now() - startTime,
+        cacheHit: false
+      }
+    };
 
-      // Cache the result
+    // Cache the result
+    if (!options.bypassCache) {
       this.cache.set(cacheKey, result);
-      
-      // Update performance metrics
-      this.updatePerformanceMetrics(false, result.performance.computationTime);
-      
-      return result;
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new ScalingError(`Scaling failed: ${errorMessage}`);
     }
+
+    // Update performance metrics
+    this.updatePerformanceMetrics(false, result.performance.computationTime);
+
+    return result;
   }
 
   /**
-   * Perform the actual scaling calculation
+   * Apply token-specific scaling rules using ScalingToken configuration
    */
-  private performScaling(
-    value: number,
-    targetBreakpoint: Breakpoint,
-    options: ScaleOptions
-  ): number {
-    const baseRatio = this.getScalingRatio(targetBreakpoint);
-    let tokenRatio = 1;
+  private applyTokenScaling(value: number, targetBreakpoint: Breakpoint, options: ScaleOptions): number {
+    if (!options.token) {
+      // No token specified, use default scaling
+      return this.calculateScaledValue(value, targetBreakpoint);
+    }
 
-    // Apply token-specific scaling if specified
-    if (options.token) {
-      const tokenConfig = this.config.strategy.tokens[options.token];
-      if (tokenConfig) {
-        tokenRatio = typeof tokenConfig.scale === 'function' 
-          ? tokenConfig.scale(baseRatio)
-          : tokenConfig.scale;
+    const tokenConfig: ScalingToken = this.config.strategy.tokens[options.token];
+    if (!tokenConfig) {
+      console.warn(`Token '${options.token}' not found in config, using default scaling`);
+      return this.calculateScaledValue(value, targetBreakpoint);
+    }
+
+    // First apply viewport-based scaling
+    let scaledValue = this.calculateScaledValue(value, targetBreakpoint);
+    
+    // Then apply token-specific scaling factor
+    let scaleFactor = typeof tokenConfig.scale === 'function' 
+      ? tokenConfig.scale(this.getScalingRatio(targetBreakpoint))
+      : tokenConfig.scale;
+
+    // Override with options if provided
+    if (options.scale !== undefined) {
+      scaleFactor = options.scale;
+    }
+
+    // Apply the token scale factor to the viewport-scaled value
+    scaledValue = scaledValue * scaleFactor;
+
+    // Apply scaling curve for non-linear scaling
+    if (tokenConfig.curve && tokenConfig.curve !== 'linear') {
+      const ratio = this.getScalingRatio(targetBreakpoint);
+      scaledValue = this.applyScalingCurve(scaledValue, ratio, options);
+    }
+
+    // Apply constraints
+    if (tokenConfig.min !== undefined || options.min !== undefined) {
+      const minValue = options.min ?? tokenConfig.min ?? 0;
+      if (scaledValue < minValue) {
+        scaledValue = minValue;
       }
     }
 
-    // Apply custom scale override if provided
-    if (options.scale !== undefined) {
-      tokenRatio = options.scale;
+    if (tokenConfig.max !== undefined || options.max !== undefined) {
+      const maxValue = options.max ?? tokenConfig.max ?? Infinity;
+      if (scaledValue > maxValue) {
+        scaledValue = maxValue;
+      }
     }
 
-    // Calculate final scaled value
-    const scaledValue = value * baseRatio * tokenRatio;
+    // Apply step increment if specified
+    if (tokenConfig.step !== undefined || options.step !== undefined) {
+      const step = options.step ?? tokenConfig.step ?? 1;
+      scaledValue = Math.round(scaledValue / step) * step;
+    }
 
-    // Apply scaling curve if specified
-    return this.applyScalingCurve(scaledValue, baseRatio, options);
+    // Apply precision
+    const precision = tokenConfig.precision ?? 1;
+    scaledValue = Math.round(scaledValue * Math.pow(10, precision)) / Math.pow(10, precision);
+
+    return scaledValue;
   }
 
   /**
@@ -214,81 +240,6 @@ export class ScalingEngine {
   }
 
   /**
-   * Apply constraints to the scaled value
-   */
-  private applyConstraints(value: number, options: ScaleOptions): { 
-    value: number; 
-    constraints: { minApplied: boolean; maxApplied: boolean; stepApplied: boolean; } 
-  } {
-    let result = value;
-    let minApplied = false;
-    let maxApplied = false;
-    let stepApplied = false;
-
-    // Apply minimum constraint (from options or token config)
-    let minConstraint = options.min;
-    if (options.token) {
-      const tokenConfig = this.config.strategy.tokens[options.token];
-      if (tokenConfig?.min !== undefined) {
-        minConstraint = minConstraint !== undefined ? Math.max(minConstraint, tokenConfig.min) : tokenConfig.min;
-      }
-    }
-    
-    if (minConstraint !== undefined) {
-      const beforeMin = result;
-      result = Math.max(result, minConstraint);
-      minApplied = beforeMin !== result;
-    }
-
-    // Apply maximum constraint (from options or token config)
-    let maxConstraint = options.max;
-    if (options.token) {
-      const tokenConfig = this.config.strategy.tokens[options.token];
-      if (tokenConfig?.max !== undefined) {
-        maxConstraint = maxConstraint !== undefined ? Math.min(maxConstraint, tokenConfig.max) : tokenConfig.max;
-      }
-    }
-    
-    if (maxConstraint !== undefined) {
-      const beforeMax = result;
-      result = Math.min(result, maxConstraint);
-      maxApplied = beforeMax !== result;
-    }
-
-    // Apply step constraint (from options or token config)
-    let stepConstraint = options.step;
-    if (options.token) {
-      const tokenConfig = this.config.strategy.tokens[options.token];
-      if (tokenConfig?.step !== undefined) {
-        stepConstraint = stepConstraint !== undefined ? stepConstraint : tokenConfig.step;
-      }
-    }
-    
-    if (stepConstraint !== undefined) {
-      const beforeStep = result;
-      result = Math.round(result / stepConstraint) * stepConstraint;
-      stepApplied = beforeStep !== result;
-    }
-
-    // Apply rounding based on strategy
-    const { rounding } = this.config.strategy;
-    switch (rounding.mode) {
-      case 'up':
-        result = Math.ceil(result / rounding.precision) * rounding.precision;
-        break;
-      case 'down':
-        result = Math.floor(result / rounding.precision) * rounding.precision;
-        break;
-      case 'nearest':
-      default:
-        result = Math.round(result / rounding.precision) * rounding.precision;
-        break;
-    }
-
-    return { value: result, constraints: { minApplied, maxApplied, stepApplied } };
-  }
-
-  /**
    * Get pre-computed scaling ratio for a target breakpoint
    */
   private getScalingRatio(targetBreakpoint: Breakpoint): number {
@@ -300,6 +251,48 @@ export class ScalingEngine {
     }
     
     return ratio;
+  }
+
+  /**
+   * Calculate scaled value using the base scaling ratio
+   */
+  private calculateScaledValue(value: number, targetBreakpoint: Breakpoint): number {
+    const ratio = this.getScalingRatio(targetBreakpoint);
+    return value * ratio;
+  }
+
+  /**
+   * Get information about which constraints were applied
+   */
+  private getAppliedConstraints(original: number, scaled: number, options: ScaleOptions): ScaledValue['constraints'] {
+    const token = options.token ? this.config.strategy.tokens[options.token] : null;
+    
+    // Check if min constraint was applied
+    let minApplied = false;
+    if (token?.min !== undefined || options.min !== undefined) {
+      const minValue = options.min ?? token?.min ?? 0;
+      minApplied = scaled === minValue;
+    }
+    
+    // Check if max constraint was applied
+    let maxApplied = false;
+    if (token?.max !== undefined || options.max !== undefined) {
+      const maxValue = options.max ?? token?.max ?? Infinity;
+      maxApplied = scaled === maxValue;
+    }
+    
+    // Check if step constraint was applied
+    let stepApplied = false;
+    if (token?.step !== undefined || options.step !== undefined) {
+      const step = options.step ?? token?.step ?? 1;
+      stepApplied = scaled % step === 0;
+    }
+    
+    return {
+      minApplied,
+      maxApplied,
+      stepApplied
+    };
   }
 
   /**

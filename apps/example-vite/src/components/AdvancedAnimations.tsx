@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useGesture } from 'react-use-gesture';
-import { useResponsiveValue } from '@react-responsive-easy/core';
+import { useResponsiveValue } from '@yaseratiar/react-responsive-easy-core';
 
 interface AnimationCard {
   id: number;
@@ -18,9 +18,9 @@ const AdvancedAnimations: React.FC = () => {
   const [dragDirection, setDragDirection] = useState<'left' | 'right' | null>(null);
 
   // Responsive values
-  const cardSize = useResponsiveValue([280, 320, 360, 400]);
-  const cardGap = useResponsiveValue([16, 20, 24, 32]);
-  const fontSize = useResponsiveValue([14, 16, 18, 20]);
+  const cardSize = useResponsiveValue(320, { token: 'spacing' });
+  const cardGap = useResponsiveValue(24, { token: 'spacing' });
+  const fontSize = useResponsiveValue(16, { token: 'fontSize' });
 
   // Motion values for drag interactions
   const x = useMotionValue(0);
@@ -86,7 +86,9 @@ const AdvancedAnimations: React.FC = () => {
 
   // Gesture handling
   const bind = useGesture({
-    onDrag: ({ movement: [mx, my], direction: [dx], velocity: [vx] }) => {
+    onDrag: ({ movement, direction }) => {
+      const [mx, my] = Array.isArray(movement) ? movement : [movement, 0];
+      const dx = Array.isArray(direction) ? direction[0] : direction;
       x.set(mx);
       y.set(my);
       
@@ -94,7 +96,9 @@ const AdvancedAnimations: React.FC = () => {
         setDragDirection(dx > 0 ? 'right' : 'left');
       }
     },
-    onDragEnd: ({ velocity: [vx], direction: [dx] }) => {
+    onDragEnd: ({ velocity, direction }) => {
+      const vx = Array.isArray(velocity) ? velocity[0] : velocity;
+      const dx = Array.isArray(direction) ? direction[0] : direction;
       if (Math.abs(vx) > 0.5) {
         // Swipe animation
         x.set(dx * 200);
@@ -267,7 +271,7 @@ const AdvancedAnimations: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         style={{ gap: cardGap }}
       >
-        {animationCards.map((card, index) => (
+        {animationCards.map((card) => (
           <motion.div
             key={card.id}
             variants={cardVariants}

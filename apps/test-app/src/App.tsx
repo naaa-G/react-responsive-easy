@@ -1,5 +1,5 @@
 import React from 'react'
-import { ResponsiveProvider, useResponsiveValue, useScaledStyle, useBreakpoint, ResponsiveConfig } from '@react-responsive-easy/core'
+import { ResponsiveProvider, useResponsiveValue, useScaledStyle, useBreakpoint, ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core'
 
 // Test configuration
 const testConfig: ResponsiveConfig = {

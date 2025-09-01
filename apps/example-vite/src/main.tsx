@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ResponsiveProvider } from '@react-responsive-easy/core'
+import { ResponsiveProvider } from '@yaseratiar/react-responsive-easy'
 import App from './App'
 import './index.css'
 

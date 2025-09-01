@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useResponsiveValue } from '@react-responsive-easy/core';
+import { useResponsiveValue } from '@yaseratiar/react-responsive-easy-core';
 
 interface PWAStatus {
   isInstalled: boolean;
@@ -21,11 +21,9 @@ const PWAManager: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   // Responsive values with validation
-  const buttonSize = useResponsiveValue(48) || 48;
   const fontSize = useResponsiveValue(16) || 16;
   
   // Ensure values are valid numbers
-  const safeButtonSize = typeof buttonSize === 'number' && !isNaN(buttonSize) ? buttonSize : 48;
   const safeFontSize = typeof fontSize === 'number' && !isNaN(fontSize) ? fontSize : 16;
 
   useEffect(() => {

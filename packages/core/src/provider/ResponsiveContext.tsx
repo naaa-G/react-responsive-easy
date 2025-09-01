@@ -53,7 +53,7 @@ export const ResponsiveProvider = ({
     
     // If it's already a Breakpoint object, use it
     return initialBreakpoint;
-  }, [initialBreakpoint, config]);
+  }, [initialBreakpoint, config.breakpoints, config.base]);
 
   // State for current breakpoint
   const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>(
@@ -79,7 +79,7 @@ export const ResponsiveProvider = ({
       }
     });
     setScalingRatios(ratios);
-  }, [config, scalingEngine]);
+  }, [config.breakpoints, scalingEngine]);
   
   // Function to invalidate cache
   const invalidateCache = useCallback(() => {
@@ -101,11 +101,68 @@ export const ResponsiveProvider = ({
       }
     });
     setScalingRatios(ratios);
-  }, [config, scalingEngine, invalidateCache]);
+  }, [config.breakpoints, scalingEngine, invalidateCache]);
+
+  // Enhanced scaling function that uses ScaleOptions
+  const scaleValueWithOptions = useCallback((value: number, options: ScaleOptions = {}): ScaledValue => {
+    try {
+      // Ensure we have a valid currentBreakpoint
+      if (!currentBreakpoint) {
+        console.warn('No current breakpoint available, using base breakpoint');
+        const result = scalingEngine.scaleValue(value, config.base, options);
+        return result;
+      }
+      
+      const result = scalingEngine.scaleValue(value, currentBreakpoint, options);
+      
+      // Cache the result if caching is enabled
+      if (!options.bypassCache) {
+        const cacheKey = `${value}-${currentBreakpoint.name}-${JSON.stringify(options)}`;
+        setComputedValues(prev => {
+          // Only update if the value is different
+          if (prev.get(cacheKey)?.scaled !== result.scaled) {
+            const newMap = new Map(prev);
+            newMap.set(cacheKey, result);
+            return newMap;
+          }
+          return prev;
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      console.warn('Failed to scale value with options:', error);
+      // Return fallback value
+      return {
+        original: value,
+        scaled: value,
+        targetBreakpoint: currentBreakpoint || config.base,
+        ratio: 1,
+        constraints: {
+          minApplied: false,
+          maxApplied: false,
+          stepApplied: false
+        },
+        performance: {
+          computationTime: 0,
+          cacheHit: false
+        }
+      };
+    }
+  }, [scalingEngine, currentBreakpoint.name, currentBreakpoint.width, currentBreakpoint.height, config.base.name, config.base.width, config.base.height]);
   
-  // Update current breakpoint based on viewport
+  // Update current breakpoint based on viewport (only if no initialBreakpoint is provided)
   useEffect(() => {
-    // Function to determine current breakpoint
+    // If we have an initialBreakpoint, use it and don't set up viewport-based detection
+    if (initialBreakpoint) {
+      // Only update if the current breakpoint is different
+      if (currentBreakpoint.name !== resolvedInitialBreakpoint.name) {
+        setCurrentBreakpoint(resolvedInitialBreakpoint);
+      }
+      return;
+    }
+    
+    // Only set up viewport-based detection if no initialBreakpoint is provided
     const updateBreakpoint = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -129,15 +186,10 @@ export const ResponsiveProvider = ({
       setCurrentBreakpoint(bestMatch);
     };
     
-    // If we have an initialBreakpoint, use it first but still set up responsive behavior
-    if (initialBreakpoint) {
-      setCurrentBreakpoint(resolvedInitialBreakpoint);
-    } else {
-      // Initial update for dynamic detection
-      updateBreakpoint();
-    }
+    // Initial update for dynamic detection
+    updateBreakpoint();
     
-    // Always listen for resize events to enable responsive behavior
+    // Listen for resize events to enable responsive behavior
     const handleResize = () => {
       updateBreakpoint();
     };
@@ -148,7 +200,7 @@ export const ResponsiveProvider = ({
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [config, initialBreakpoint, resolvedInitialBreakpoint]);
+  }, [config.breakpoints, config.base, initialBreakpoint, resolvedInitialBreakpoint]);
   
   // Debug logging
   useEffect(() => {
@@ -164,7 +216,7 @@ export const ResponsiveProvider = ({
         }
       });
     }
-  }, [debug, currentBreakpoint, scalingRatios, computedValues.size, config]);
+  }, [debug, currentBreakpoint, scalingRatios, computedValues.size, config.base.name, config.breakpoints, config.strategy.origin]);
   
   // Create the context value
   const contextValue: ResponsiveContextValue = useMemo(() => ({
@@ -173,8 +225,9 @@ export const ResponsiveProvider = ({
     scalingRatios,
     computedValues,
     invalidateCache,
-    forceRecompute
-  }), [config, currentBreakpoint, scalingRatios, computedValues, invalidateCache, forceRecompute]);
+    forceRecompute,
+    scaleValueWithOptions // Add the new scaling function
+  }), [config, currentBreakpoint, scalingRatios, computedValues, invalidateCache, forceRecompute, scaleValueWithOptions]);
   
   return (
     <ResponsiveContext.Provider value={contextValue}>

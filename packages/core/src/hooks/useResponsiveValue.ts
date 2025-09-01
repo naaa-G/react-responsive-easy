@@ -1,7 +1,6 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useResponsiveContext } from '../provider/ResponsiveContext';
 import { ScaleOptions, ScaledValue } from '../types';
-import { ScalingEngine } from '../scaling/ScalingEngine';
 
 /**
  * Hook to get a responsively scaled value based on the current breakpoint
@@ -24,7 +23,7 @@ export const useResponsiveValue = (
   value: number,
   options: ScaleOptions = {}
 ): number => {
-  const { config, currentBreakpoint } = useResponsiveContext();
+  const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
   // Memoize the scaled value to avoid unnecessary recalculations
   const scaledValue = useMemo(() => {
@@ -34,18 +33,14 @@ export const useResponsiveValue = (
       return value;
     }
     
-    // Create a temporary scaling engine for this calculation
-    // In a real implementation, this would be shared across the app
-    const engine = new ScalingEngine(config);
-    
     try {
-      const result = engine.scaleValue(value, currentBreakpoint, options);
+      const result = scaleValueWithOptions(value, options);
       return result.scaled;
     } catch (error) {
       console.warn('Failed to scale value:', error);
       return value; // Fallback to original value
     }
-  }, [value, currentBreakpoint, config, options]);
+  }, [value, currentBreakpoint, config, options, scaleValueWithOptions]);
   
   return scaledValue;
 };
@@ -140,7 +135,7 @@ export const useResponsiveValueInfo = (
   value: number,
   options: ScaleOptions = {}
 ): ScaledValue => {
-  const { config, currentBreakpoint } = useResponsiveContext();
+  const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
   return useMemo(() => {
     // If we're at the base breakpoint, return a mock result
@@ -163,11 +158,8 @@ export const useResponsiveValueInfo = (
       };
     }
     
-    // Create a temporary scaling engine for this calculation
-    const engine = new ScalingEngine(config);
-    
     try {
-      return engine.scaleValue(value, currentBreakpoint, options);
+      return scaleValueWithOptions(value, options);
     } catch (error) {
       console.warn('Failed to get scaling info:', error);
       // Return fallback info
@@ -187,5 +179,5 @@ export const useResponsiveValueInfo = (
         }
       };
     }
-  }, [value, currentBreakpoint, config, options]);
+  }, [value, currentBreakpoint, config, options, scaleValueWithOptions]);
 };

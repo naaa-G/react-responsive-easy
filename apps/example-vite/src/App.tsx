@@ -3,12 +3,11 @@ import {
   useResponsiveValue, 
   useBreakpoint, 
   useScaledStyle
-} from '@react-responsive-easy/core'
-import { PerformanceDashboard } from '@react-responsive-easy/performance-dashboard'
+} from '@yaseratiar/react-responsive-easy-core'
+import { PerformanceDashboard } from '@yaseratiar/react-responsive-easy-performance-dashboard'
 import {
   ResponsiveNavigation,
   ResponsiveHero,
-  AdvancedResponsiveGrid,
   ResponsiveStats,
   ResponsiveTimeline,
   ResponsiveTestimonials
@@ -81,17 +80,7 @@ const ResponsiveCard: React.FC<{
   )
 }
 
-// Responsive Grid Component
-const ResponsiveGrid: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const gap = useResponsiveValue(24, { token: 'spacing' })
-  
-  const gridStyle = useScaledStyle({
-    gap: gap,
-    padding: gap
-  })
 
-  return <div className="responsive-grid feature-grid" style={gridStyle}>{children}</div>
-}
 
 // Main App Component
 const App: React.FC = () => {
@@ -102,8 +91,6 @@ const App: React.FC = () => {
   
   // Responsive values
   const containerPadding = useResponsiveValue(32, { token: 'spacing' })
-  const headingSize = useResponsiveValue(48, { token: 'fontSize' })
-  const subheadingSize = useResponsiveValue(24, { token: 'fontSize' })
   
   // Theme toggle
   const toggleTheme = () => {
@@ -111,9 +98,6 @@ const App: React.FC = () => {
   }
   
   const containerClasses = `app-container ${currentTheme === 'dark' ? 'dark' : ''}`
-  const headerClasses = 'app-header'
-  const headingClasses = 'app-heading'
-  const subheadingClasses = 'app-subheading'
   const controlsClasses = 'app-controls'
   const breakpointClasses = 'breakpoint-indicator'
 

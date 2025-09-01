@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useResponsiveContext } from '../provider/ResponsiveContext';
 import { ScaleOptions } from '../types';
-import { ScalingEngine } from '../scaling/ScalingEngine';
 
 // Type for style objects that can contain numeric values
 type StyleObject = Record<string, string | number>;
@@ -34,7 +33,7 @@ export const useScaledStyle = (
   styles: ScalableStyleObject,
   options: ScaleOptions = {}
 ): StyleObject => {
-  const { config, currentBreakpoint } = useResponsiveContext();
+  const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
   return useMemo(() => {
     // If we're at the base breakpoint, return original styles
@@ -43,15 +42,12 @@ export const useScaledStyle = (
       return styles;
     }
     
-    // Create a temporary scaling engine for this calculation
-    const engine = new ScalingEngine(config);
-    
     const scaledStyles: StyleObject = {};
     
     try {
       for (const [key, value] of Object.entries(styles)) {
         if (typeof value === 'number') {
-          const result = engine.scaleValue(value, currentBreakpoint, options);
+          const result = scaleValueWithOptions(value, options);
           scaledStyles[key] = result.scaled;
         } else {
           scaledStyles[key] = value;
@@ -63,7 +59,7 @@ export const useScaledStyle = (
     }
     
     return scaledStyles;
-  }, [styles, currentBreakpoint, config, options]);
+  }, [styles, currentBreakpoint, config, options, scaleValueWithOptions]);
 };
 
 /**
@@ -88,7 +84,7 @@ export const useScaledStyle = (
 export const useScaledStyleWithTokens = (
   styles: Record<string, { value: number; token?: keyof any; options?: ScaleOptions }>
 ): StyleObject => {
-  const { config, currentBreakpoint } = useResponsiveContext();
+  const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
   return useMemo(() => {
     // If we're at the base breakpoint, return original values
@@ -101,9 +97,6 @@ export const useScaledStyleWithTokens = (
       return result;
     }
     
-    // Create a temporary scaling engine for this calculation
-    const engine = new ScalingEngine(config);
-    
     const scaledStyles: StyleObject = {};
     
     try {
@@ -113,7 +106,7 @@ export const useScaledStyleWithTokens = (
           token: token as any || options.token
         };
         
-        const result = engine.scaleValue(value, currentBreakpoint, scaleOptions);
+        const result = scaleValueWithOptions(value, scaleOptions);
         scaledStyles[key] = result.scaled;
       }
     } catch (error) {
@@ -125,7 +118,7 @@ export const useScaledStyleWithTokens = (
     }
     
     return scaledStyles;
-  }, [styles, currentBreakpoint, config]);
+  }, [styles, currentBreakpoint, config, scaleValueWithOptions]);
 };
 
 /**
@@ -156,7 +149,7 @@ export const useResponsiveCSSVariables = (
   variables: Record<string, number>,
   options: ScaleOptions = {}
 ): Record<string, string> => {
-  const { config, currentBreakpoint } = useResponsiveContext();
+  const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
   return useMemo(() => {
     // If we're at the base breakpoint, return original values
@@ -169,14 +162,11 @@ export const useResponsiveCSSVariables = (
       return result;
     }
     
-    // Create a temporary scaling engine for this calculation
-    const engine = new ScalingEngine(config);
-    
     const cssVars: Record<string, string> = {};
     
     try {
       for (const [key, value] of Object.entries(variables)) {
-        const result = engine.scaleValue(value, currentBreakpoint, options);
+        const result = scaleValueWithOptions(value, options);
         cssVars[key] = `${result.scaled}px`;
       }
     } catch (error) {
@@ -188,5 +178,5 @@ export const useResponsiveCSSVariables = (
     }
     
     return cssVars;
-  }, [variables, currentBreakpoint, config, options]);
+  }, [variables, currentBreakpoint, config, options, scaleValueWithOptions]);
 };

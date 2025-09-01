@@ -109,6 +109,108 @@ export function createDefaultConfig(): ResponsiveConfig {
 }
 
 /**
+ * Create a custom breakpoint with proper typing
+ */
+export function createBreakpoint(name: string, width: number, height: number, alias?: string): Breakpoint {
+  return {
+    name,
+    width,
+    height,
+    alias,
+    custom: {}
+  };
+}
+
+/**
+ * Create a custom scaling strategy with proper typing
+ */
+export function createScalingStrategy(overrides: Partial<ScalingStrategy> = {}): ScalingStrategy {
+  const defaultStrategy: ScalingStrategy = {
+    origin: 'width',
+    mode: 'linear',
+    tokens: {
+      fontSize: {
+        scale: 0.85,
+        min: 12,
+        max: 48,
+        unit: 'px',
+        precision: 1,
+        responsive: true
+      },
+      spacing: {
+        scale: 0.9,
+        step: 2,
+        unit: 'px',
+        precision: 1,
+        responsive: true
+      },
+      radius: {
+        scale: 0.95,
+        min: 2,
+        unit: 'px',
+        precision: 1,
+        responsive: true
+      },
+      lineHeight: {
+        scale: 0.9,
+        min: 1.2,
+        unit: 'em',
+        precision: 0.1,
+        responsive: true
+      },
+      shadow: {
+        scale: 0.8,
+        unit: 'px',
+        precision: 1,
+        responsive: true
+      },
+      border: {
+        scale: 0.9,
+        min: 1,
+        unit: 'px',
+        precision: 1,
+        responsive: true
+      }
+    },
+    rounding: {
+      mode: 'nearest',
+      precision: 1
+    },
+    accessibility: {
+      minFontSize: 12,
+      minTapTarget: 44,
+      contrastPreservation: true
+    },
+    performance: {
+      memoization: true,
+      cacheStrategy: 'memory',
+      precomputeValues: true
+    }
+  };
+
+  return {
+    ...defaultStrategy,
+    ...overrides,
+    tokens: {
+      ...defaultStrategy.tokens,
+      ...overrides.tokens
+    },
+    rounding: {
+      ...defaultStrategy.rounding,
+      ...overrides.rounding
+    },
+    accessibility: {
+      ...defaultStrategy.accessibility,
+      ...overrides.accessibility
+    },
+    performance: {
+      ...defaultStrategy.performance,
+      ...overrides.performance
+    }
+  };
+}
+
+/**
  * Configuration presets for common use cases
  */
 export const configPresets = {

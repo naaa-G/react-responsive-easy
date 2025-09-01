@@ -11,7 +11,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@yaseratiar/react-responsive-easy-core": "workspace:*",
+    "@yaseratiar/react-responsive-easy": "^1.0.0",
     "@yaseratiar/react-responsive-easy-performance-dashboard": "workspace:*",
     "@yaseratiar/react-responsive-easy-ai-optimizer": "workspace:*",
     "react": "^18.2.0",
