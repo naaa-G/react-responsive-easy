@@ -1,4 +1,4 @@
-import { ResponsiveConfig, Breakpoint, ScalingToken } from '@react-responsive-easy/core';
+import { ResponsiveConfig, Breakpoint, ScalingToken } from '@yaseratiar/react-responsive-easy-core';
 
 /**
  * Component usage data collected from real applications

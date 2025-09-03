@@ -1,7 +1,7 @@
 {
   "name": "@yaseratiar/react-responsive-easy-ai-optimizer",
-  "version": "1.0.1",
-  "description": "AI-powered optimization suggestions for React Responsive Easy",
+  "version": "2.0.0",
+  "description": "Enterprise-grade AI-powered optimization engine with comprehensive machine learning capabilities for React Responsive Easy",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -23,10 +23,28 @@
     "responsive",
     "ai",
     "optimization",
-    "machine-learning"
+    "machine-learning",
+    "enterprise",
+    "tensorflow",
+    "caching",
+    "batch-processing",
+    "a-b-testing",
+    "streaming-api",
+    "performance",
+    "analytics",
+    "monitoring"
   ],
   "author": "naa-G",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yaseratiar/react-responsive-easy.git",
+    "directory": "packages/ai-optimizer"
+  },
+  "homepage": "https://github.com/yaseratiar/react-responsive-easy#readme",
+  "bugs": {
+    "url": "https://github.com/yaseratiar/react-responsive-easy/issues"
+  },
   "dependencies": {
     "@yaseratiar/react-responsive-easy-core": "workspace:*",
     "@tensorflow/tfjs": "^4.15.0",

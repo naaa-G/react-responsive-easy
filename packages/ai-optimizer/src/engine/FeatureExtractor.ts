@@ -1,4 +1,4 @@
-import { ResponsiveConfig } from '@react-responsive-easy/core';
+import { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 import {
   ComponentUsageData,
   ModelFeatures,
@@ -71,14 +71,19 @@ export class FeatureExtractor {
    * Extract configuration-based features
    */
   private extractConfigurationFeatures(config: ResponsiveConfig): ConfigurationFeatures {
+    // Defensive programming - handle missing config properties
+    if (!config || !config.breakpoints || !config.base || !config.strategy) {
+      return this.getDefaultConfigurationFeatures();
+    }
+
     const breakpoints = config.breakpoints;
     
     // Calculate breakpoint ratios
-    const baseWidth = config.base.width;
-    const breakpointRatios = breakpoints.map(bp => bp.width / baseWidth);
+    const baseWidth = config.base.width || 375; // Default mobile width
+    const breakpointRatios = breakpoints.map(bp => (bp?.width || baseWidth) / baseWidth);
     
     // Calculate token complexity
-    const tokens = config.strategy.tokens;
+    const tokens = config.strategy.tokens || {};
     let tokenComplexity = 0;
     Object.values(tokens).forEach(token => {
       tokenComplexity += (token.min !== undefined ? 1 : 0);
@@ -109,6 +114,11 @@ export class FeatureExtractor {
    * Extract usage pattern features
    */
   private extractUsageFeatures(usageData: ComponentUsageData[]): UsageFeatures {
+    // Defensive programming - handle null/undefined usage data
+    if (!usageData || !Array.isArray(usageData)) {
+      return this.getDefaultUsageFeatures();
+    }
+
     // Collect all responsive values
     const allValues: number[] = [];
     const componentTypes: Record<string, number> = {};
@@ -116,14 +126,20 @@ export class FeatureExtractor {
     const valueDistributions: Record<string, number[]> = {};
     
     usageData.forEach(data => {
+      if (!data || !data.componentType) return;
+      
       // Count component types
       componentTypes[data.componentType] = (componentTypes[data.componentType] || 0) + 1;
       
+      // Handle null/undefined responsiveValues
+      if (!data.responsiveValues || !Array.isArray(data.responsiveValues)) return;
+      
       data.responsiveValues.forEach(value => {
+        if (!value || typeof value.baseValue !== 'number') return;
         allValues.push(value.baseValue);
         
-        // Count properties
-        properties[value.property] = (properties[value.property] || 0) + value.usageFrequency;
+        // Count properties (raw occurrence count)
+        properties[value.property] = (properties[value.property] || 0) + 1;
         
         // Collect value distributions by token
         if (!valueDistributions[value.token]) {
@@ -151,12 +167,8 @@ export class FeatureExtractor {
       componentFrequencies[type] = count / totalComponents;
     });
     
-    // Normalize property patterns
-    const totalPropertyUsage = Object.values(properties).reduce((sum, count) => sum + count, 0);
-    const propertyPatterns: Record<string, number> = {};
-    Object.entries(properties).forEach(([prop, count]) => {
-      propertyPatterns[prop] = count / totalPropertyUsage;
-    });
+    // Keep raw property counts (not normalized)
+    const propertyPatterns: Record<string, number> = { ...properties };
     
     return {
       commonValues: this.padArray(commonValues, 10, 0),
@@ -194,12 +206,21 @@ export class FeatureExtractor {
    * Extract context-based features
    */
   private extractContextFeatures(usageData: ComponentUsageData[]): ContextFeatures {
+    // Defensive programming - handle null/undefined usage data
+    if (!usageData || !Array.isArray(usageData)) {
+      return this.getDefaultContextFeatures();
+    }
+
     // Infer application type from component patterns
-    const componentTypes = usageData.map(d => d.componentType);
+    const componentTypes = usageData
+      .filter(d => d && d.componentType)
+      .map(d => d.componentType);
     const applicationType = this.inferApplicationType(componentTypes);
     
     // Calculate device distribution from context data
-    const positions = usageData.map(d => d.context.position);
+    const positions = usageData
+      .filter(d => d && d.context && d.context.position)
+      .map(d => d.context.position);
     const deviceDistribution = this.calculateDeviceDistribution(positions);
     
     // Analyze user behavior patterns
@@ -227,7 +248,9 @@ export class FeatureExtractor {
     
     const sorted = [...values].sort((a, b) => a - b);
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const median = sorted[Math.floor(sorted.length / 2)];
+    const median = sorted.length % 2 === 0
+      ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+      : sorted[Math.floor(sorted.length / 2)];
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
     const std = Math.sqrt(
@@ -273,12 +296,23 @@ export class FeatureExtractor {
    * Calculate device distribution from position data
    */
   private calculateDeviceDistribution(positions: string[]): Record<string, number> {
+    if (!positions || positions.length === 0) {
+      return { desktop: 0, tablet: 0, mobile: 0, other: 0 };
+    }
+
     const positionFreq: Record<string, number> = {};
     positions.forEach(pos => {
-      positionFreq[pos] = (positionFreq[pos] || 0) + 1;
+      if (pos) {
+        positionFreq[pos] = (positionFreq[pos] || 0) + 1;
+      }
     });
     
     const total = positions.length;
+    if (total === 0) {
+      return { desktop: 0, tablet: 0, mobile: 0, other: 0 };
+    }
+
+    // More realistic device distribution mapping
     return {
       desktop: (positionFreq.main || 0) / total,
       tablet: (positionFreq.sidebar || 0) / total,
@@ -291,19 +325,37 @@ export class FeatureExtractor {
    * Analyze user behavior patterns
    */
   private analyzeUserBehavior(interactions: any[]): Record<string, number> {
-    if (interactions.length === 0) {
+    if (!interactions || interactions.length === 0) {
       return { engagement: 0, accessibility: 0, performance: 0 };
     }
     
-    const avgInteractionRate = interactions.reduce((sum, i) => sum + i.interactionRate, 0) / interactions.length;
-    const avgAccessibilityScore = interactions.reduce((sum, i) => sum + i.accessibilityScore, 0) / interactions.length;
-    const avgViewTime = interactions.reduce((sum, i) => sum + i.viewTime, 0) / interactions.length;
-    
-    return {
-      engagement: avgInteractionRate,
-      accessibility: avgAccessibilityScore,
-      performance: avgViewTime > 5000 ? 1 : 0 // Long view times indicate performance issues
-    };
+    try {
+      const validInteractions = interactions.filter(i => i && typeof i === 'object');
+      if (validInteractions.length === 0) {
+        return { engagement: 0, accessibility: 0, performance: 0 };
+      }
+
+      const avgInteractionRate = validInteractions.reduce((sum, i) => {
+        return sum + (typeof i.interactionRate === 'number' ? i.interactionRate : 0);
+      }, 0) / validInteractions.length;
+      
+      const avgAccessibilityScore = validInteractions.reduce((sum, i) => {
+        return sum + (typeof i.accessibilityScore === 'number' ? i.accessibilityScore : 0);
+      }, 0) / validInteractions.length;
+      
+      const avgViewTime = validInteractions.reduce((sum, i) => {
+        return sum + (typeof i.viewTime === 'number' ? i.viewTime : 0);
+      }, 0) / validInteractions.length;
+      
+      return {
+        engagement: Math.max(0, Math.min(1, avgInteractionRate)), // Clamp between 0 and 1
+        accessibility: Math.max(0, Math.min(100, avgAccessibilityScore)), // Clamp between 0 and 100
+        performance: avgViewTime > 5000 ? 1 : 0 // Long view times indicate performance issues
+      };
+    } catch (error) {
+      console.warn('⚠️ Error analyzing user behavior:', error);
+      return { engagement: 0, accessibility: 0, performance: 0 };
+    }
   }
 
   /**
@@ -358,5 +410,56 @@ export class FeatureExtractor {
       result.push(fillValue);
     }
     return result.slice(0, length);
+  }
+
+  /**
+   * Get default configuration features for error cases
+   */
+  private getDefaultConfigurationFeatures(): ConfigurationFeatures {
+    return {
+      breakpointCount: 3,
+      breakpointRatios: [1, 1.5, 2],
+      tokenComplexity: 0,
+      originDistribution: {
+        width: 1,
+        height: 0,
+        min: 0,
+        max: 0,
+        diagonal: 0,
+        area: 0
+      }
+    };
+  }
+
+  /**
+   * Get default usage features for error cases
+   */
+  private getDefaultUsageFeatures(): UsageFeatures {
+    return {
+      commonValues: new Array(10).fill(0),
+      valueDistributions: {},
+      componentFrequencies: {},
+      propertyPatterns: {}
+    };
+  }
+
+  /**
+   * Get default context features for error cases
+   */
+  private getDefaultContextFeatures(): ContextFeatures {
+    return {
+      applicationType: 'web',
+      deviceDistribution: {
+        mobile: 0.6,
+        tablet: 0.3,
+        desktop: 0.1
+      },
+      userBehavior: {
+        interactionFrequency: 0.5,
+        sessionDuration: 300,
+        bounceRate: 0.3
+      },
+      industry: 'general'
+    };
   }
 }

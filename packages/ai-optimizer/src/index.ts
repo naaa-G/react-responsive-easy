@@ -4,7 +4,7 @@ export { FeatureExtractor } from './engine/FeatureExtractor.js';
 export { ModelTrainer } from './engine/ModelTrainer.js';
 export { PredictionEngine } from './engine/PredictionEngine.js';
 
-// Type exports
+// Type exports (compile-time only)
 export type {
   ComponentUsageData,
   ResponsiveValueUsage,
@@ -28,13 +28,30 @@ export type {
   TrainingMetadata
 } from './types/index.js';
 
+
+
 // Utility functions and helpers
 export { createDefaultAIConfig } from './utils/defaults.js';
 export { DataCollector } from './utils/DataCollector.js';
 export { OptimizationReporter } from './utils/OptimizationReporter.js';
 
+// Enterprise utilities
+export { MemoryMonitor, MemoryAwareTensorOps, TensorPool } from './utils/MemoryManager.js';
+export { PerformanceOptimizer, IntelligentCache, BatchProcessor } from './utils/PerformanceOptimizer.js';
+export { AnalyticsEngine, AnalyticsTracker, SystemHealthMonitor } from './utils/AnalyticsEngine.js';
+
+// Advanced enterprise utilities
+export { AdvancedCache, IntelligentMemoizer, CachePerformanceMonitor } from './utils/AdvancedCache.js';
+export { AdvancedBatchProcessor, BatchProcessingOptimizer } from './utils/BatchProcessor.js';
+export { DynamicConfigManager } from './utils/DynamicConfig.js';
+
+// Low priority enterprise utilities
+export { AdvancedAIManager, HyperparameterTuner, FeatureEngineer } from './utils/AdvancedAI.js';
+export { ABTestingFramework } from './utils/ABTestingFramework.js';
+export { StreamingAPIManager, OptimizationStream } from './utils/StreamingAPI.js';
+
 // Version information
-export const VERSION = '0.0.1';
+export const VERSION = '1.0.1';
 
 /**
  * Create and initialize an AI optimizer instance
@@ -50,7 +67,7 @@ export async function createAIOptimizer(config?: Partial<import('./types/index.j
  * Quick optimization function for simple use cases
  */
 export async function optimizeConfiguration(
-  config: import('@react-responsive-easy/core').ResponsiveConfig,
+  config: import('@yaseratiar/react-responsive-easy-core').ResponsiveConfig,
   usageData: import('./types/index.js').ComponentUsageData[]
 ): Promise<import('./types/index.js').OptimizationSuggestions> {
   const optimizer = await createAIOptimizer();
