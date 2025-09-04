@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import fs from 'fs-extra';
 import path from 'path';
-import glob from 'glob';
+import { glob } from 'glob';
 // Mock validation function for now
 const validateConfig = (config: any) => {
   const errors: string[] = [];
@@ -115,7 +115,7 @@ async function loadConfig(configPath: string): Promise<any> {
       throw new Error('Could not parse configuration file');
     }
     const configString = configMatch[1];
-    return JSON.parse(configString);
+    return JSON.parse(configString!);
   } catch (error) {
     throw new Error(`Failed to load configuration: ${error}`);
   }
@@ -167,7 +167,7 @@ function analyzeBreakpointCoverage(breakpoints: any[]): any {
 function findBreakpointGaps(widths: number[]): any[] {
   const gaps = [];
   for (let i = 1; i < widths.length; i++) {
-    const gap = widths[i] - widths[i - 1];
+    const gap = widths[i]! - widths[i - 1]!;
     if (gap > 200) { // Large gap threshold
       gaps.push({
         from: widths[i - 1],

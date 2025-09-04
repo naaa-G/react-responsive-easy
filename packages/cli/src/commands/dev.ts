@@ -112,7 +112,7 @@ async function loadConfig(configPath: string): Promise<any> {
       throw new Error('Could not parse configuration file');
     }
     const configString = configMatch[1];
-    return JSON.parse(configString);
+    return JSON.parse(configString!);
   } catch (error) {
     throw new Error(`Failed to load configuration: ${error}`);
   }

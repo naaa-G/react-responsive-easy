@@ -5,15 +5,24 @@
     "rootDir": "./src",
     "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
-    "declaration": true,
-    "declarationMap": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": false,
+    "declarationMap": false,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["ES2020", "DOM"]
   },
   "include": [
     "src/**/*"
