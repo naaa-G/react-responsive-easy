@@ -3,6 +3,7 @@
  * 
  * This class provides comprehensive performance monitoring capabilities
  * including real-time metrics collection, analysis, and alerting.
+ * Enhanced with enterprise-grade AI integration, analytics, and alerting.
  */
 export class PerformanceMonitor {
   private isMonitoring = false;
@@ -13,22 +14,33 @@ export class PerformanceMonitor {
   private thresholds: PerformanceThresholds = this.getDefaultThresholds();
   private history: PerformanceSnapshot[] = [];
   private maxHistorySize = 1000;
+  
+  // Enterprise features
+  private aiIntegration?: any; // AIIntegrationManager
+  private alertingSystem?: any; // AlertingSystem
+  private analyticsEngine?: any; // AnalyticsEngine
+  private enterpriseConfig: EnterpriseConfig;
 
   constructor(private config: PerformanceMonitorConfig = {}) {
     this.thresholds = { ...this.thresholds, ...config.thresholds };
     this.maxHistorySize = config.maxHistorySize || 1000;
+    this.enterpriseConfig = config.enterprise || this.getDefaultEnterpriseConfig();
   }
 
   /**
    * Start performance monitoring
    */
-  start(): void {
+  async start(): Promise<void> {
     if (this.isMonitoring) {
       console.warn('Performance monitoring is already active');
       return;
     }
 
     this.isMonitoring = true;
+    
+    // Initialize enterprise features
+    await this.initializeEnterpriseFeatures();
+    
     this.setupObservers();
     this.startMetricsCollection();
     
@@ -47,6 +59,9 @@ export class PerformanceMonitor {
 
     this.isMonitoring = false;
     this.cleanup();
+    
+    // Dispose enterprise features
+    this.disposeEnterpriseFeatures();
     
     console.log('📊 Performance monitoring stopped');
     this.emit('monitoring-stopped', this.metrics);
@@ -107,9 +122,15 @@ export class PerformanceMonitor {
   /**
    * Generate performance report
    */
-  generateReport(): PerformanceReport {
+  async generateReport(): Promise<PerformanceReport> {
     const currentMetrics = this.getMetrics();
     const recentHistory = this.getHistory(100);
+    
+    // Get AI insights if available
+    const aiInsights = this.aiIntegration ? await this.aiIntegration.generateInsights(currentMetrics, this.checkAlerts(currentMetrics)) : [];
+    
+    // Get analytics data if available
+    const analyticsData = this.analyticsEngine ? await this.analyticsEngine.processData(recentHistory, aiInsights) : null;
     
     return {
       timestamp: Date.now(),
@@ -118,7 +139,11 @@ export class PerformanceMonitor {
       trends: this.analyzeTrends(recentHistory),
       alerts: this.checkAlerts(currentMetrics),
       recommendations: this.generateRecommendations(currentMetrics),
-      historicalData: recentHistory
+      historicalData: recentHistory,
+      // Enterprise features
+      aiInsights: aiInsights,
+      analytics: analyticsData,
+      enterpriseMetrics: this.getEnterpriseMetrics()
     };
   }
 
@@ -128,28 +153,28 @@ export class PerformanceMonitor {
   private setupObservers(): void {
     // Layout Shift Observer
     if ('LayoutShift' in window) {
-      const layoutShiftObserver = new PerformanceObserver((list) => {
-        list.getEntries().forEach((entry: any) => {
-          if (entry.entryType === 'layout-shift' && !entry.hadRecentInput) {
-            this.metrics.layoutShift.current += entry.value;
-            this.metrics.layoutShift.entries.push({
-              value: entry.value,
-              timestamp: entry.startTime,
-              sources: entry.sources?.map((source: any) => ({
-                element: source.node?.tagName || 'unknown',
-                selector: this.getElementSelector(source.node)
-              })) || []
-            });
-            
-            // Keep only recent entries
-            if (this.metrics.layoutShift.entries.length > 50) {
-              this.metrics.layoutShift.entries = this.metrics.layoutShift.entries.slice(-50);
-            }
-          }
-        });
-      });
-
       try {
+        const layoutShiftObserver = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry: any) => {
+            if (entry.entryType === 'layout-shift' && !entry.hadRecentInput) {
+              this.metrics.layoutShift.current += entry.value;
+              this.metrics.layoutShift.entries.push({
+                value: entry.value,
+                timestamp: entry.startTime,
+                sources: entry.sources?.map((source: any) => ({
+                  element: source.node?.tagName || 'unknown',
+                  selector: this.getElementSelector(source.node)
+                })) || []
+              });
+              
+              // Keep only recent entries
+              if (this.metrics.layoutShift.entries.length > 50) {
+                this.metrics.layoutShift.entries = this.metrics.layoutShift.entries.slice(-50);
+              }
+            }
+          });
+        });
+
         layoutShiftObserver.observe({ entryTypes: ['layout-shift'] });
         this.observers.push(layoutShiftObserver);
       } catch (e) {
@@ -158,17 +183,17 @@ export class PerformanceMonitor {
     }
 
     // Paint Observer
-    const paintObserver = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        if (entry.name === 'first-contentful-paint') {
-          this.metrics.paintTiming.fcp = entry.startTime;
-        } else if (entry.name === 'largest-contentful-paint') {
-          this.metrics.paintTiming.lcp = entry.startTime;
-        }
-      });
-    });
-
     try {
+      const paintObserver = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => {
+          if (entry.name === 'first-contentful-paint') {
+            this.metrics.paintTiming.fcp = entry.startTime;
+          } else if (entry.name === 'largest-contentful-paint') {
+            this.metrics.paintTiming.lcp = entry.startTime;
+          }
+        });
+      });
+
       paintObserver.observe({ entryTypes: ['paint', 'largest-contentful-paint'] });
       this.observers.push(paintObserver);
     } catch (e) {
@@ -176,26 +201,26 @@ export class PerformanceMonitor {
     }
 
     // Navigation Observer
-    const navigationObserver = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry: any) => {
-        if (entry.entryType === 'navigation') {
-          this.metrics.navigation = {
-            domContentLoaded: entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart,
-            loadComplete: entry.loadEventEnd - entry.loadEventStart,
-            firstByte: entry.responseStart - entry.requestStart,
-            domInteractive: entry.domInteractive - entry.fetchStart,
-            redirect: entry.redirectEnd - entry.redirectStart,
-            dns: entry.domainLookupEnd - entry.domainLookupStart,
-            tcp: entry.connectEnd - entry.connectStart,
-            request: entry.responseStart - entry.requestStart,
-            response: entry.responseEnd - entry.responseStart,
-            processing: entry.domComplete - entry.responseEnd
-          };
-        }
-      });
-    });
-
     try {
+      const navigationObserver = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry: any) => {
+          if (entry.entryType === 'navigation') {
+            this.metrics.navigation = {
+              domContentLoaded: entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart,
+              loadComplete: entry.loadEventEnd - entry.loadEventStart,
+              firstByte: entry.responseStart - entry.requestStart,
+              domInteractive: entry.domInteractive - entry.fetchStart,
+              redirect: entry.redirectEnd - entry.redirectStart,
+              dns: entry.domainLookupEnd - entry.domainLookupStart,
+              tcp: entry.connectEnd - entry.connectStart,
+              request: entry.responseStart - entry.requestStart,
+              response: entry.responseEnd - entry.responseStart,
+              processing: entry.domComplete - entry.responseEnd
+            };
+          }
+        });
+      });
+
       navigationObserver.observe({ entryTypes: ['navigation'] });
       this.observers.push(navigationObserver);
     } catch (e) {
@@ -255,6 +280,9 @@ export class PerformanceMonitor {
     
     // Check for alerts
     this.checkAndEmitAlerts();
+    
+    // Process with enterprise systems
+    this.processWithEnterpriseSystems();
     
     // Emit metrics update
     this.emit('metrics-updated', this.metrics);
@@ -436,6 +464,27 @@ export class PerformanceMonitor {
       alerts.forEach(alert => {
         this.emit('performance-alert', { alert, metrics: this.metrics });
       });
+    }
+  }
+
+  /**
+   * Process metrics with enterprise systems
+   */
+  private async processWithEnterpriseSystems(): Promise<void> {
+    try {
+      // Process with alerting system
+      if (this.alertingSystem) {
+        const alerts = this.checkAlerts(this.metrics);
+        await this.alertingSystem.processMetrics(this.metrics, []);
+      }
+
+      // Process with analytics engine
+      if (this.analyticsEngine) {
+        const recentHistory = this.getHistory(10);
+        await this.analyticsEngine.processData(recentHistory);
+      }
+    } catch (error) {
+      console.error('Enterprise systems processing failed:', error);
     }
   }
 
@@ -680,6 +729,244 @@ export class PerformanceMonitor {
       this.intervalId = null;
     }
   }
+
+  // Enterprise Methods
+
+  /**
+   * Initialize enterprise features
+   */
+  private async initializeEnterpriseFeatures(): Promise<void> {
+    try {
+      // Initialize AI Integration
+      if (this.enterpriseConfig.ai?.enabled) {
+        const { AIIntegrationManager } = await import('../utils/AIIntegration');
+        this.aiIntegration = new AIIntegrationManager(this.enterpriseConfig.ai);
+        await this.aiIntegration.initialize();
+      }
+
+      // Initialize Alerting System
+      if (this.enterpriseConfig.alerting?.enabled) {
+        const { AlertingSystem } = await import('../utils/AlertingSystem');
+        this.alertingSystem = new AlertingSystem(this.enterpriseConfig.alerting);
+      }
+
+      // Initialize Analytics Engine
+      if (this.enterpriseConfig.analytics?.enabled) {
+        const { AnalyticsEngine } = await import('../utils/AnalyticsEngine');
+        this.analyticsEngine = new AnalyticsEngine(this.enterpriseConfig.analytics);
+      }
+
+      console.log('🏢 Enterprise features initialized');
+    } catch (error) {
+      console.error('Failed to initialize enterprise features:', error);
+    }
+  }
+
+  /**
+   * Dispose enterprise features
+   */
+  private disposeEnterpriseFeatures(): void {
+    if (this.aiIntegration) {
+      this.aiIntegration.dispose();
+      this.aiIntegration = undefined;
+    }
+
+    if (this.alertingSystem) {
+      this.alertingSystem.dispose();
+      this.alertingSystem = undefined;
+    }
+
+    if (this.analyticsEngine) {
+      this.analyticsEngine.dispose();
+      this.analyticsEngine = undefined;
+    }
+  }
+
+  /**
+   * Get enterprise metrics
+   */
+  private getEnterpriseMetrics(): any {
+    return {
+      aiEnabled: !!this.aiIntegration,
+      alertingEnabled: !!this.alertingSystem,
+      analyticsEnabled: !!this.analyticsEngine,
+      enterpriseConfig: this.enterpriseConfig,
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Get AI insights
+   */
+  async getAIInsights(): Promise<any[]> {
+    if (!this.aiIntegration) return [];
+    return this.aiIntegration.getInsights();
+  }
+
+  /**
+   * Get AI predictions
+   */
+  async getAIPredictions(): Promise<any[]> {
+    if (!this.aiIntegration) return [];
+    return this.aiIntegration.getPredictions();
+  }
+
+  /**
+   * Perform AI optimization
+   */
+  async performAIOptimization(): Promise<any> {
+    if (!this.aiIntegration) {
+      throw new Error('AI Integration not available');
+    }
+    return this.aiIntegration.performOptimization(this.metrics);
+  }
+
+  /**
+   * Get alerting statistics
+   */
+  getAlertingStats(): any {
+    if (!this.alertingSystem) return null;
+    return this.alertingSystem.getStatistics();
+  }
+
+  /**
+   * Get active alerts
+   */
+  getActiveAlerts(): any[] {
+    if (!this.alertingSystem) return [];
+    return this.alertingSystem.getActiveAlerts();
+  }
+
+  /**
+   * Acknowledge alert
+   */
+  async acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<boolean> {
+    if (!this.alertingSystem) return false;
+    return this.alertingSystem.acknowledgeAlert(alertId, acknowledgedBy);
+  }
+
+  /**
+   * Resolve alert
+   */
+  async resolveAlert(alertId: string): Promise<boolean> {
+    if (!this.alertingSystem) return false;
+    return this.alertingSystem.resolveAlert(alertId);
+  }
+
+  /**
+   * Get analytics statistics
+   */
+  getAnalyticsStats(): any {
+    if (!this.analyticsEngine) return null;
+    return this.analyticsEngine.getStatistics();
+  }
+
+  /**
+   * Generate analytics report
+   */
+  async generateAnalyticsReport(type: string = 'summary'): Promise<any> {
+    if (!this.analyticsEngine) return null;
+    return this.analyticsEngine.generateReport(type);
+  }
+
+  /**
+   * Export analytics data
+   */
+  async exportAnalyticsData(format: string): Promise<Blob> {
+    if (!this.analyticsEngine) {
+      throw new Error('Analytics Engine not available');
+    }
+    return this.analyticsEngine.exportData(format);
+  }
+
+  /**
+   * Update enterprise configuration
+   */
+  updateEnterpriseConfig(newConfig: Partial<EnterpriseConfig>): void {
+    this.enterpriseConfig = { ...this.enterpriseConfig, ...newConfig };
+    
+    // Update individual systems
+    if (this.aiIntegration && newConfig.ai) {
+      this.aiIntegration.updateConfig(newConfig.ai);
+    }
+    
+    if (this.alertingSystem && newConfig.alerting) {
+      this.alertingSystem.updateConfig(newConfig.alerting);
+    }
+    
+    if (this.analyticsEngine && newConfig.analytics) {
+      this.analyticsEngine.updateConfig(newConfig.analytics);
+    }
+  }
+
+  /**
+   * Get default enterprise configuration
+   */
+  private getDefaultEnterpriseConfig(): EnterpriseConfig {
+    return {
+      ai: {
+        enabled: false,
+        enableRealTimeOptimization: true,
+        enablePredictiveAnalytics: true,
+        enableIntelligentAlerts: true,
+        optimizationThreshold: 0.1,
+        predictionInterval: 30000,
+        alertSensitivity: 'medium'
+      },
+      alerting: {
+        enabled: false,
+        channels: [],
+        rules: [],
+        escalation: {
+          enabled: false,
+          levels: [],
+          maxEscalations: 3,
+          escalationDelay: 300000
+        },
+        rateLimiting: {
+          enabled: true,
+          maxAlertsPerMinute: 10,
+          maxAlertsPerHour: 100,
+          maxAlertsPerDay: 1000,
+          burstLimit: 20
+        },
+        retention: {
+          alertHistoryDays: 30,
+          metricsRetentionDays: 90,
+          logRetentionDays: 7,
+          archiveEnabled: true
+        },
+        integrations: []
+      },
+      analytics: {
+        enabled: false,
+        dataRetention: {
+          metrics: 90,
+          reports: 365,
+          insights: 30
+        },
+        aggregation: {
+          intervals: [1, 5, 15, 60],
+          methods: ['avg', 'max', 'min', 'sum', 'count', 'percentile']
+        },
+        reporting: {
+          autoGenerate: false,
+          schedule: '0 0 * * *',
+          formats: ['json', 'html']
+        },
+        visualization: {
+          chartTypes: ['line', 'bar', 'pie', 'heatmap'],
+          colorSchemes: ['default', 'dark', 'light'],
+          themes: ['modern', 'classic', 'minimal']
+        },
+        export: {
+          enabled: true,
+          formats: ['json', 'csv', 'pdf', 'html'],
+          compression: true
+        }
+      }
+    };
+  }
 }
 
 // Type definitions
@@ -687,6 +974,36 @@ export interface PerformanceMonitorConfig {
   collectionInterval?: number;
   maxHistorySize?: number;
   thresholds?: Partial<PerformanceThresholds>;
+  enterprise?: EnterpriseConfig;
+}
+
+export interface EnterpriseConfig {
+  ai?: {
+    enabled: boolean;
+    enableRealTimeOptimization?: boolean;
+    enablePredictiveAnalytics?: boolean;
+    enableIntelligentAlerts?: boolean;
+    optimizationThreshold?: number;
+    predictionInterval?: number;
+    alertSensitivity?: 'low' | 'medium' | 'high';
+  };
+  alerting?: {
+    enabled: boolean;
+    channels: any[];
+    rules: any[];
+    escalation: any;
+    rateLimiting: any;
+    retention: any;
+    integrations: any[];
+  };
+  analytics?: {
+    enabled: boolean;
+    dataRetention: any;
+    aggregation: any;
+    reporting: any;
+    visualization: any;
+    export: any;
+  };
 }
 
 export interface PerformanceMetrics {
@@ -787,6 +1104,10 @@ export interface PerformanceReport {
   alerts: PerformanceAlert[];
   recommendations: string[];
   historicalData: PerformanceSnapshot[];
+  // Enterprise features
+  aiInsights?: any[];
+  analytics?: any;
+  enterpriseMetrics?: any;
 }
 
 export interface PerformanceSummary {

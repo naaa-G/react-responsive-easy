@@ -6,6 +6,7 @@ import { AlertsPanel } from './AlertsPanel';
 import { RecommendationsPanel } from './RecommendationsPanel';
 import { HistoricalView } from './HistoricalView';
 import { ResponsiveElementsView } from './ResponsiveElementsView';
+import { VisualizationManager } from './visualizations/VisualizationManager';
 
 /**
  * Main Performance Dashboard Component
@@ -66,8 +67,8 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   }, [monitor, isMonitoring]);
 
   // Generate report
-  const generateReport = useCallback(() => {
-    const newReport = monitor.generateReport();
+  const generateReport = useCallback(async () => {
+    const newReport = await monitor.generateReport();
     setReport(newReport);
   }, [monitor]);
 
@@ -223,6 +224,27 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
           />
         );
 
+      case 'visualizations':
+        return (
+          <VisualizationManager
+            metrics={metrics}
+            history={monitor.getHistory()}
+            theme={theme}
+            onVisualizationChange={(type) => {
+              console.log('Visualization changed:', type);
+            }}
+            onDataExport={(format, data) => {
+              console.log('Data export:', format, data);
+            }}
+            onLayoutSave={(layout) => {
+              console.log('Layout saved:', layout);
+            }}
+            onLayoutLoad={(layoutId) => {
+              console.log('Layout loaded:', layoutId);
+            }}
+          />
+        );
+
       default:
         return null;
     }
@@ -331,6 +353,13 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
         >
           💡 Recommendations
         </button>
+        
+        <button
+          className={`nav-button ${selectedView === 'visualizations' ? 'active' : ''}`}
+          onClick={() => setSelectedView('visualizations')}
+        >
+          🎨 Visualizations
+        </button>
       </div>
 
       {/* Content */}
@@ -375,6 +404,7 @@ export type DashboardView =
   | 'elements' 
   | 'historical' 
   | 'alerts' 
-  | 'recommendations';
+  | 'recommendations'
+  | 'visualizations';
 
 export default PerformanceDashboard;

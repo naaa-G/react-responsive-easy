@@ -18,7 +18,8 @@ export type {
   PerformanceThresholds,
   LayoutShiftEntry,
   LayoutShiftSource,
-  SlowRequest
+  SlowRequest,
+  EnterpriseConfig
 } from './core/PerformanceMonitor';
 
 // Component exports
@@ -29,6 +30,60 @@ export { AlertsPanel } from './components/AlertsPanel';
 export { RecommendationsPanel } from './components/RecommendationsPanel';
 export { HistoricalView } from './components/HistoricalView';
 export { ResponsiveElementsView } from './components/ResponsiveElementsView';
+
+// Advanced Visualizations
+export { 
+  InteractiveCharts, 
+  PerformanceHeatmap, 
+  CustomLayouts, 
+  VisualizationManager 
+} from './components/visualizations';
+
+// Optimization Components
+export { 
+  Skeleton,
+  ChartSkeleton,
+  MetricsSkeleton,
+  HeatmapSkeleton,
+  DashboardSkeleton,
+  TableSkeleton,
+  LoadingSpinner,
+  LoadingOverlay
+} from './components/common/LoadingSkeleton';
+
+export { useDataCache } from './hooks/useDataCache';
+export { 
+  useErrorBoundary,
+  withErrorBoundary,
+  DefaultErrorFallback
+} from './hooks/useErrorBoundary';
+
+// High-priority enterprise features
+export { 
+  useVirtualScrolling, 
+  useDynamicItemHeights, 
+  useWindowing 
+} from './hooks/useVirtualScrolling';
+export { 
+  useRealTimeCollaboration, 
+  useCollaborativeCursors, 
+  useCollaborativeSelections 
+} from './hooks/useRealTimeCollaboration';
+export { 
+  useAdvancedML, 
+  useRealTimeMLAnalysis 
+} from './hooks/useAdvancedML';
+export { PluginManager } from './plugins/PluginManager';
+export { 
+  usePluginManager, 
+  usePlugin, 
+  usePluginRegistry, 
+  usePluginDevelopment 
+} from './hooks/usePluginManager';
+export { 
+  VirtualScrollingList, 
+  useVirtualScrollingList 
+} from './components/visualizations/VirtualScrollingList';
 
 // Component prop types
 export type {
@@ -44,6 +99,114 @@ export type { AlertsPanelProps } from './components/AlertsPanel';
 export type { RecommendationsPanelProps } from './components/RecommendationsPanel';
 export type { HistoricalViewProps } from './components/HistoricalView';
 export type { ResponsiveElementsViewProps } from './components/ResponsiveElementsView';
+
+// Visualization prop types
+export type {
+  InteractiveChartsProps,
+  PerformanceHeatmapProps,
+  CustomLayoutsProps,
+  VisualizationManagerProps,
+  VisualizationType,
+  ExportFormat,
+  VisualizationConfig,
+  HeatmapCellData,
+  WidgetConfig,
+  WidgetSize,
+  WidgetPosition,
+  DashboardLayout
+} from './components/visualizations';
+
+// High-priority enterprise feature types
+export type {
+  VirtualScrollingOptions,
+  VirtualScrollingState,
+  VirtualScrollingActions,
+  VirtualScrollingRef
+} from './hooks/useVirtualScrolling';
+
+export type {
+  CollaborationUser,
+  CollaborationEvent,
+  CollaborationConfig,
+  CollaborationState,
+  CollaborationActions
+} from './hooks/useRealTimeCollaboration';
+
+export type {
+  MLModel,
+  AnomalyDetectionResult,
+  PredictionResult,
+  PatternRecognitionResult,
+  MLConfig,
+  MLState,
+  MLActions
+} from './hooks/useAdvancedML';
+
+export type {
+  PluginManifest,
+  PluginConfig,
+  PluginContext,
+  PluginStorage,
+  PluginUI,
+  PluginData,
+  PluginLogger,
+  MenuItem,
+  ToolbarButton,
+  PluginInstance,
+  PluginManagerState,
+  PluginRegistry,
+  PluginManagerActions
+} from './plugins/PluginManager';
+
+export type {
+  VirtualScrollingListProps
+} from './components/visualizations/VirtualScrollingList';
+
+// Enterprise utility exports
+export { AIIntegrationManager } from './utils/AIIntegration';
+export type {
+  AIIntegrationConfig,
+  AIInsight,
+  AIAction,
+  AIPrediction,
+  AIOptimizationResult,
+  AIPerformanceAnalysis
+} from './utils/AIIntegration';
+
+export { AlertingSystem } from './utils/AlertingSystem';
+export type {
+  AlertingConfig,
+  AlertChannel,
+  AlertRule,
+  AlertCondition,
+  AlertAction,
+  AlertFilter,
+  EscalationPolicy,
+  EscalationLevel,
+  RateLimitingConfig,
+  RetentionConfig,
+  IntegrationConfig,
+  AlertEvent,
+  AlertStatistics,
+  NotificationTemplate
+} from './utils/AlertingSystem';
+
+export { AnalyticsEngine } from './utils/AnalyticsEngine';
+export type {
+  AnalyticsConfig,
+  AnalyticsData,
+  AggregatedMetrics,
+  MetricAggregation,
+  ResourceAggregation,
+  CustomMetricAggregation,
+  AnalyticsMetadata,
+  PerformanceBenchmark,
+  ComparativeAnalysis,
+  PerformanceCorrelation,
+  AnomalyDetection,
+  PerformanceForecast,
+  AnalyticsReport
+} from './utils/AnalyticsEngine';
 
 // Utility functions
 export const createPerformanceMonitor = (config?: any) => {
@@ -95,7 +258,7 @@ export const PERFORMANCE_PRESETS = {
 export const VERSION = '0.0.1';
 export const BUILD_DATE = new Date().toISOString();
 
-// Feature flags (for future extensibility)
+// Feature flags (for enterprise extensibility)
 export const FEATURES = {
   realTimeCharts: true,
   alertSystem: true,
@@ -103,6 +266,32 @@ export const FEATURES = {
   historicalAnalysis: true,
   exportData: true,
   customThresholds: true,
-  aiInsights: false, // Future feature
-  predictiveAnalytics: false // Future feature
+  aiInsights: true, // Enterprise feature
+  predictiveAnalytics: true, // Enterprise feature
+  intelligentAlerting: true, // Enterprise feature
+  advancedAnalytics: true, // Enterprise feature
+  performanceOptimization: true, // Enterprise feature
+  comparativeAnalysis: true, // Enterprise feature
+  forecasting: true, // Enterprise feature
+  multiChannelNotifications: true, // Enterprise feature
+  escalationPolicies: true, // Enterprise feature
+  dataExport: true, // Enterprise feature
+  customDashboards: true, // Enterprise feature
+  roleBasedAccess: true, // Enterprise feature
+  auditTrails: true, // Enterprise feature
+  interactiveCharts: true, // Advanced visualization feature
+  performanceHeatmaps: true, // Advanced visualization feature
+  customLayouts: true, // Advanced visualization feature
+  visualizationManager: true, // Advanced visualization feature
+  fullscreenMode: true, // Advanced visualization feature
+  realTimeInteractions: true, // Advanced visualization feature
+  virtualScrolling: true, // High-priority enterprise feature
+  realTimeCollaboration: true, // High-priority enterprise feature
+  advancedML: true, // High-priority enterprise feature
+  pluginArchitecture: true, // High-priority enterprise feature
+  dynamicItemHeights: true, // High-priority enterprise feature
+  collaborativeCursors: true, // High-priority enterprise feature
+  patternRecognition: true, // High-priority enterprise feature
+  pluginSandboxing: true, // High-priority enterprise feature
+  realTimeDataSync: true // High-priority enterprise feature
 } as const;

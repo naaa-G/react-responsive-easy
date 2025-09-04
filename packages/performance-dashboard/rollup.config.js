@@ -1,6 +1,7 @@
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import postcss from 'rollup-plugin-postcss';
 import dts from 'rollup-plugin-dts';
 import { readFileSync } from 'fs';
 
@@ -28,9 +29,16 @@ export default [
         preferBuiltins: true
       }),
       commonjs(),
+      postcss({
+        extract: true,
+        minimize: true,
+        sourceMap: true
+      }),
       typescript({
         tsconfig: './tsconfig.json',
-        exclude: ['**/*.test.ts', '**/*.test.tsx', 'dashboard/**/*']
+        exclude: ['**/*.test.ts', '**/*.test.tsx', 'dashboard/**/*'],
+        declaration: true,
+        declarationMap: true
       })
     ],
     external: [
@@ -41,11 +49,5 @@ export default [
       'socket.io-client',
       '@react-responsive-easy/core'
     ]
-  },
-  // Type definitions
-  {
-    input: 'dist/index.d.ts',
-    output: [{ file: 'dist/index.d.ts', format: 'esm' }],
-    plugins: [dts()],
   }
 ];

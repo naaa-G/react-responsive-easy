@@ -1,7 +1,7 @@
 {
   "name": "@yaseratiar/react-responsive-easy-performance-dashboard",
-  "version": "1.0.2",
-  "description": "Real-time performance monitoring dashboard for React Responsive Easy",
+  "version": "2.1.0",
+  "description": "🚀 World-class enterprise-grade real-time performance monitoring dashboard with AI integration, advanced analytics, virtual scrolling, real-time collaboration, machine learning, and plugin architecture for React Responsive Easy",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -28,11 +28,39 @@
     "performance",
     "monitoring",
     "dashboard",
-    "analytics"
+    "analytics",
+    "enterprise",
+    "ai",
+    "machine-learning",
+    "alerting",
+    "real-time",
+    "predictive-analytics",
+    "anomaly-detection",
+    "optimization",
+    "visualization",
+    "reporting",
+    "virtual-scrolling",
+    "collaboration",
+    "websocket",
+    "plugin-architecture",
+    "postcss",
+    "enterprise-grade",
+    "world-class",
+    "production-ready"
   ],
   "author": "naa-G",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naa-G/react-responsive-easy.git",
+    "directory": "packages/performance-dashboard"
+  },
+  "homepage": "https://github.com/naa-G/react-responsive-easy#readme",
+  "bugs": {
+    "url": "https://github.com/naa-G/react-responsive-easy/issues"
+  },
   "dependencies": {
+    "@yaseratiar/react-responsive-easy-ai-optimizer": "workspace:*",
     "@yaseratiar/react-responsive-easy-core": "workspace:*",
     "chart.js": "^4.4.1",
     "chartjs-adapter-date-fns": "^3.0.0",
@@ -43,19 +71,23 @@
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.1.1",
+    "autoprefixer": "^10.4.21",
+    "events": "^3.3.0",
+    "postcss": "^8.5.6",
     "rollup": "^4.9.4",
-    "@rollup/plugin-typescript": "^11.1.5",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-commonjs": "^25.0.7",
     "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-postcss": "^4.0.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
-    "vitest": "^1.1.1",
-    "@vitest/coverage-v8": "^1.1.1"
+    "vitest": "^1.1.1"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
