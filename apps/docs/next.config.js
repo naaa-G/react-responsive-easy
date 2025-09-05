@@ -1,22 +1,26 @@
-const withMDX = require('@next/mdx')({
-  extension: /\.mdx?$/,
-  options: {
-    remarkPlugins: [
-      require('remark-gfm'),
-      require('remark-prism')
-    ],
-    rehypePlugins: [
-      require('rehype-slug'),
-      require('rehype-autolink-headings'),
-      require('rehype-code-titles')
-    ],
-    providerImportSource: '@mdx-js/react'
-  }
-});
+// Dynamic imports for ESM modules
+const createMDXConfig = async () => {
+  const { default: remarkGfm } = await import('remark-gfm');
+  const { default: remarkPrism } = await import('remark-prism');
+  const { default: rehypeSlug } = await import('rehype-slug');
+  const { default: rehypeAutolinkHeadings } = await import('rehype-autolink-headings');
+  const { default: rehypeCodeTitles } = await import('rehype-code-titles');
+  
+  const withMDX = require('@next/mdx')({
+    extension: /\.mdx?$/,
+    options: {
+      remarkPlugins: [remarkGfm, remarkPrism],
+      rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings, rehypeCodeTitles],
+      providerImportSource: '@mdx-js/react'
+    }
+  });
 
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true'
-});
+  const withBundleAnalyzer = require('@next/bundle-analyzer')({
+    enabled: process.env.ANALYZE === 'true'
+  });
+
+  return { withMDX, withBundleAnalyzer };
+};
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -133,4 +137,8 @@ const nextConfig = {
   }
 };
 
-module.exports = withBundleAnalyzer(withMDX(nextConfig));
+// Export the configuration as an async function
+module.exports = async () => {
+  const { withMDX, withBundleAnalyzer } = await createMDXConfig();
+  return withBundleAnalyzer(withMDX(nextConfig));
+};
