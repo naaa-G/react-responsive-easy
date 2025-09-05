@@ -162,28 +162,38 @@ class ContentScript {
   private injectDebuggerScript(): void {
     if (this.isInjected) return;
 
-    // Inject CSS styles
-    this.injectStyles();
+    try {
+      // Inject CSS styles
+      this.injectStyles();
 
-    // Create and inject the debugger script
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('injected-script.js');
-    script.onload = () => {
-      this.isInjected = true;
-      console.log('🔍 Debugger script injected successfully');
-    };
-    
-    (document.head || document.documentElement).appendChild(script);
+      // Create and inject the debugger script
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL('injected-script.js');
+      script.onload = () => {
+        this.isInjected = true;
+        console.log('🔍 Debugger script injected successfully');
+      };
+      
+      (document.head || document.documentElement).appendChild(script);
+    } catch (error) {
+      console.error('Failed to inject debugger script:', error);
+      // Don't rethrow to prevent breaking the extension
+    }
   }
 
   /**
    * Inject CSS styles for the debugger
    */
   private injectStyles(): void {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = chrome.runtime.getURL('overlay-styles.css');
-    (document.head || document.documentElement).appendChild(link);
+    try {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = chrome.runtime.getURL('overlay-styles.css');
+      (document.head || document.documentElement).appendChild(link);
+    } catch (error) {
+      console.error('Failed to inject styles:', error);
+      // Don't rethrow to prevent breaking the extension
+    }
   }
 
   /**
@@ -192,7 +202,17 @@ class ContentScript {
   private detectResponsiveEasy(): void {
     // Check for React Responsive Easy context or components
     const hasContext = !!(window as any).__RRE_DEBUG_CONTEXT__;
-    const hasResponsiveElements = document.querySelectorAll('[data-responsive]').length > 0;
+    
+    // Safely check for responsive elements with error handling
+    let hasResponsiveElements = false;
+    try {
+      const elements = document.querySelectorAll('[data-responsive]');
+      hasResponsiveElements = elements && elements.length > 0;
+    } catch (error) {
+      console.warn('Failed to query responsive elements:', error);
+      hasResponsiveElements = false;
+    }
+    
     const hasReactFiber = !!(window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
     if (hasContext || hasResponsiveElements) {
@@ -216,8 +236,19 @@ class ContentScript {
    * Check if React Responsive Easy is present
    */
   private hasResponsiveEasy(): boolean {
-    return !!(window as any).__RRE_DEBUG_CONTEXT__ || 
-           document.querySelectorAll('[data-responsive]').length > 0;
+    const hasContext = !!(window as any).__RRE_DEBUG_CONTEXT__;
+    
+    // Safely check for responsive elements with error handling
+    let hasResponsiveElements = false;
+    try {
+      const elements = document.querySelectorAll('[data-responsive]');
+      hasResponsiveElements = elements && elements.length > 0;
+    } catch (error) {
+      console.warn('Failed to query responsive elements in hasResponsiveEasy:', error);
+      hasResponsiveElements = false;
+    }
+    
+    return hasContext || hasResponsiveElements;
   }
 
   /**
@@ -226,7 +257,16 @@ class ContentScript {
   private setupPeriodicChecks(): void {
     // Check every 5 seconds for new responsive elements
     setInterval(() => {
-      const elementCount = document.querySelectorAll('[data-responsive]').length;
+      // Safely get element count with error handling
+      let elementCount = 0;
+      try {
+        const elements = document.querySelectorAll('[data-responsive]');
+        elementCount = elements && elements.length ? elements.length : 0;
+      } catch (error) {
+        console.warn('Failed to query responsive elements in periodic check:', error);
+        elementCount = 0;
+      }
+      
       const previousCount = this.debugger?.getResponsiveElements().length || 0;
       
       if (elementCount !== previousCount) {
