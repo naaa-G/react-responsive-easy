@@ -43,7 +43,16 @@ export default defineConfig({
     },
     testTimeout: 30000, // 30 seconds for performance tests
     hookTimeout: 30000,
-    teardownTimeout: 30000
+    teardownTimeout: 30000,
+    // Suppress console output during tests for cleaner output
+    silent: true,
+    // Only show console output for errors
+    onConsoleLog(log, type) {
+      if (type === 'stderr') {
+        return false; // Show errors
+      }
+      return true; // Suppress other console output
+    }
   },
   resolve: {
     alias: {
