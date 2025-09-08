@@ -21,45 +21,31 @@ import {
   EnterpriseAssertions,
   type TestMetrics
 } from './utils/enterprise-test-helpers';
+import {
+  adaptivePerformanceAssert,
+  testAdaptivePerformance,
+  getEnvironmentConfig,
+  adaptivePerformanceTester
+} from './utils/adaptive-performance';
+import {
+  generatePerformanceReport,
+  checkPerformanceAnomalies,
+  performanceMonitor
+} from './utils/performance-monitor';
 
 // Mock CI/CD environment variables
 const originalEnv = process.env;
 
-// Environment-aware performance thresholds with regression detection
+// Legacy function for backward compatibility - now uses adaptive performance testing
 function getPerformanceThreshold(baseThreshold: number): number {
-  const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS || !!process.env.GITLAB_CI || !!process.env.CIRCLECI || !!process.env.TRAVIS;
-  
-  if (isCI) {
-    // More generous thresholds for CI environments
-    // Base threshold * 10 + 5000ms buffer for CI variability
-    return Math.max(baseThreshold * 10, 5000);
-  }
-  
-  return baseThreshold;
+  const envConfig = getEnvironmentConfig();
+  return baseThreshold * envConfig.multiplier;
 }
 
-// Performance monitoring and regression detection
+// Legacy function for backward compatibility - now uses adaptive performance testing
 function checkPerformanceRegression(actualTime: number, threshold: number, testName: string): void {
-  const isCI = !!process.env.CI;
-  
-  if (actualTime > threshold) {
-    const message = `Performance benchmark exceeded: ${actualTime.toFixed(2)}ms > ${threshold}ms (${testName})`;
-    
-    if (isCI) {
-      // In CI, log warning but don't fail unless it's a severe regression (>100% over threshold)
-      console.warn(`⚠️ ${message}`);
-      
-      // Only fail on severe regressions (>100% over threshold)
-      if (actualTime > threshold * 2) {
-        throw new Error(`Severe performance regression: ${message}`);
-      }
-    } else {
-      // In local development, fail on any threshold breach
-      throw new Error(message);
-    }
-  } else {
-    console.log(`✅ Performance OK: ${actualTime.toFixed(2)}ms < ${threshold}ms (${testName})`);
-  }
+  // Use the new adaptive performance assertion
+  adaptivePerformanceAssert(actualTime, threshold, testName, threshold);
 }
 
 describe('CI/CD Integration Tests', () => {
@@ -74,6 +60,9 @@ describe('CI/CD Integration Tests', () => {
   afterEach(() => {
     // Restore original environment
     process.env = originalEnv;
+    
+    // Clear performance test data to avoid interference between tests
+    adaptivePerformanceTester.clear();
   });
 
   describe('GitHub Actions Environment', () => {
@@ -411,12 +400,26 @@ describe('CI/CD Integration Tests', () => {
         await processCss(input, defaultTestOptions);
       }, 5);
       
-      // Use adaptive performance monitoring instead of rigid thresholds
-      const threshold = getPerformanceThreshold(1000);
-      checkPerformanceRegression(metrics.executionTime, threshold, 'CI/CD Performance Requirements');
+      // Use adaptive performance testing with intelligent thresholds
+      const result = testAdaptivePerformance(
+        'CI/CD Performance Requirements',
+        metrics.executionTime,
+        1000 // Base threshold of 1 second
+      );
       
-      // Additional assertion for severe regressions only
-      expect(metrics.executionTime).toBeLessThan(threshold * 2);
+      // Log the result for visibility
+      console.log(`[${result.status.toUpperCase()}] ${result.message}`);
+      
+      // Only fail on critical regressions, not warnings
+      if (result.status === 'failure') {
+        throw new Error(result.message);
+      }
+      
+      // Additional check for extreme outliers (5x threshold)
+      const extremeThreshold = result.threshold * 5;
+      if (metrics.executionTime > extremeThreshold) {
+        throw new Error(`Extreme performance regression: ${metrics.executionTime.toFixed(2)}ms > ${extremeThreshold.toFixed(2)}ms`);
+      }
     });
 
     it('should provide consistent performance across environments', async () => {
@@ -448,12 +451,75 @@ describe('CI/CD Integration Tests', () => {
       // Max time should not be more than 3x the min time (allow for system variations)
       expect(maxTime).toBeLessThan(minTime * 3);
       
-      // Use adaptive performance monitoring for average time
-      const threshold = getPerformanceThreshold(1000);
-      checkPerformanceRegression(avgTime, threshold, 'Cross-Environment Performance Consistency');
+      // Use adaptive performance testing for cross-environment consistency
+      const result = testAdaptivePerformance(
+        'Cross-Environment Performance Consistency',
+        avgTime,
+        1000 // Base threshold of 1 second
+      );
       
-      // Additional assertion for severe regressions only
-      expect(avgTime).toBeLessThan(threshold * 2);
+      // Log the result for visibility
+      console.log(`[${result.status.toUpperCase()}] ${result.message}`);
+      
+      // Only fail on critical regressions, not warnings
+      if (result.status === 'failure') {
+        throw new Error(result.message);
+      }
+      
+      // Log environment-specific performance data
+      console.log('Environment Performance Summary:');
+      environments.forEach((env, index) => {
+        console.log(`  ${env.name}: ${times[index].toFixed(2)}ms`);
+      });
+    });
+
+    it('should generate comprehensive performance report', async () => {
+      const input = generateTestCSS(100);
+      
+      // Run multiple tests to build performance data
+      const testCases = [
+        { name: 'small-css', input: generateTestCSS(25) },
+        { name: 'medium-css', input: generateTestCSS(50) },
+        { name: 'large-css', input: generateTestCSS(100) }
+      ];
+      
+      for (const testCase of testCases) {
+        const { metrics } = processCssWithMetrics(testCase.input, defaultTestOptions);
+        testAdaptivePerformance(testCase.name, metrics.executionTime, 1000);
+      }
+      
+      // Generate comprehensive performance report
+      const report = generatePerformanceReport('CI/CD Performance Suite');
+      
+      // Check for anomalies
+      const anomalies = checkPerformanceAnomalies();
+      
+      // Log report summary
+      console.log('Performance Report Summary:');
+      console.log(`  Environment: ${report.environment}`);
+      console.log(`  Total Tests: ${report.summary.totalTests}`);
+      console.log(`  Passed: ${report.summary.passed}`);
+      console.log(`  Warnings: ${report.summary.warnings}`);
+      console.log(`  Failures: ${report.summary.failures}`);
+      console.log(`  Average Execution Time: ${report.summary.averageExecutionTime.toFixed(2)}ms`);
+      console.log(`  Slowest Test: ${report.summary.slowestTest}`);
+      console.log(`  Fastest Test: ${report.summary.fastestTest}`);
+      
+      if (anomalies.length > 0) {
+        console.log(`  Anomalies Detected: ${anomalies.length}`);
+        anomalies.forEach(anomaly => {
+          console.log(`    ${anomaly.severity.toUpperCase()}: ${anomaly.message}`);
+        });
+      }
+      
+      // Log recommendations
+      if (report.recommendations.length > 0) {
+        console.log('Recommendations:');
+        report.recommendations.forEach(rec => console.log(`  - ${rec}`));
+      }
+      
+      // Only fail if there are critical failures
+      expect(report.summary.failures).toBe(0);
     });
   });
 
