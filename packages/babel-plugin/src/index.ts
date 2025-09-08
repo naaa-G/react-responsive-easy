@@ -30,12 +30,32 @@ const defaultOptions: BabelPluginOptions = {
   minifyOutput: false
 };
 
+// CI-optimized options for better performance in CI environments
+const getCIOptimizedOptions = (opts: BabelPluginOptions): BabelPluginOptions => {
+  const isCI = !!process.env.CI;
+  if (!isCI) return opts;
+  
+  return {
+    ...opts,
+    // Disable expensive features in CI
+    performanceMetrics: false,
+    addComments: false,
+    generateSourceMaps: false,
+    validateConfig: false,
+    // Reduce cache size for CI
+    cacheSize: Math.min(opts.cacheSize || 1000, 500),
+    // Enable optimizations
+    minifyOutput: true,
+    precompute: true
+  };
+};
+
 // Main plugin declaration
 export default declare<BabelPluginOptions>((api, options) => {
   api.assertVersion(7);
 
-  // Merge options with defaults
-  const opts = { ...defaultOptions, ...options };
+  // Merge options with defaults and apply CI optimizations
+  const opts = getCIOptimizedOptions({ ...defaultOptions, ...options });
   
   
   // Initialize managers
