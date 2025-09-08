@@ -136,27 +136,50 @@ describe('AIOptimizer Unit Tests', () => {
     });
 
     it('should train model with training data', async () => {
-      const trainingData = [{
-        features: {
-          config: { breakpointCount: 3, breakpointRatios: [0.4, 0.53, 1], tokenComplexity: 12, originDistribution: { width: 1, height: 0, min: 0, max: 0, diagonal: 0, area: 0 } },
-          usage: { commonValues: [16, 14, 15], valueDistributions: {}, componentFrequencies: { Button: 1 }, propertyPatterns: { fontSize: 1 } },
-          performance: { avgRenderTimes: [2.5, 2.5, 2.5, 2.5, 2.5], bundleSizes: [5120, 5120, 5120, 5120, 5120], memoryPatterns: [1024, 1024, 1024, 1024, 1024], layoutShiftFreq: [0.01, 0.01, 0.01, 0.01, 0.01] },
-          context: { applicationType: 'general', deviceDistribution: { desktop: 1, tablet: 0, mobile: 0, other: 0 }, userBehavior: { engagement: 0.85, accessibility: 95, performance: 0 }, industry: 'general' }
+      const trainingData = [
+        {
+          features: {
+            config: { breakpointCount: 3, breakpointRatios: [0.4, 0.53, 1], tokenComplexity: 12, originDistribution: { width: 1, height: 0, min: 0, max: 0, diagonal: 0, area: 0 } },
+            usage: { commonValues: [16, 14, 15], valueDistributions: {}, componentFrequencies: { Button: 1 }, propertyPatterns: { fontSize: 1 } },
+            performance: { avgRenderTimes: [2.5, 2.5, 2.5, 2.5, 2.5], bundleSizes: [5120, 5120, 5120, 5120, 5120], memoryPatterns: [1024, 1024, 1024, 1024, 1024], layoutShiftFreq: [0.01, 0.01, 0.01, 0.01, 0.01] },
+            context: { applicationType: 'general', deviceDistribution: { desktop: 1, tablet: 0, mobile: 0, other: 0 }, userBehavior: { engagement: 0.85, accessibility: 95, performance: 0 }, industry: 'general' }
+          },
+          labels: {
+            optimalTokens: {},
+            performanceScores: {},
+            satisfactionRatings: [95],
+            accessibilityScores: {}
+          },
+          metadata: {
+            timestamp: new Date(),
+            source: 'test',
+            qualityScore: 0.9,
+            sampleSize: 1,
+            region: 'test'
+          }
         },
-        labels: {
-          optimalTokens: {},
-          performanceScores: {},
-          satisfactionRatings: [95],
-          accessibilityScores: {}
-        },
-        metadata: {
-          timestamp: new Date(),
-          source: 'test',
-          qualityScore: 0.9,
-          sampleSize: 1,
-          region: 'test'
+        {
+          features: {
+            config: { breakpointCount: 4, breakpointRatios: [0.3, 0.5, 0.7, 1], tokenComplexity: 15, originDistribution: { width: 0.8, height: 0.2, min: 0, max: 0, diagonal: 0, area: 0 } },
+            usage: { commonValues: [20, 18, 22], valueDistributions: {}, componentFrequencies: { Card: 1 }, propertyPatterns: { padding: 1 } },
+            performance: { avgRenderTimes: [3.1, 3.1, 3.1, 3.1, 3.1], bundleSizes: [6144, 6144, 6144, 6144, 6144], memoryPatterns: [1280, 1280, 1280, 1280, 1280], layoutShiftFreq: [0.02, 0.02, 0.02, 0.02, 0.02] },
+            context: { applicationType: 'ecommerce', deviceDistribution: { desktop: 0.7, tablet: 0.2, mobile: 0.1, other: 0 }, userBehavior: { engagement: 0.92, accessibility: 98, performance: 0 }, industry: 'ecommerce' }
+          },
+          labels: {
+            optimalTokens: {},
+            performanceScores: {},
+            satisfactionRatings: [98],
+            accessibilityScores: {}
+          },
+          metadata: {
+            timestamp: new Date(),
+            source: 'test',
+            qualityScore: 0.95,
+            sampleSize: 1,
+            region: 'test'
+          }
         }
-      }];
+      ];
 
       const metrics = await optimizer.trainModel(trainingData);
       
