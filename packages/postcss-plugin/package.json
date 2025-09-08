@@ -22,6 +22,15 @@
     "dev": "rollup -c -w",
     "test": "vitest",
     "test:watch": "vitest --watch",
+    "test:unit": "vitest --grep \"Unit Tests\"",
+    "test:integration": "vitest --grep \"Integration Tests\"",
+    "test:performance": "vitest --grep \"Performance Tests\"",
+    "test:stress": "vitest --grep \"Stress Tests\"",
+    "test:ci-cd": "vitest --grep \"CI/CD\"",
+    "test:snapshot": "vitest --grep \"Snapshot Tests\"",
+    "test:error": "vitest --grep \"Error Handling\"",
+    "test:coverage": "vitest --coverage",
+    "test:debug": "DEBUG_TESTS=true vitest",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rimraf dist"
@@ -39,16 +48,16 @@
   "author": "naa-G",
   "license": "MIT",
   "dependencies": {
+    "@yaseratiar/react-responsive-easy-core": "workspace:*",
     "postcss": "^8.4.0",
-    "postcss-value-parser": "^4.2.0",
-    "@yaseratiar/react-responsive-easy-core": "workspace:*"
+    "postcss-value-parser": "^4.2.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
     "@rollup/plugin-typescript": "^11.1.0",
-
     "@types/node": "^20.0.0",
+    "@vitest/ui": "^3.2.4",
     "rimraf": "^5.0.5",
     "rollup": "^4.0.0",
     "rollup-plugin-dts": "^6.0.0",

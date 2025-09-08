@@ -6,315 +6,242 @@
  */
 
 import { declare } from '@babel/helper-plugin-utils';
-import type { PluginObj, PluginPass } from '@babel/core';
-import type * as t from '@babel/types';
+import type { PluginObj } from '@babel/core';
+import { configManager } from './config-manager';
+import { cacheManager } from './cache-manager';
+import { ScalingEngine } from './scaling-engine';
+import { HookTransformers } from './hook-transformers';
+import type { BabelPluginOptions, PluginState, ResponsiveConfig, TransformContext, PerformanceMetrics } from './types';
 
-// Plugin options interface
-interface BabelPluginOptions {
-  /** Path to the RRE configuration file */
-  configPath?: string;
-  /** Enable build-time pre-computation */
-  precompute?: boolean;
-  /** Enable CSS custom properties generation */
-  generateCSSProps?: boolean;
-  /** Enable development mode with extra debugging */
-  development?: boolean;
-  /** Custom import source for RRE hooks */
-  importSource?: string;
-}
-
-// Mock configuration for now - will be replaced with actual config loading
-const mockConfig = {
-  base: { name: 'desktop', width: 1920, height: 1080, alias: 'base' },
-  breakpoints: [
-    { name: 'mobile', width: 390, height: 844, alias: 'mobile' },
-    { name: 'tablet', width: 768, height: 1024, alias: 'tablet' },
-    { name: 'laptop', width: 1366, height: 768, alias: 'laptop' },
-    { name: 'desktop', width: 1920, height: 1080, alias: 'base' }
-  ],
-  strategy: {
-    origin: 'width' as const,
-    tokens: {
-      fontSize: { scale: 0.85, min: 12, max: 22 },
-      spacing: { scale: 0.85, step: 2 },
-      radius: { scale: 0.9 }
-    },
-    rounding: { mode: 'nearest' as const, precision: 0.5 }
-  }
+// Default plugin options
+const defaultOptions: BabelPluginOptions = {
+  precompute: true,
+  development: false,
+  generateCSSProps: false,
+  importSource: 'react-responsive-easy',
+  enableCaching: true,
+  cacheSize: 1000,
+  enableMemoization: true,
+  addComments: false,
+  validateConfig: false,
+  performanceMetrics: false,
+  generateSourceMaps: true,
+  preserveTypeInfo: true,
+  minifyOutput: false
 };
-
-// Scaling function - simplified version of the core scaling engine
-function scaleValue(
-  baseValue: number,
-  fromBreakpoint: typeof mockConfig.base,
-  toBreakpoint: typeof mockConfig.breakpoints[0],
-  token?: string
-): number {
-  const fromSize = fromBreakpoint.width;
-  const toSize = toBreakpoint.width;
-  const ratio = toSize / fromSize;
-  
-  let scaledValue = baseValue * ratio;
-  
-  // Apply token-specific rules
-  if (token && mockConfig.strategy.tokens[token as keyof typeof mockConfig.strategy.tokens]) {
-    const tokenConfig = mockConfig.strategy.tokens[token as keyof typeof mockConfig.strategy.tokens];
-    if (tokenConfig.scale) {
-      scaledValue = baseValue * tokenConfig.scale * ratio;
-    }
-    
-    // Apply constraints with proper type checking
-    if ('min' in tokenConfig && tokenConfig.min && scaledValue < tokenConfig.min) {
-      scaledValue = tokenConfig.min;
-    }
-    if ('max' in tokenConfig && tokenConfig.max && scaledValue > tokenConfig.max) {
-      scaledValue = tokenConfig.max;
-    }
-    if ('step' in tokenConfig && tokenConfig.step) {
-      scaledValue = Math.round(scaledValue / tokenConfig.step) * tokenConfig.step;
-    }
-  }
-  
-  // Apply rounding
-  if (mockConfig.strategy.rounding.precision) {
-    const precision = mockConfig.strategy.rounding.precision;
-    scaledValue = Math.round(scaledValue / precision) * precision;
-  }
-  
-  return scaledValue;
-}
 
 // Main plugin declaration
 export default declare<BabelPluginOptions>((api, options) => {
   api.assertVersion(7);
 
-  const {
-    configPath = 'rre.config.ts',
-    precompute = true,
-    generateCSSProps = false,
-    development = false,
-    importSource = 'react-responsive-easy'
-  } = options;
+  // Merge options with defaults
+  const opts = { ...defaultOptions, ...options };
+  
+  
+  // Initialize managers
+  const config = configManager.getConfig(opts);
+  const scalingEngine = new ScalingEngine(config);
+  const hookTransformers = new HookTransformers(scalingEngine);
+  
+  // Initialize cache if enabled
+  if (opts.enableCaching) {
+    cacheManager.clear();
+    // Set cache size limit to prevent memory issues
+    cacheManager.setMaxSize(opts.cacheSize || 1000);
+  }
+
+  // Helper function to add required imports
+  function addRequiredImports(path: any, state: PluginState, api: any, opts: BabelPluginOptions) {
+    // Get the program node
+    const program = path.findParent((p: any) => p.isProgram());
+    if (!program) return;
+    
+    // Use stored existing imports
+    const existingImports = state.existingImports || new Set<string>();
+    
+    // Add React imports if needed
+    const hasUseMemoImport = existingImports.has('useMemo:react');
+    if (!hasUseMemoImport) {
+      const reactImport = api.types.importDeclaration(
+        [api.types.importSpecifier(api.types.identifier('useMemo'), api.types.identifier('useMemo'))],
+        api.types.stringLiteral('react')
+      );
+      program.node.body.unshift(reactImport);
+      existingImports.add('useMemo:react');
+    }
+    
+    // Add RRE imports if needed
+    const hasUseBreakpointImport = existingImports.has(`useBreakpoint:${opts.importSource || 'react-responsive-easy'}`);
+    if (!hasUseBreakpointImport) {
+      const rreImport = api.types.importDeclaration(
+        [api.types.importSpecifier(api.types.identifier('useBreakpoint'), api.types.identifier('useBreakpoint'))],
+        api.types.stringLiteral(opts.importSource || 'react-responsive-easy')
+      );
+      program.node.body.unshift(rreImport);
+      existingImports.add(`useBreakpoint:${opts.importSource || 'react-responsive-easy'}`);
+    }
+    
+    // Add currentBreakpoint declaration if needed (only once per file)
+    const hasCurrentBreakpointDecl = existingImports.has('currentBreakpoint:declared');
+    if (!hasCurrentBreakpointDecl) {
+      const currentBreakpointDecl = api.types.variableDeclaration('const', [
+        api.types.variableDeclarator(
+          api.types.identifier('currentBreakpoint'),
+          api.types.callExpression(
+            api.types.identifier('useBreakpoint'),
+            []
+          )
+        )
+      ]);
+      program.node.body.unshift(currentBreakpointDecl);
+      existingImports.add('currentBreakpoint:declared');
+    }
+  }
 
   return {
     name: '@react-responsive-easy/babel-plugin',
+    
+        pre(state: PluginState) {
+          // Initialize state
+          state.hasTransformations = false;
+          state.cache = new Map();
+          state.metrics = {
+            transformCount: 0,
+            totalTransformTime: 0,
+            averageTransformTime: 0,
+            cacheHits: 0,
+            cacheMisses: 0,
+            errors: 0
+          };
+          
+          // Store existing imports for later use
+          state.existingImports = new Set<string>();
+        },
     visitor: {
-      // Transform useResponsiveValue calls
-      CallExpression(path, state: PluginPass) {
-        const { node } = path;
-        
-        // Check if this is a useResponsiveValue call
-        if (
-          node.type === 'CallExpression' &&
-          node.callee.type === 'Identifier' &&
-          node.callee.name === 'useResponsiveValue'
-        ) {
-          // Only transform if we can statically analyze the arguments
-          const firstArg = node.arguments[0];
-          const secondArg = node.arguments[1];
-          
-          if (
-            firstArg &&
-            firstArg.type === 'NumericLiteral' &&
-            precompute
-          ) {
-            const baseValue = firstArg.value;
-            let token: string | undefined;
-            
-            // Extract token from options object
-            if (
-              secondArg &&
-              secondArg.type === 'ObjectExpression'
-            ) {
-              const tokenProp = secondArg.properties.find(
-                prop => 
-                  prop.type === 'ObjectProperty' &&
-                  prop.key.type === 'Identifier' &&
-                  prop.key.name === 'token' &&
-                  prop.value.type === 'StringLiteral'
-              );
-              
-              if (tokenProp && tokenProp.type === 'ObjectProperty' && tokenProp.value.type === 'StringLiteral') {
-                token = tokenProp.value.value;
-              }
-            }
-            
-            // Generate optimized switch statement
-            const cases: t.SwitchCase[] = mockConfig.breakpoints.map(breakpoint => {
-              const scaledValue = scaleValue(baseValue, mockConfig.base, breakpoint, token);
-              
-              return api.types.switchCase(
-                api.types.stringLiteral(breakpoint.name),
-                [api.types.returnStatement(api.types.stringLiteral(`${scaledValue}px`))]
-              );
-            });
-            
-            // Add default case
-            cases.push(
-              api.types.switchCase(
-                null, // default case
-                [api.types.returnStatement(api.types.stringLiteral(`${baseValue}px`))]
-              )
-            );
-            
-            // Create optimized function
-            const optimizedFunction = api.types.arrowFunctionExpression(
-              [],
-              api.types.blockStatement([
-                api.types.switchStatement(
-                  api.types.memberExpression(
-                    api.types.identifier('currentBreakpoint'),
-                    api.types.identifier('name')
-                  ),
-                  cases
-                )
-              ])
-            );
-            
-            // Wrap in useMemo for React optimization
-            const useMemoCall = api.types.callExpression(
-              api.types.identifier('useMemo'),
-              [
-                optimizedFunction,
-                api.types.arrayExpression([
-                  api.types.memberExpression(
-                    api.types.identifier('currentBreakpoint'),
-                    api.types.identifier('name')
-                  )
-                ])
-              ]
-            );
-            
-            if (development) {
-              // Add comment in development mode
-              api.types.addComment(
-                useMemoCall,
-                'leading',
-                ` Optimized by @react-responsive-easy/babel-plugin from useResponsiveValue(${baseValue}${token ? `, { token: '${token}' }` : ''}) `
-              );
-            }
-            
-            path.replaceWith(useMemoCall);
-          }
-        }
-        
-        // Check if this is a useScaledStyle call
-        else if (
-          node.type === 'CallExpression' &&
-          node.callee.type === 'Identifier' &&
-          node.callee.name === 'useScaledStyle' &&
-          precompute
-        ) {
-          const firstArg = node.arguments[0];
-          
-          if (firstArg && firstArg.type === 'ObjectExpression') {
-            // Transform each numeric property in the style object
-            const transformedProperties = firstArg.properties.map(prop => {
-              if (
-                prop.type === 'ObjectProperty' &&
-                prop.key.type === 'Identifier' &&
-                prop.value.type === 'NumericLiteral'
-              ) {
-                const propertyName = prop.key.name;
-                const baseValue = prop.value.value;
-                
-                // Determine token based on property name
-                let token: string | undefined;
-                if (propertyName.includes('font') || propertyName.includes('Font')) {
-                  token = 'fontSize';
-                } else if (propertyName.includes('padding') || propertyName.includes('margin')) {
-                  token = 'spacing';
-                } else if (propertyName.includes('radius') || propertyName.includes('Radius')) {
-                  token = 'radius';
-                }
-                
-                // Generate responsive property object
-                const breakpointValues: t.ObjectProperty[] = mockConfig.breakpoints.map(breakpoint => {
-                  const scaledValue = scaleValue(baseValue, mockConfig.base, breakpoint, token);
-                  return api.types.objectProperty(
-                    api.types.stringLiteral(breakpoint.name),
-                    api.types.stringLiteral(`${scaledValue}px`)
-                  );
-                });
-                
-                return api.types.objectProperty(
-                  prop.key,
-                  api.types.objectExpression(breakpointValues)
-                );
-              }
-              
-              return prop;
-            });
-            
-            // Replace the original object with transformed version
-            const transformedObject = api.types.objectExpression(transformedProperties);
-            
-            if (development) {
-              api.types.addComment(
-                transformedObject,
-                'leading',
-                ' Optimized by @react-responsive-easy/babel-plugin - style object pre-computed '
-              );
-            }
-            
-            path.get('arguments.0').replaceWith(transformedObject);
-          }
-        }
-      },
-      
-      // Add necessary imports
+      // Capture existing imports before transformations and add new imports after
       Program: {
-        enter(path, state: PluginPass) {
-          // Track if we need to add imports
-          let needsUseMemo = false;
-          let needsCurrentBreakpoint = false;
-          
-          // Traverse to check what we need
+        enter(path, state: PluginState) {
+          // Store existing imports for later use
+          state.existingImports = new Set<string>();
           path.traverse({
-            CallExpression(innerPath) {
-              const { node } = innerPath;
-              if (
-                node.type === 'CallExpression' &&
-                node.callee.type === 'Identifier' &&
-                (node.callee.name === 'useResponsiveValue' || node.callee.name === 'useScaledStyle')
-              ) {
-                needsUseMemo = true;
-                needsCurrentBreakpoint = true;
+            ImportDeclaration(importPath) {
+              const { node } = importPath;
+              if (node.source.type === 'StringLiteral') {
+                const source = node.source.value;
+                node.specifiers.forEach(spec => {
+                  if (spec.type === 'ImportSpecifier' && spec.imported.type === 'Identifier') {
+                    state.existingImports!.add(`${spec.imported.name}:${source}`);
+                  } else if (spec.type === 'ImportDefaultSpecifier' && spec.local.type === 'Identifier') {
+                    state.existingImports!.add(`${spec.local.name}:${source}`);
+                  }
+                });
               }
             }
           });
-          
-          // Add imports if needed
-          if (needsUseMemo) {
-            const reactImport = api.types.importDeclaration(
-              [api.types.importSpecifier(api.types.identifier('useMemo'), api.types.identifier('useMemo'))],
-              api.types.stringLiteral('react')
-            );
-            path.unshiftContainer('body', reactImport);
-          }
-          
-          if (needsCurrentBreakpoint) {
-            const rreImport = api.types.importDeclaration(
-              [api.types.importSpecifier(api.types.identifier('useBreakpoint'), api.types.identifier('useBreakpoint'))],
-              api.types.stringLiteral(importSource)
-            );
-            path.unshiftContainer('body', rreImport);
-            
-            // Add currentBreakpoint variable declaration
-            const currentBreakpointDecl = api.types.variableDeclaration('const', [
-              api.types.variableDeclarator(
-                api.types.identifier('currentBreakpoint'),
-                api.types.callExpression(api.types.identifier('useBreakpoint'), [])
-              )
-            ]);
-            
-            // Find the first non-import statement and insert before it
-            const firstNonImport = path.get('body').find(stmt => 
-              !api.types.isImportDeclaration(stmt.node)
-            );
-            
-            if (firstNonImport) {
-              firstNonImport.insertBefore(currentBreakpointDecl);
+        },
+        
+        exit(path, state: PluginState) {
+          // Program exit handler - imports are now handled in CallExpression
+        }
+      },
+      
+      // Transform hook calls
+      CallExpression(path, state: PluginState) {
+        const { node } = path;
+        
+        // Initialize state if not already done
+        if (state.hasTransformations === undefined) {
+          state.hasTransformations = false;
+        }
+        
+        
+        if (!opts.precompute) return;
+        
+        // Get all supported transformers
+        const transformers = hookTransformers.getTransformers();
+        
+        // Try to transform each supported hook
+        for (const transformer of Object.values(transformers)) {
+          if (transformer.shouldTransform(path)) {
+            try {
+              const startTime = performance.now();
+              
+              // Check cache first
+              if (opts.enableCaching) {
+                const inputCode = path.toString();
+                const cached = cacheManager.get(inputCode, opts);
+                if (cached) {
+                  try {
+                    const ast = api.template.ast(cached);
+                    if (Array.isArray(ast)) {
+                      path.replaceWithMultiple(ast);
+                    } else {
+                      path.replaceWith(ast);
+                    }
+                    return;
+                  } catch (cacheError) {
+                    // If cached AST is invalid, continue with transformation
+                    console.warn('Invalid cached AST, continuing with transformation:', cacheError);
+                  }
+                }
+              }
+              
+              // Transform the hook
+              transformer.transform(path, { ...state, api, opts } as any);
+              
+              // Set hasTransformations on the original state object
+              state.hasTransformations = true;
+              
+              // Add imports immediately after transformation
+              addRequiredImports(path, state, api, opts);
+              
+              // Cache the result
+              if (opts.enableCaching) {
+                try {
+                  const outputCode = path.toString();
+                  const inputCode = path.toString();
+                  cacheManager.set(inputCode, outputCode, opts);
+                } catch (cacheError) {
+                  // If caching fails, continue without caching
+                  console.warn('Failed to cache transformation result:', cacheError);
+                }
+              }
+              
+              // Update performance metrics
+              if (opts.performanceMetrics) {
+                const endTime = performance.now();
+                cacheManager.updateMetrics(endTime - startTime);
+              }
+              
+              // Call transform hook
+              if (opts.onTransform) {
+                opts.onTransform(node, {
+                  filename: state.filename || 'unknown',
+                  line: node.loc?.start.line || 0,
+                  column: node.loc?.start.column || 0,
+                  code: path.toString()
+                });
+              }
+              
+              break; // Only transform one hook per call
+            } catch (error) {
+              // Call error hook
+              if (opts.onError) {
+                opts.onError(error as Error, {
+                  filename: state.filename || 'unknown',
+                  line: node.loc?.start.line || 0,
+                  column: node.loc?.start.column || 0,
+                  code: path.toString()
+                });
+              }
+              
+              // Update error metrics
+              if (opts.performanceMetrics) {
+                cacheManager.updateMetrics(0, true);
+              }
+              
+              // Don't throw the error, just log it and continue
+              console.warn('Transformation failed, continuing without transformation:', error);
             }
           }
         }
@@ -324,5 +251,17 @@ export default declare<BabelPluginOptions>((api, options) => {
 });
 
 // Export utilities for testing and external use
-export { scaleValue };
-export type { BabelPluginOptions };
+export { configManager, cacheManager, ScalingEngine, HookTransformers };
+export type { BabelPluginOptions, ResponsiveConfig, TransformContext, PerformanceMetrics };
+
+// Export scaleValue function for backward compatibility and testing
+export function scaleValue(
+  baseValue: number,
+  fromBreakpoint: any,
+  toBreakpoint: any,
+  token?: string
+): number {
+  const config = configManager.getDefaultConfig();
+  const scalingEngine = new ScalingEngine(config);
+  return scalingEngine.scaleValue(baseValue, fromBreakpoint, toBreakpoint, token);
+}

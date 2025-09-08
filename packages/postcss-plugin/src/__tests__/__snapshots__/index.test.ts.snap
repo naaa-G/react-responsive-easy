@@ -1,0 +1,4750 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PostCSS Plugin Snapshot Tests > Basic CSS Transformations > should generate consistent output for multiple rre() calls > multiple-rre-calls 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-margin: 10px;
+          --rre-margin: 20px;
+          --rre-margin: 10px;
+          --rre-margin: 20px;
+          --rre-padding: 12px;
+          --rre-padding: 24px;
+          --rre-border-radius: 4px;
+          --rre-border-radius: 8px;
+          --rre-border-radius: 4px;
+          --rre-border-radius: 8px;
+}
+.complex {
+          margin: var(--rre-margin) var(--rre-margin) var(--rre-margin) var(--rre-margin);
+          padding: var(--rre-padding) var(--rre-padding);
+          border-radius: var(--rre-border-radius) var(--rre-border-radius) var(--rre-border-radius) var(--rre-border-radius);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 2px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 4px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 7px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 4px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 8px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 14px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 2px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 4px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 7px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 4px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 8px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 14px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 9.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 17px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 5.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 5.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Basic CSS Transformations > should generate consistent output for rre() in calc() > rre-in-calc 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-width: 40px;
+          --rre-height: 64px;
+          --rre-padding: 16px;
+          --rre-padding: 8px;
+}
+.calculated {
+          width: calc(100% - var(--rre-width));
+          height: calc(100vh - var(--rre-height));
+          padding: calc(var(--rre-padding) + var(--rre-padding));
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-width: 8px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-width: 16px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-width: 28.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-height: 13px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-height: 25.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-height: 45.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 5.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Basic CSS Transformations > should generate consistent output for rre() with tokens > rre-with-tokens 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 24px;
+          --rre-padding: 16px;
+          --rre-border-radius: 8px;
+}
+.text {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+          border-radius: var(--rre-border-radius);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 9.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 17px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 5.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Basic CSS Transformations > should generate consistent output for simple rre() functions > simple-rre-functions 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 18px;
+          --rre-padding: 16px;
+}
+.button {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 7px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 13px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > CSS Custom Properties Generation > should generate consistent custom properties > custom-properties 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+          --rre-margin: 8px;
+          --rre-border-radius: 4px;
+}
+.element {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+          margin: var(--rre-margin);
+          border-radius: var(--rre-border-radius);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 5.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > CSS Custom Properties Generation > should generate consistent custom properties with custom prefix > custom-properties-custom-prefix 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --my-prefix-font-size: 16px;
+          --my-prefix-padding: 12px;
+}
+.element {
+          font-size: var(--my-prefix-font-size);
+          padding: var(--my-prefix-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --my-prefix-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --my-prefix-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --my-prefix-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --my-prefix-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --my-prefix-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --my-prefix-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > CSS Custom Properties Generation > should generate consistent responsive variants > responsive-variants 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 20px;
+          --rre-padding: 16px;
+}
+.responsive {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 4px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 8px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 14px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Complex CSS Structures > should generate consistent output for existing custom properties > existing-custom-properties 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        
+        @custom-media --laptop (max-width: 1366px);
+        
+        @custom-media --tablet (max-width: 768px);
+        
+        @custom-media --mobile (max-width: 390px);
+        
+        :root {
+          --existing-prop: 20px;
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+        }
+        
+        .existing-custom-props {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Complex CSS Structures > should generate consistent output for existing media queries > existing-media-queries 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        
+        @custom-media --laptop (max-width: 1366px);
+        
+        @custom-media --tablet (max-width: 768px);
+        
+        @custom-media --mobile (max-width: 390px);
+        
+        :root {
+          --rre-font-size: 16px;
+          --rre-font-size: 14px;
+}
+        
+        .existing-media {
+          font-size: var(--rre-font-size);
+        }
+        
+        @media (max-width: 600px) {
+          .existing-media {
+            font-size: var(--rre-font-size);
+          }
+        }
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-font-size: 3px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-font-size: 5.5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-font-size: 10px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Complex CSS Structures > should generate consistent output for nested selectors > nested-selectors 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+          --rre-margin: 8px;
+          --rre-border-radius: 4px;
+}
+.parent {
+          .child {
+            font-size: var(--rre-font-size);
+            padding: var(--rre-padding);
+          }
+          
+          .another-child {
+            margin: var(--rre-margin);
+            border-radius: var(--rre-border-radius);
+          }
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 5.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Complex CSS Structures > should generate consistent output for pseudo-selectors > pseudo-selectors 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        
+        @custom-media --laptop (max-width: 1366px);
+        
+        @custom-media --tablet (max-width: 768px);
+        
+        @custom-media --mobile (max-width: 390px);
+        
+        :root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+          --rre-font-size: 18px;
+          --rre-padding: 14px;
+          --rre-font-size: 14px;
+          --rre-padding: 10px;
+}
+        
+        .button {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+        
+        .button:hover {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+        
+        .button:active {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-font-size: 7px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-font-size: 13px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-padding: 3px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-padding: 5.5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-padding: 10px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-font-size: 3px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-font-size: 5.5px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-font-size: 10px;
+          }
+}
+        
+        @media (max-width: 390px) {
+        
+          :root {
+                    --rre-padding: 2px;
+          }
+}
+        
+        @media (max-width: 768px) {
+        
+          :root {
+                    --rre-padding: 4px;
+          }
+}
+        
+        @media (max-width: 1366px) {
+        
+          :root {
+                    --rre-padding: 7px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different configurations > config-both-disabled 1`] = `
+"
+        .test {
+          font-size: 16px;
+          padding: 12px;
+        }
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different configurations > config-default 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+}
+.test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different configurations > config-development 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+/*  Custom media queries generated by @react-responsive-easy/postcss-plugin  */
+:root {
+          --rre-font-size: 16px;
+          /*  Generated by @react-responsive-easy/postcss-plugin  */
+          --rre-padding: 12px;
+          /*  Generated by @react-responsive-easy/postcss-plugin  */
+}
+.test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different configurations > config-no-custom-media 1`] = `
+":root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+}
+.test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different configurations > config-no-custom-props 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+.test {
+          font-size: 16px;
+          padding: 12px;
+        }
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different configurations > config-production 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+}
+.test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different prefixes > prefix-custom 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --custom-font-size: 16px;
+          --custom-padding: 12px;
+}
+.test {
+          font-size: var(--custom-font-size);
+          padding: var(--custom-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --custom-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --custom-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --custom-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --custom-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --custom-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --custom-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different prefixes > prefix-design-system 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --design-system-font-size: 16px;
+          --design-system-padding: 12px;
+}
+.test {
+          font-size: var(--design-system-font-size);
+          padding: var(--design-system-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --design-system-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --design-system-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --design-system-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --design-system-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --design-system-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --design-system-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different prefixes > prefix-my-prefix 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --my-prefix-font-size: 16px;
+          --my-prefix-padding: 12px;
+}
+.test {
+          font-size: var(--my-prefix-font-size);
+          padding: var(--my-prefix-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --my-prefix-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --my-prefix-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --my-prefix-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --my-prefix-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --my-prefix-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --my-prefix-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Configuration Variations > should generate consistent output with different prefixes > prefix-rre 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+}
+.test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Development vs Production Modes > should generate consistent output in development mode > development-mode 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+/*  Custom media queries generated by @react-responsive-easy/postcss-plugin  */
+:root {
+          --rre-font-size: 16px;
+          /*  Generated by @react-responsive-easy/postcss-plugin  */
+          --rre-padding: 12px;
+          /*  Generated by @react-responsive-easy/postcss-plugin  */
+}
+.dev-test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Development vs Production Modes > should generate consistent output in production mode > production-mode 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+}
+.prod-test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Development vs Production Modes > should generate consistent output with custom media disabled > no-custom-media 1`] = `
+":root {
+          --rre-font-size: 16px;
+}
+.no-custom-media {
+          font-size: var(--rre-font-size);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Development vs Production Modes > should generate consistent output with custom properties disabled > no-custom-properties 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+.no-custom-props {
+          font-size: 16px;
+          padding: 12px;
+        }
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Edge Cases > should generate consistent output for CSS with comments > css-with-comments 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        @custom-media --laptop (max-width: 1366px);
+        @custom-media --tablet (max-width: 768px);
+        @custom-media --mobile (max-width: 390px);
+        :root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+}
+        /* This is a comment */
+        .commented {
+          font-size: var(--rre-font-size); /* Another comment */
+          padding: var(--rre-padding);
+        }
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Edge Cases > should generate consistent output for CSS without rre() functions > css-without-rre 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+.normal {
+          color: red;
+          background: blue;
+          border: 1px solid black;
+        }
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Edge Cases > should generate consistent output for empty CSS > empty-css 1`] = `""`;
+
+exports[`PostCSS Plugin Snapshot Tests > Edge Cases > should generate consistent output for malformed rre() calls > malformed-rre-calls 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-margin: 16px;
+}
+.malformed {
+          font-size: rre();
+          padding: rre(invalid);
+          margin: var(--rre-margin);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 11.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Edge Cases > should generate consistent output for mixed valid and invalid CSS > mixed-valid-invalid 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-margin: 8px;
+}
+.mixed {
+          font-size: var(--rre-font-size);
+          color: red;
+          padding: rre(invalid);
+          background: blue;
+          margin: var(--rre-margin);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 5.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Media Query Generation > should generate consistent custom media rules > custom-media-rules 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+.custom-media-test {
+          color: blue;
+        }
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Media Query Generation > should generate consistent media queries > media-queries 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 18px;
+}
+.media-test {
+          font-size: var(--rre-font-size);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 7px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 13px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Real-World Scenarios > should generate consistent output for component stylesheet > button-component 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        @custom-media --laptop (max-width: 1366px);
+        @custom-media --tablet (max-width: 768px);
+        @custom-media --mobile (max-width: 390px);
+        :root {
+          --rre-padding: 12px;
+          --rre-padding: 24px;
+          --rre-font-size: 16px;
+          --rre-border-radius: 6px;
+          --rre-transform: -2px;
+          --rre-padding: 16px;
+          --rre-padding: 32px;
+          --rre-font-size: 20px;
+          --rre-border-radius: 8px;
+          --rre-padding: 8px;
+          --rre-padding: 16px;
+          --rre-font-size: 14px;
+          --rre-border-radius: 4px;
+}
+        /* Button Component */
+        .button {
+          display: inline-block;
+          padding: var(--rre-padding) var(--rre-padding);
+          font-size: var(--rre-font-size);
+          font-weight: 600;
+          color: white;
+          background-color: #007bff;
+          border: none;
+          border-radius: var(--rre-border-radius);
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .button:hover {
+          background-color: #0056b3;
+          transform: translateY(var(--rre-transform));
+        }
+
+        .button--large {
+          padding: var(--rre-padding) var(--rre-padding);
+          font-size: var(--rre-font-size);
+          border-radius: var(--rre-border-radius);
+        }
+
+        .button--small {
+          padding: var(--rre-padding) var(--rre-padding);
+          font-size: var(--rre-font-size);
+          border-radius: var(--rre-border-radius);
+        }
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 9.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 17px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 2.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 4.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-transform: -0.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-transform: -1px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-transform: -1.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 13px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 23px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 4px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 8px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 14px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 5.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 1.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 3px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 5.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 5.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 10px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Real-World Scenarios > should generate consistent output for design system > design-system 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        @custom-media --laptop (max-width: 1366px);
+        @custom-media --tablet (max-width: 768px);
+        @custom-media --mobile (max-width: 390px);
+        :root {
+          --rre-font-size: 12px;
+          --rre-font-size: 14px;
+          --rre-font-size: 16px;
+          --rre-font-size: 18px;
+          --rre-font-size: 20px;
+          --rre-padding: 4px;
+          --rre-padding: 8px;
+          --rre-padding: 12px;
+          --rre-padding: 16px;
+          --rre-padding: 20px;
+          --rre-border-radius: 2px;
+          --rre-border-radius: 4px;
+          --rre-border-radius: 6px;
+          --rre-border-radius: 8px;
+          --rre-border-radius: 12px;
+}
+        /* Design System */
+        :root {
+          --primary-color: #007bff;
+          --secondary-color: #6c757d;
+          --success-color: #28a745;
+          --danger-color: #dc3545;
+        }
+
+        .text-xs { font-size: var(--rre-font-size); }
+        .text-sm { font-size: var(--rre-font-size); }
+        .text-base { font-size: var(--rre-font-size); }
+        .text-lg { font-size: var(--rre-font-size); }
+        .text-xl { font-size: var(--rre-font-size); }
+
+        .p-1 { padding: var(--rre-padding); }
+        .p-2 { padding: var(--rre-padding); }
+        .p-3 { padding: var(--rre-padding); }
+        .p-4 { padding: var(--rre-padding); }
+        .p-5 { padding: var(--rre-padding); }
+
+        .rounded-sm { border-radius: var(--rre-border-radius); }
+        .rounded { border-radius: var(--rre-border-radius); }
+        .rounded-md { border-radius: var(--rre-border-radius); }
+        .rounded-lg { border-radius: var(--rre-border-radius); }
+        .rounded-xl { border-radius: var(--rre-border-radius); }
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 2.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 8.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 5.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 10px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 7px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 13px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 4px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 8px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 14px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 1px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 1.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 3px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 1.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 3px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 5.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 3.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 11.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 4px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 8px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 14px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 0.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 2.5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 4.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 5.5px;
+          }
+}
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 2.5px;
+          }
+}
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 5px;
+          }
+}
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Real-World Scenarios > should generate consistent output for grid system > grid-system 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        @custom-media --laptop (max-width: 1366px);
+        @custom-media --tablet (max-width: 768px);
+        @custom-media --mobile (max-width: 390px);
+        :root {
+          --rre-grid-template-columns: 300px;
+          --rre-gap: 24px;
+          --rre-padding: 32px;
+          --rre-margin: 16px;
+          --rre-max-width: 1200px;
+          --rre-padding: 24px;
+          --rre-border-radius: 8px;
+          --rre-box-shadow: 2px;
+          --rre-box-shadow: 4px;
+}
+        /* Grid System */
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(var(--rre-grid-template-columns), 1fr));
+          gap: var(--rre-gap);
+          padding: var(--rre-padding);
+          margin: var(--rre-margin) auto;
+          max-width: var(--rre-max-width);
+        }
+
+        .grid-item {
+          background: white;
+          padding: var(--rre-padding);
+          border-radius: var(--rre-border-radius);
+          box-shadow: 0 var(--rre-box-shadow) var(--rre-box-shadow) rgba(0, 0, 0, 0.1);
+        }
+
+        .grid--2-cols {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid--3-cols {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-grid-template-columns: 61px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-grid-template-columns: 120px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-grid-template-columns: 213.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-gap: 5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-gap: 9.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-gap: 17px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 6.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 13px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 23px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-margin: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-margin: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-max-width: 244px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-max-width: 480px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-max-width: 854px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-padding: 9.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 17px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 5.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-box-shadow: 0.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-box-shadow: 1px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-box-shadow: 1.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-box-shadow: 1px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-box-shadow: 1.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-box-shadow: 3px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Real-World Scenarios > should generate consistent output for typography system > typography-system 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+        @custom-media --laptop (max-width: 1366px);
+        @custom-media --tablet (max-width: 768px);
+        @custom-media --mobile (max-width: 390px);
+        :root {
+          --rre-font-size: 48px;
+          --rre-line-height: 56px;
+          --rre-margin-bottom: 24px;
+          --rre-font-size: 36px;
+          --rre-line-height: 44px;
+          --rre-margin-bottom: 20px;
+          --rre-font-size: 24px;
+          --rre-line-height: 32px;
+          --rre-margin-bottom: 16px;
+          --rre-font-size: 16px;
+          --rre-line-height: 24px;
+          --rre-margin-bottom: 16px;
+          --rre-font-size: 14px;
+          --rre-line-height: 20px;
+          --rre-margin-bottom: 12px;
+}
+        /* Typography System */
+        .heading-1 {
+          font-size: var(--rre-font-size);
+          line-height: var(--rre-line-height);
+          font-weight: 700;
+          margin-bottom: var(--rre-margin-bottom);
+        }
+
+        .heading-2 {
+          font-size: var(--rre-font-size);
+          line-height: var(--rre-line-height);
+          font-weight: 600;
+          margin-bottom: var(--rre-margin-bottom);
+        }
+
+        .heading-3 {
+          font-size: var(--rre-font-size);
+          line-height: var(--rre-line-height);
+          font-weight: 600;
+          margin-bottom: var(--rre-margin-bottom);
+        }
+
+        .body-text {
+          font-size: var(--rre-font-size);
+          line-height: var(--rre-line-height);
+          margin-bottom: var(--rre-margin-bottom);
+        }
+
+        .caption {
+          font-size: var(--rre-font-size);
+          line-height: var(--rre-line-height);
+          margin-bottom: var(--rre-margin-bottom);
+        }
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 10px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 19px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 34px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-line-height: 11.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-line-height: 22.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-line-height: 40px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-margin-bottom: 5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-margin-bottom: 9.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-margin-bottom: 17px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 7.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 14.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 25.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-line-height: 9px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-line-height: 17.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-line-height: 31.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-margin-bottom: 4px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-margin-bottom: 8px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-margin-bottom: 14px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 9.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 17px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-line-height: 6.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-line-height: 13px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-line-height: 23px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-margin-bottom: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-margin-bottom: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-margin-bottom: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-line-height: 5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-line-height: 9.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-line-height: 17px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-margin-bottom: 3.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-margin-bottom: 6.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-margin-bottom: 11.5px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 5.5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 10px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-line-height: 4px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-line-height: 8px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-line-height: 14px;
+          }
+}
+
+        @media (max-width: 390px) {
+          :root {
+                    --rre-margin-bottom: 2.5px;
+          }
+}
+
+        @media (max-width: 768px) {
+          :root {
+                    --rre-margin-bottom: 5px;
+          }
+}
+
+        @media (max-width: 1366px) {
+          :root {
+                    --rre-margin-bottom: 8.5px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Regression Tests > should maintain consistent output across versions > regression-test 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+@custom-media --laptop (max-width: 1366px);
+@custom-media --tablet (max-width: 768px);
+@custom-media --mobile (max-width: 390px);
+:root {
+          --rre-font-size: 16px;
+          --rre-padding: 12px;
+          --rre-margin: 8px;
+          --rre-border-radius: 4px;
+}
+.regression-test {
+          font-size: var(--rre-font-size);
+          padding: var(--rre-padding);
+          margin: var(--rre-margin);
+          border-radius: var(--rre-border-radius);
+        }
+@media (max-width: 390px) {
+          :root {
+                    --rre-font-size: 3.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-font-size: 6.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-font-size: 11.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-padding: 2.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-padding: 5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-padding: 8.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-margin: 1.5px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-margin: 3px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-margin: 5.5px;
+          }
+}
+@media (max-width: 390px) {
+          :root {
+                    --rre-border-radius: 1px;
+          }
+}
+@media (max-width: 768px) {
+          :root {
+                    --rre-border-radius: 1.5px;
+          }
+}
+@media (max-width: 1366px) {
+          :root {
+                    --rre-border-radius: 3px;
+          }
+}
+      "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Regression Tests > should maintain consistent output for complex scenarios > complex-regression-test 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+
+    @custom-media --laptop (max-width: 1366px);
+
+    @custom-media --tablet (max-width: 768px);
+
+    @custom-media --mobile (max-width: 390px);
+
+    :root {
+      --rre-grid-template-columns: 300px;
+      --rre-gap: 24px;
+      --rre-padding: 32px;
+      --rre-margin: 16px;
+      --rre-max-width: 1200px;
+      --rre-border-radius: 12px;
+      --rre-box-shadow: 4px;
+      --rre-box-shadow: 8px;
+      --rre-padding: 24px;
+      --rre-border-radius: 8px;
+      --rre-box-shadow: 2px;
+      --rre-box-shadow: 4px;
+      --rre-margin-bottom: 16px;
+      --rre-font-size: 24px;
+      --rre-margin-bottom: 16px;
+      --rre-font-size: 16px;
+      --rre-line-height: 24px;
+      --rre-margin-bottom: 12px;
+      --rre-padding: 12px;
+      --rre-padding: 24px;
+      --rre-font-size: 16px;
+      --rre-border-radius: 6px;
+      --rre-transform: -2px;
+      --rre-padding: 16px;
+      --rre-gap: 16px;
+      --rre-padding: 16px;
+}
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(var(--rre-grid-template-columns), 1fr));
+      gap: var(--rre-gap);
+      padding: var(--rre-padding);
+      margin: var(--rre-margin) auto;
+      max-width: var(--rre-max-width);
+      border-radius: var(--rre-border-radius);
+      box-shadow: 0 var(--rre-box-shadow) var(--rre-box-shadow) rgba(0, 0, 0, 0.1);
+    }
+
+    .card {
+      background: white;
+      padding: var(--rre-padding);
+      border-radius: var(--rre-border-radius);
+      box-shadow: 0 var(--rre-box-shadow) var(--rre-box-shadow) rgba(0, 0, 0, 0.1);
+      margin-bottom: var(--rre-margin-bottom);
+    }
+
+    .card h2 {
+      font-size: var(--rre-font-size);
+      margin-bottom: var(--rre-margin-bottom);
+      color: #333;
+    }
+
+    .card p {
+      font-size: var(--rre-font-size);
+      line-height: var(--rre-line-height);
+      margin-bottom: var(--rre-margin-bottom);
+    }
+
+    .button {
+      display: inline-block;
+      padding: var(--rre-padding) var(--rre-padding);
+      font-size: var(--rre-font-size);
+      border-radius: var(--rre-border-radius);
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .button:hover {
+      background: #0056b3;
+      transform: translateY(var(--rre-transform));
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: var(--rre-padding);
+        gap: var(--rre-gap);
+      }
+      
+      .card {
+        padding: var(--rre-padding);
+      }
+    }
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-grid-template-columns: 61px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-grid-template-columns: 120px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-grid-template-columns: 213.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-gap: 5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-gap: 9.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-gap: 17px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-padding: 6.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-padding: 13px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-padding: 23px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-margin: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-margin: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-margin: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-max-width: 244px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-max-width: 480px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-max-width: 854px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-border-radius: 2.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-border-radius: 5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-border-radius: 8.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-box-shadow: 1px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-box-shadow: 1.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-box-shadow: 3px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-box-shadow: 1.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-box-shadow: 3px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-box-shadow: 5.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-padding: 5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-padding: 9.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-padding: 17px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-border-radius: 1.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-border-radius: 3px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-border-radius: 5.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-box-shadow: 0.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-box-shadow: 1px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-box-shadow: 1.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-box-shadow: 1px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-box-shadow: 1.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-box-shadow: 3px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-margin-bottom: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-margin-bottom: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-margin-bottom: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-font-size: 5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-font-size: 9.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-font-size: 17px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-margin-bottom: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-margin-bottom: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-margin-bottom: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-font-size: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-font-size: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-font-size: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-line-height: 5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-line-height: 9.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-line-height: 17px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-margin-bottom: 2.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-margin-bottom: 5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-margin-bottom: 8.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-padding: 2.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-padding: 5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-padding: 8.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-padding: 5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-padding: 9.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-padding: 17px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-font-size: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-font-size: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-font-size: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-border-radius: 1px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-border-radius: 2.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-border-radius: 4.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-transform: -0.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-transform: -1px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-transform: -1.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-padding: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-padding: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-padding: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-gap: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-gap: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-gap: 11.5px;
+      }
+}
+
+    @media (max-width: 390px) {
+
+      :root {
+            --rre-padding: 3.5px;
+      }
+}
+
+    @media (max-width: 768px) {
+
+      :root {
+            --rre-padding: 6.5px;
+      }
+}
+
+    @media (max-width: 1366px) {
+
+      :root {
+            --rre-padding: 11.5px;
+      }
+}
+  "
+`;
+
+exports[`PostCSS Plugin Snapshot Tests > Regression Tests > should maintain consistent output for large CSS > large-css-regression-test 1`] = `
+"@custom-media --desktop (max-width: 1920px);
+
+@custom-media --laptop (max-width: 1366px);
+
+@custom-media --tablet (max-width: 768px);
+
+@custom-media --mobile (max-width: 390px);
+
+:root {
+  --rre-font-size: 12px;
+  --rre-padding: 16px;
+  --rre-margin: 20px;
+  --rre-width: 24px;
+  --rre-height: 32px;
+  --rre-border-radius: 48px;
+  --rre-font-size: 64px;
+  --rre-padding: 80px;
+  --rre-margin: 96px;
+  --rre-width: 120px;
+  --rre-height: 12px;
+  --rre-border-radius: 16px;
+  --rre-font-size: 20px;
+  --rre-padding: 24px;
+  --rre-margin: 32px;
+  --rre-width: 48px;
+  --rre-height: 64px;
+  --rre-border-radius: 80px;
+  --rre-font-size: 96px;
+  --rre-padding: 120px;
+  --rre-margin: 12px;
+  --rre-width: 16px;
+  --rre-height: 20px;
+  --rre-border-radius: 24px;
+  --rre-font-size: 32px;
+  --rre-padding: 48px;
+  --rre-margin: 64px;
+  --rre-width: 80px;
+  --rre-height: 96px;
+  --rre-border-radius: 120px;
+  --rre-font-size: 12px;
+  --rre-padding: 16px;
+  --rre-margin: 20px;
+  --rre-width: 24px;
+  --rre-height: 32px;
+  --rre-border-radius: 48px;
+  --rre-font-size: 64px;
+  --rre-padding: 80px;
+  --rre-margin: 96px;
+  --rre-width: 120px;
+  --rre-height: 12px;
+  --rre-border-radius: 16px;
+  --rre-font-size: 20px;
+  --rre-padding: 24px;
+  --rre-margin: 32px;
+  --rre-width: 48px;
+  --rre-height: 64px;
+  --rre-border-radius: 80px;
+  --rre-font-size: 96px;
+  --rre-padding: 120px;
+}
+
+.test-0 {
+  font-size: var(--rre-font-size);
+}
+
+.test-1 {
+  padding: var(--rre-padding);
+}
+
+.test-2 {
+  margin: var(--rre-margin);
+}
+
+.test-3 {
+  width: var(--rre-width);
+}
+
+.test-4 {
+  height: var(--rre-height);
+}
+
+.test-5 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-6 {
+  font-size: var(--rre-font-size);
+}
+
+.test-7 {
+  padding: var(--rre-padding);
+}
+
+.test-8 {
+  margin: var(--rre-margin);
+}
+
+.test-9 {
+  width: var(--rre-width);
+}
+
+.test-10 {
+  height: var(--rre-height);
+}
+
+.test-11 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-12 {
+  font-size: var(--rre-font-size);
+}
+
+.test-13 {
+  padding: var(--rre-padding);
+}
+
+.test-14 {
+  margin: var(--rre-margin);
+}
+
+.test-15 {
+  width: var(--rre-width);
+}
+
+.test-16 {
+  height: var(--rre-height);
+}
+
+.test-17 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-18 {
+  font-size: var(--rre-font-size);
+}
+
+.test-19 {
+  padding: var(--rre-padding);
+}
+
+.test-20 {
+  margin: var(--rre-margin);
+}
+
+.test-21 {
+  width: var(--rre-width);
+}
+
+.test-22 {
+  height: var(--rre-height);
+}
+
+.test-23 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-24 {
+  font-size: var(--rre-font-size);
+}
+
+.test-25 {
+  padding: var(--rre-padding);
+}
+
+.test-26 {
+  margin: var(--rre-margin);
+}
+
+.test-27 {
+  width: var(--rre-width);
+}
+
+.test-28 {
+  height: var(--rre-height);
+}
+
+.test-29 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-30 {
+  font-size: var(--rre-font-size);
+}
+
+.test-31 {
+  padding: var(--rre-padding);
+}
+
+.test-32 {
+  margin: var(--rre-margin);
+}
+
+.test-33 {
+  width: var(--rre-width);
+}
+
+.test-34 {
+  height: var(--rre-height);
+}
+
+.test-35 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-36 {
+  font-size: var(--rre-font-size);
+}
+
+.test-37 {
+  padding: var(--rre-padding);
+}
+
+.test-38 {
+  margin: var(--rre-margin);
+}
+
+.test-39 {
+  width: var(--rre-width);
+}
+
+.test-40 {
+  height: var(--rre-height);
+}
+
+.test-41 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-42 {
+  font-size: var(--rre-font-size);
+}
+
+.test-43 {
+  padding: var(--rre-padding);
+}
+
+.test-44 {
+  margin: var(--rre-margin);
+}
+
+.test-45 {
+  width: var(--rre-width);
+}
+
+.test-46 {
+  height: var(--rre-height);
+}
+
+.test-47 {
+  border-radius: var(--rre-border-radius);
+}
+
+.test-48 {
+  font-size: var(--rre-font-size);
+}
+
+.test-49 {
+  padding: var(--rre-padding);
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 2.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 8.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 3.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 6.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 11.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 8px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 9.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 6.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 13px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 19px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 34px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 25.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 45.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 16.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 32px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 57px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 19.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 38.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 68.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 24.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 48px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 85.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 2.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 8.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 3.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 6.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 11.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 8px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 9.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 6.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 13px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 19px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 34px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 25.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 45.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 16.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 32px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 57px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 19.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 38.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 68.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 24.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 48px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 85.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 2.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 8.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 3.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 6.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 11.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 8px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 9.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 6.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 13px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 19px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 34px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 25.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 45.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 16.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 32px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 57px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 19.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 38.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 68.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 24.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 48px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 85.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 2.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 8.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 3.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 6.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 11.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 8px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 9.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 6.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 13px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 19px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 34px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 25.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 45.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 16.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 32px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 57px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 19.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 38.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 68.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 24.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 48px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 85.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 2.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 8.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 3.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 6.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 11.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 8px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 9.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-margin: 6.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-margin: 13px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-margin: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-width: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-width: 19px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-width: 34px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-height: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-height: 25.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-height: 45.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-border-radius: 16.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-border-radius: 32px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-border-radius: 57px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-font-size: 19.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-font-size: 38.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-font-size: 68.5px;
+  }
+}
+
+@media (max-width: 390px) {
+
+  :root {
+    --rre-padding: 24.5px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  :root {
+    --rre-padding: 48px;
+  }
+}
+
+@media (max-width: 1366px) {
+
+  :root {
+    --rre-padding: 85.5px;
+  }
+}
+
+"
+`;

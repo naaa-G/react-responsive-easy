@@ -1,0 +1,703 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot Tests > complex scenarios > should generate consistent output for TypeScript component 1`] = `
+""use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = _interopRequireWildcard(require("react"));
+function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const Button = ({
+  children,
+  variant = 'primary'
+}) => {
+  const fontSize = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "12px";
+      case "tablet":
+        return "12px";
+      case "laptop":
+        return "12px";
+      case "desktop":
+        return "13.5px";
+      default:
+        return "16px";
+    }
+  }, [currentBreakpoint.name]);
+  const padding = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "2px";
+      case "tablet":
+        return "4px";
+      case "laptop":
+        return "8px";
+      case "desktop":
+        return "10px";
+      default:
+        return "12px";
+    }
+  }, [currentBreakpoint.name]);
+  return <button style={{
+    fontSize,
+    padding,
+    backgroundColor: variant === 'primary' ? 'blue' : 'gray'
+  }}>
+              {children}
+            </button>;
+};
+var _default = exports.default = Button;"
+`;
+
+exports[`Snapshot Tests > complex scenarios > should generate consistent output for complete component 1`] = `
+""use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = _interopRequireWildcard(require("react"));
+function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const Button = ({
+  children,
+  variant = 'primary'
+}) => {
+  const fontSize = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "12px";
+      case "tablet":
+        return "12px";
+      case "laptop":
+        return "12px";
+      case "desktop":
+        return "13.5px";
+      default:
+        return "16px";
+    }
+  }, [currentBreakpoint.name]);
+  const padding = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "2px";
+      case "tablet":
+        return "4px";
+      case "laptop":
+        return "8px";
+      case "desktop":
+        return "10px";
+      default:
+        return "12px";
+    }
+  }, [currentBreakpoint.name]);
+  const borderRadius = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "1.5px";
+      case "tablet":
+        return "3px";
+      case "laptop":
+        return "5px";
+      case "desktop":
+        return "7px";
+      default:
+        return "8px";
+    }
+  }, [currentBreakpoint.name]);
+  const styles = (0, _reactResponsiveEasy.useScaledStyle)({
+    fontSize: {
+      "mobile": "12px",
+      "tablet": "12px",
+      "laptop": "12px",
+      "desktop": "12px"
+    },
+    padding: {
+      "mobile": "2px",
+      "tablet": "2px",
+      "laptop": "4px",
+      "desktop": "6px"
+    },
+    margin: {
+      "mobile": "0px",
+      "tablet": "2px",
+      "laptop": "2px",
+      "desktop": "4px"
+    }
+  });
+  return <button style={{
+    fontSize,
+    padding,
+    borderRadius,
+    ...styles
+  }}>
+              {children}
+            </button>;
+};
+var _default = exports.default = Button;"
+`;
+
+exports[`Snapshot Tests > complex scenarios > should generate consistent output for nested components 1`] = `
+""use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = _interopRequireWildcard(require("react"));
+function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const Card = ({
+  title,
+  content
+}) => {
+  const titleSize = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "12px";
+      case "tablet":
+        return "12px";
+      case "laptop":
+        return "14.5px";
+      case "desktop":
+        return "20.5px";
+      default:
+        return "24px";
+    }
+  }, [currentBreakpoint.name]);
+  const contentSize = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "12px";
+      case "tablet":
+        return "12px";
+      case "laptop":
+        return "12px";
+      case "desktop":
+        return "13.5px";
+      default:
+        return "16px";
+    }
+  }, [currentBreakpoint.name]);
+  const padding = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "4px";
+      case "tablet":
+        return "6px";
+      case "laptop":
+        return "12px";
+      case "desktop":
+        return "18px";
+      default:
+        return "20px";
+    }
+  }, [currentBreakpoint.name]);
+  return <div style={{
+    padding
+  }}>
+              <h2 style={{
+      fontSize: titleSize
+    }}>{title}</h2>
+              <p style={{
+      fontSize: contentSize
+    }}>{content}</p>
+            </div>;
+};
+const CardGrid = ({
+  cards
+}) => {
+  const gap = (0, _react.useMemo)(() => {
+    switch (currentBreakpoint.name) {
+      case "mobile":
+        return "2px";
+      case "tablet":
+        return "6px";
+      case "laptop":
+        return "10px";
+      case "desktop":
+        return "14px";
+      default:
+        return "16px";
+    }
+  }, [currentBreakpoint.name]);
+  return <div style={{
+    display: 'grid',
+    gap
+  }}>
+              {cards.map(card => <Card key={card.id} {...card} />)}
+            </div>;
+};
+var _default = exports.default = CardGrid;"
+`;
+
+exports[`Snapshot Tests > configuration options > should generate consistent output with CSS props enabled 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "14.5px";
+    case "desktop":
+      return "20.5px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > configuration options > should generate consistent output with custom config path 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "14.5px";
+    case "desktop":
+      return "20.5px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > configuration options > should generate consistent output with precompute disabled 1`] = `
+""use strict";
+
+const fontSize = useResponsiveValue(24, {
+  token: 'fontSize'
+});"
+`;
+
+exports[`Snapshot Tests > development mode > should generate consistent development comments 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = /* Optimized by @react-responsive-easy/babel-plugin from useResponsiveValue(24, { token: 'fontSize' }) */(0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "14.5px";
+    case "desktop":
+      return "20.5px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > development mode > should generate consistent development comments for useScaledStyle 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const styles = useScaledStyle(
+/* Optimized by @react-responsive-easy/babel-plugin - style object pre-computed */
+{
+  fontSize: {
+    "mobile": "12px",
+    "tablet": "12px",
+    "laptop": "12px",
+    "desktop": "15.5px"
+  }
+});"
+`;
+
+exports[`Snapshot Tests > development mode > should generate consistent production output 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "14.5px";
+    case "desktop":
+      return "20.5px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > error scenarios > should generate consistent output for complex expressions 1`] = `
+""use strict";
+
+const fontSize = useResponsiveValue(baseSize + 4, {
+  token: getToken(),
+  min: calculateMin()
+});"
+`;
+
+exports[`Snapshot Tests > error scenarios > should generate consistent output for malformed calls 1`] = `
+""use strict";
+
+const fontSize = useResponsiveValue();
+const padding = useResponsiveValue(undefined);
+const margin = useResponsiveValue(null);"
+`;
+
+exports[`Snapshot Tests > error scenarios > should generate consistent output for non-object arguments 1`] = `
+""use strict";
+
+const styles = useScaledStyle(null);
+const otherStyles = useScaledStyle(undefined);
+const moreStyles = useScaledStyle('string');"
+`;
+
+exports[`Snapshot Tests > import handling > should generate consistent import statements 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "5px";
+    case "tablet":
+      return "9.5px";
+    case "laptop":
+      return "17px";
+    case "desktop":
+      return "24px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > import handling > should generate consistent imports with custom source 1`] = `
+""use strict";
+
+var _responsive = require("@custom/responsive");
+var _react = require("react");
+const currentBreakpoint = (0, _responsive.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "5px";
+    case "tablet":
+      return "9.5px";
+    case "laptop":
+      return "17px";
+    case "desktop":
+      return "24px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > import handling > should handle existing imports consistently 1`] = `
+""use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "5px";
+    case "tablet":
+      return "9.5px";
+    case "laptop":
+      return "17px";
+    case "desktop":
+      return "24px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > useResponsiveValue transformations > should generate consistent output for different numeric values 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const smallSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "12px";
+    case "desktop":
+      return "12px";
+    default:
+      return "12px";
+  }
+}, [currentBreakpoint.name]);
+const mediumSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "12px";
+    case "desktop":
+      return "13.5px";
+    default:
+      return "16px";
+  }
+}, [currentBreakpoint.name]);
+const largeSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "14.5px";
+    case "desktop":
+      return "20.5px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);
+const xlSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "19.5px";
+    case "desktop":
+      return "22px";
+    default:
+      return "32px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > useResponsiveValue transformations > should generate consistent output for simple numeric literal 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "5px";
+    case "tablet":
+      return "9.5px";
+    case "laptop":
+      return "17px";
+    case "desktop":
+      return "24px";
+    default:
+      return "24px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > useResponsiveValue transformations > should generate consistent output with radius token 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const borderRadius = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "1.5px";
+    case "tablet":
+      return "3px";
+    case "laptop":
+      return "5px";
+    case "desktop":
+      return "7px";
+    default:
+      return "8px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > useResponsiveValue transformations > should generate consistent output with spacing token 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const padding = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "2px";
+    case "tablet":
+      return "6px";
+    case "laptop":
+      return "10px";
+    case "desktop":
+      return "14px";
+    default:
+      return "16px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > useResponsiveValue transformations > should generate consistent output with token configuration 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const fontSize = (0, _react.useMemo)(() => {
+  switch (currentBreakpoint.name) {
+    case "mobile":
+      return "12px";
+    case "tablet":
+      return "12px";
+    case "laptop":
+      return "12px";
+    case "desktop":
+      return "15.5px";
+    default:
+      return "18px";
+  }
+}, [currentBreakpoint.name]);"
+`;
+
+exports[`Snapshot Tests > useScaledStyle transformations > should generate consistent output for complex style object 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const styles = useScaledStyle({
+  fontSize: {
+    "mobile": "12px",
+    "tablet": "12px",
+    "laptop": "12px",
+    "desktop": "13.5px"
+  },
+  padding: {
+    "mobile": "2px",
+    "tablet": "4px",
+    "laptop": "8px",
+    "desktop": "10px"
+  },
+  margin: {
+    "mobile": "2px",
+    "tablet": "2px",
+    "laptop": "4px",
+    "desktop": "6px"
+  },
+  borderRadius: {
+    "mobile": "0.5px",
+    "tablet": "1.5px",
+    "laptop": "2.5px",
+    "desktop": "3.5px"
+  },
+  borderWidth: {
+    "mobile": "0px",
+    "tablet": "0.5px",
+    "laptop": "0.5px",
+    "desktop": "1px"
+  },
+  minHeight: {
+    "mobile": "8px",
+    "tablet": "16px",
+    "laptop": "28.5px",
+    "desktop": "40px"
+  },
+  maxWidth: {
+    "mobile": "40.5px",
+    "tablet": "80px",
+    "laptop": "142.5px",
+    "desktop": "200px"
+  }
+});"
+`;
+
+exports[`Snapshot Tests > useScaledStyle transformations > should generate consistent output for mixed properties 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const styles = useScaledStyle({
+  fontSize: {
+    "mobile": "12px",
+    "tablet": "12px",
+    "laptop": "12px",
+    "desktop": "15.5px"
+  },
+  color: 'red',
+  backgroundColor: '#fff',
+  padding: {
+    "mobile": "2px",
+    "tablet": "6px",
+    "laptop": "10px",
+    "desktop": "14px"
+  },
+  margin: {
+    "mobile": "2px",
+    "tablet": "2px",
+    "laptop": "4px",
+    "desktop": "6px"
+  }
+});"
+`;
+
+exports[`Snapshot Tests > useScaledStyle transformations > should generate consistent output for simple style object 1`] = `
+""use strict";
+
+var _reactResponsiveEasy = require("react-responsive-easy");
+var _react = require("react");
+const currentBreakpoint = (0, _reactResponsiveEasy.useBreakpoint)();
+const styles = useScaledStyle({
+  fontSize: {
+    "mobile": "12px",
+    "tablet": "12px",
+    "laptop": "12px",
+    "desktop": "15.5px"
+  },
+  padding: {
+    "mobile": "2px",
+    "tablet": "6px",
+    "laptop": "10px",
+    "desktop": "14px"
+  }
+});"
+`;

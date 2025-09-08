@@ -2,23 +2,8 @@
  * Tests for @react-responsive-easy/babel-plugin
  */
 
-import { transform } from '@babel/core';
-import plugin from '../index';
 import { describe, it, expect } from 'vitest';
-
-// Helper function to transform code with our plugin
-function transformCode(code: string, options = {}) {
-  const result = transform(code, {
-    filename: 'test.tsx',
-    plugins: [[plugin, options]],
-    presets: [
-      ['@babel/preset-env', { targets: { node: 'current' } }],
-      '@babel/preset-typescript'
-    ]
-  });
-  
-  return result?.code || '';
-}
+import { transformCode, assertions, testConfigs } from './utils/test-helpers';
 
 describe('@react-responsive-easy/babel-plugin', () => {
   describe('useResponsiveValue transformations', () => {
@@ -27,10 +12,9 @@ describe('@react-responsive-easy/babel-plugin', () => {
         const fontSize = useResponsiveValue(24);
       `;
       
-      const output = transformCode(input, { precompute: true });
+      const output = transformCode(input, testConfigs.development);
       
-      expect(output).toContain('useMemo');
-      expect(output).toContain('currentBreakpoint.name');
+      assertions.shouldTransform(output);
       expect(output).toContain('24px');
     });
     

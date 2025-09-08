@@ -1,16 +1,15 @@
 /**
- * Tests for @react-responsive-easy/postcss-plugin
+ * Legacy tests for @react-responsive-easy/postcss-plugin
+ * These tests are maintained for backward compatibility
  */
 
 import postcss from 'postcss';
 import plugin from '../index';
 import { describe, it, expect } from 'vitest';
-
-// Helper function to process CSS with our plugin
-async function processCss(css: string, options = {}) {
-  const result = await postcss([plugin(options)]).process(css, { from: 'test.css' });
-  return result.css;
-}
+import {
+  processCss,
+  defaultTestOptions
+} from './utils/test-helpers';
 
 describe('@react-responsive-easy/postcss-plugin', () => {
   describe('rre() function processing', () => {
