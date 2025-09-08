@@ -78,32 +78,39 @@ export class FeatureExtractor {
 
     const breakpoints = config.breakpoints;
     
-    // Calculate breakpoint ratios
-    const baseWidth = config.base.width || 375; // Default mobile width
-    const breakpointRatios = breakpoints.map(bp => (bp?.width || baseWidth) / baseWidth);
+    // Calculate breakpoint ratios with null safety
+    const baseWidth = config.base?.width || 375; // Default mobile width
+    const breakpointRatios = breakpoints.map(bp => {
+      if (!bp || typeof bp.width !== 'number') {
+        return baseWidth / baseWidth; // Default to 1
+      }
+      return bp.width / baseWidth;
+    });
     
-    // Calculate token complexity
-    const tokens = config.strategy.tokens || {};
+    // Calculate token complexity with null safety
+    const tokens = config.strategy?.tokens || {};
     let tokenComplexity = 0;
     Object.values(tokens).forEach(token => {
+      if (!token) return;
       tokenComplexity += (token.min !== undefined ? 1 : 0);
       tokenComplexity += (token.max !== undefined ? 1 : 0);
       tokenComplexity += (token.step !== undefined ? 1 : 0);
       tokenComplexity += (token.responsive !== false ? 1 : 0);
     });
     
-    // Origin distribution
+    // Origin distribution with null safety
+    const origin = config.strategy?.origin || 'width';
     const originDistribution: Record<string, number> = {
-      width: config.strategy.origin === 'width' ? 1 : 0,
-      height: config.strategy.origin === 'height' ? 1 : 0,
-      min: config.strategy.origin === 'min' ? 1 : 0,
-      max: config.strategy.origin === 'max' ? 1 : 0,
-      diagonal: config.strategy.origin === 'diagonal' ? 1 : 0,
-      area: config.strategy.origin === 'area' ? 1 : 0
+      width: origin === 'width' ? 1 : 0,
+      height: origin === 'height' ? 1 : 0,
+      min: origin === 'min' ? 1 : 0,
+      max: origin === 'max' ? 1 : 0,
+      diagonal: origin === 'diagonal' ? 1 : 0,
+      area: origin === 'area' ? 1 : 0
     };
     
     return {
-      breakpointCount: breakpoints.length,
+      breakpointCount: breakpoints?.length || 0,
       breakpointRatios: this.padArray(breakpointRatios, 8, 1),
       tokenComplexity,
       originDistribution

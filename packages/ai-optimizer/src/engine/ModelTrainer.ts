@@ -31,6 +31,24 @@ export class ModelTrainer {
     trainingData: TrainingData[]
   ): Promise<ModelEvaluationMetrics> {
     try {
+      // Validate model before training
+      if (!model) {
+        throw new Error('Model is null or undefined');
+      }
+      
+      if (typeof model.fit !== 'function') {
+        throw new Error('Model does not implement fit method');
+      }
+      
+      // Validate training data
+      if (!Array.isArray(trainingData) || trainingData.length === 0) {
+        throw new Error('Training data is required and must be a non-empty array');
+      }
+      
+      if (trainingData.length < 2) {
+        throw new Error('Insufficient data points (minimum 2 required)');
+      }
+      
       console.log(`🎯 Training model with ${trainingData.length} samples...`);
       
       // Prepare training data
@@ -84,6 +102,20 @@ export class ModelTrainer {
     model: tf.LayersModel,
     testData: TrainingData[]
   ): Promise<ModelEvaluationMetrics> {
+    // Validate model before evaluation
+    if (!model) {
+      throw new Error('Model is null or undefined');
+    }
+    
+    if (typeof model.predict !== 'function') {
+      throw new Error('Model does not implement predict method');
+    }
+    
+    // Validate test data
+    if (!Array.isArray(testData) || testData.length === 0) {
+      throw new Error('Test data is required and must be a non-empty array');
+    }
+    
     const { features, labels } = this.prepareTrainingData(testData);
     
     try {

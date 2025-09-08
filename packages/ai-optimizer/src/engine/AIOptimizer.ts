@@ -222,17 +222,44 @@ export class AIOptimizer {
       // Validate configuration before initialization
       this.validateConfiguration();
       
+      // Check if TensorFlow is available
+      if (typeof tf === 'undefined' || !tf) {
+        throw new Error('TensorFlow initialization failed: TensorFlow is not available');
+      }
+      
       if (modelPath) {
-        this.model = await tf.loadLayersModel(modelPath);
-        console.log('✅ Loaded pre-trained AI optimization model');
+        try {
+          this.model = await tf.loadLayersModel(modelPath);
+          console.log('✅ Loaded pre-trained AI optimization model');
+        } catch (loadError) {
+          console.warn('⚠️ Failed to load pre-trained model, creating new model:', loadError);
+          this.model = this.createBaseModel();
+          console.log('🧠 Created new AI optimization model');
+        }
       } else {
         this.model = this.createBaseModel();
         console.log('🧠 Created new AI optimization model');
       }
       
+      // Validate the model after creation/loading
+      if (!this.model) {
+        throw new Error('Model creation/loading failed: model is null');
+      }
+      
+      // Validate model interface
+      if (typeof this.model.fit !== 'function') {
+        throw new Error('Model does not implement fit method');
+      }
+      if (typeof this.model.predict !== 'function') {
+        throw new Error('Model does not implement predict method');
+      }
+      
       this.isInitialized = true;
     } catch (error) {
       console.error('❌ Failed to initialize AI optimizer:', error);
+      // Set a flag to indicate initialization failure
+      this.isInitialized = false;
+      this.model = null;
       throw new Error(`AI Optimizer initialization failed: ${error}`);
     }
   }
@@ -357,6 +384,20 @@ export class AIOptimizer {
       throw new Error('Model not initialized');
     }
 
+    // Validate training data
+    if (!Array.isArray(trainingData) || trainingData.length === 0) {
+      throw new Error('Training data is required and must be a non-empty array');
+    }
+
+    if (trainingData.length < 2) {
+      throw new Error('Insufficient data points (minimum 2 required)');
+    }
+
+    // Validate model interface before training
+    if (typeof this.model.fit !== 'function') {
+      throw new Error('Model does not implement fit method');
+    }
+
     try {
       console.log('🎯 Starting AI model training...');
       
@@ -379,6 +420,16 @@ export class AIOptimizer {
   async evaluateModel(testData: TrainingData[]): Promise<ModelEvaluationMetrics> {
     if (!this.model) {
       throw new Error('Model not initialized');
+    }
+
+    // Validate test data
+    if (!Array.isArray(testData) || testData.length === 0) {
+      throw new Error('Test data is required and must be a non-empty array');
+    }
+
+    // Validate model interface before evaluation
+    if (typeof this.model.predict !== 'function') {
+      throw new Error('Model does not implement predict method');
     }
 
     return this.modelTrainer.evaluate(this.model, testData);
@@ -732,8 +783,23 @@ export class AIOptimizer {
   private analyzeTokenUsage(usageData: ComponentUsageData[]): Record<string, any> {
     const tokenUsage: Record<string, any> = {};
     
+    // Defensive programming - handle null/undefined usage data
+    if (!usageData || !Array.isArray(usageData)) {
+      return tokenUsage;
+    }
+    
     usageData.forEach(data => {
+      // Check if data and responsiveValues exist
+      if (!data || !data.responsiveValues || !Array.isArray(data.responsiveValues)) {
+        return;
+      }
+      
       data.responsiveValues.forEach(value => {
+        // Check if value and token exist
+        if (!value || !value.token) {
+          return;
+        }
+        
         if (!tokenUsage[value.token]) {
           tokenUsage[value.token] = {
             totalUsage: 0,
@@ -742,15 +808,15 @@ export class AIOptimizer {
           };
         }
         
-        tokenUsage[value.token].totalUsage += value.usageFrequency;
-        tokenUsage[value.token].averageValue += value.baseValue;
+        tokenUsage[value.token].totalUsage += value.usageFrequency || 0;
+        tokenUsage[value.token].averageValue += value.baseValue || 0;
         tokenUsage[value.token].valueRange.min = Math.min(
           tokenUsage[value.token].valueRange.min,
-          value.baseValue
+          value.baseValue || 0
         );
         tokenUsage[value.token].valueRange.max = Math.max(
           tokenUsage[value.token].valueRange.max,
-          value.baseValue
+          value.baseValue || 0
         );
       });
     });

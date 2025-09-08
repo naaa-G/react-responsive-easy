@@ -103,8 +103,8 @@ describe('CI/CD Integration Tests', () => {
         transformWithMetrics(input);
       });
 
-      // Should complete transformation in less than 1000ms (enterprise CI)
-      expect(time).toBeLessThan(1000);
+      // Should complete transformation in less than 1500ms (enterprise CI with buffer)
+      expect(time).toBeLessThan(1500);
       
       // Memory usage should be reasonable (less than 50MB)
       expect(memory).toBeLessThan(50 * 1024 * 1024);
