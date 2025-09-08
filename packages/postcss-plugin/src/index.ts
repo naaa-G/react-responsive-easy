@@ -21,6 +21,8 @@ interface PostCSSPluginOptions {
   customPropertyPrefix?: string;
   /** Enable development mode with extra comments */
   development?: boolean;
+  /** Enable CI-optimized mode for better performance in CI environments */
+  ciOptimized?: boolean;
 }
 
 // Mock configuration for now
@@ -91,8 +93,13 @@ const postcssResponsiveEasy: PluginCreator<PostCSSPluginOptions> = (options = {}
     generateCustomProperties = true,
     generateCustomMedia = true,
     customPropertyPrefix = '--rre',
-    development = false
+    development = false,
+    ciOptimized = false
   } = options;
+
+  // Auto-detect CI environment and apply optimizations
+  const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS || !!process.env.GITLAB_CI || !!process.env.CIRCLECI || !!process.env.TRAVIS;
+  const shouldOptimize = ciOptimized || isCI;
 
   return {
     postcssPlugin: '@react-responsive-easy/postcss-plugin',

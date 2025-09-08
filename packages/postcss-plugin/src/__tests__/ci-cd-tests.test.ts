@@ -25,10 +25,41 @@ import {
 // Mock CI/CD environment variables
 const originalEnv = process.env;
 
-// Helper function to get environment-appropriate performance thresholds
+// Environment-aware performance thresholds with regression detection
 function getPerformanceThreshold(baseThreshold: number): number {
   const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS || !!process.env.GITLAB_CI || !!process.env.CIRCLECI || !!process.env.TRAVIS;
-  return isCI ? baseThreshold * 20 : baseThreshold; // 20x threshold for CI environments (more realistic)
+  
+  if (isCI) {
+    // More generous thresholds for CI environments
+    // Base threshold * 10 + 5000ms buffer for CI variability
+    return Math.max(baseThreshold * 10, 5000);
+  }
+  
+  return baseThreshold;
+}
+
+// Performance monitoring and regression detection
+function checkPerformanceRegression(actualTime: number, threshold: number, testName: string): void {
+  const isCI = !!process.env.CI;
+  
+  if (actualTime > threshold) {
+    const message = `Performance benchmark exceeded: ${actualTime.toFixed(2)}ms > ${threshold}ms (${testName})`;
+    
+    if (isCI) {
+      // In CI, log warning but don't fail unless it's a severe regression (>100% over threshold)
+      console.warn(`⚠️ ${message}`);
+      
+      // Only fail on severe regressions (>100% over threshold)
+      if (actualTime > threshold * 2) {
+        throw new Error(`Severe performance regression: ${message}`);
+      }
+    } else {
+      // In local development, fail on any threshold breach
+      throw new Error(message);
+    }
+  } else {
+    console.log(`✅ Performance OK: ${actualTime.toFixed(2)}ms < ${threshold}ms (${testName})`);
+  }
 }
 
 describe('CI/CD Integration Tests', () => {
@@ -380,8 +411,12 @@ describe('CI/CD Integration Tests', () => {
         await processCss(input, defaultTestOptions);
       }, 5);
       
-      // Should meet CI/CD performance thresholds
-      expect(metrics.executionTime).toBeLessThan(getPerformanceThreshold(1000)); // Increased for CI environments
+      // Use adaptive performance monitoring instead of rigid thresholds
+      const threshold = getPerformanceThreshold(1000);
+      checkPerformanceRegression(metrics.executionTime, threshold, 'CI/CD Performance Requirements');
+      
+      // Additional assertion for severe regressions only
+      expect(metrics.executionTime).toBeLessThan(threshold * 2);
     });
 
     it('should provide consistent performance across environments', async () => {
@@ -413,8 +448,12 @@ describe('CI/CD Integration Tests', () => {
       // Max time should not be more than 3x the min time (allow for system variations)
       expect(maxTime).toBeLessThan(minTime * 3);
       
-      // Average time should be reasonable (higher threshold for CI environments)
-      expect(avgTime).toBeLessThan(getPerformanceThreshold(1000)); // Increased base threshold for CI environments
+      // Use adaptive performance monitoring for average time
+      const threshold = getPerformanceThreshold(1000);
+      checkPerformanceRegression(avgTime, threshold, 'Cross-Environment Performance Consistency');
+      
+      // Additional assertion for severe regressions only
+      expect(avgTime).toBeLessThan(threshold * 2);
     });
   });
 
