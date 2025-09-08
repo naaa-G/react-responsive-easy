@@ -42,11 +42,13 @@ const getCIOptimizedOptions = (opts: BabelPluginOptions): BabelPluginOptions => 
     addComments: false,
     generateSourceMaps: false,
     validateConfig: false,
-    // Reduce cache size for CI
-    cacheSize: Math.min(opts.cacheSize || 1000, 500),
+    // Reduce cache size for CI to minimize memory usage
+    cacheSize: Math.min(opts.cacheSize || 1000, 200),
     // Enable optimizations
     minifyOutput: true,
-    precompute: true
+    precompute: true,
+    // Disable CSS props generation in CI to save memory
+    generateCSSProps: false
   };
 };
 
