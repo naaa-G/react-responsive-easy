@@ -16,6 +16,13 @@ import {
 // Mock CI/CD environment variables
 const originalEnv = process.env;
 
+// Environment-aware performance thresholds
+const isCI = !!process.env.CI;
+const getPerformanceThreshold = (baseThreshold: number): number => {
+  // Add 50% buffer for CI environments
+  return isCI ? Math.ceil(baseThreshold * 1.5) : baseThreshold;
+};
+
 // Helper function to transform code with comprehensive metrics
 function transformWithMetrics(code: string, options = {}): { code: string; metrics: TestMetrics } {
   const startTime = performance.now();
@@ -103,8 +110,8 @@ describe('CI/CD Integration Tests', () => {
         transformWithMetrics(input);
       });
 
-      // Should complete transformation in less than 5000ms (enterprise CI with realistic buffer)
-      expect(time).toBeLessThan(5000);
+      // Should complete transformation within environment-aware threshold
+      expect(time).toBeLessThan(getPerformanceThreshold(3000));
       
       // Memory usage should be reasonable (less than 50MB)
       expect(memory).toBeLessThan(50 * 1024 * 1024);
@@ -121,8 +128,8 @@ describe('CI/CD Integration Tests', () => {
         }
       });
 
-      // Should complete 100 transformations in less than 2000ms (enterprise CI)
-      expect(time).toBeLessThan(2000);
+      // Should complete 100 transformations within environment-aware threshold
+      expect(time).toBeLessThan(getPerformanceThreshold(2000));
       
       // Memory usage should be reasonable (less than 50MB)
       expect(memory).toBeLessThan(50 * 1024 * 1024);
@@ -172,8 +179,8 @@ describe('CI/CD Integration Tests', () => {
         });
       });
 
-      // Should complete all transformations in less than 1500ms (enterprise CI)
-      expect(time).toBeLessThan(1500);
+      // Should complete all transformations within environment-aware threshold
+      expect(time).toBeLessThan(getPerformanceThreshold(1000));
       
       // Memory usage should be reasonable (less than 30MB)
       expect(memory).toBeLessThan(30 * 1024 * 1024);
