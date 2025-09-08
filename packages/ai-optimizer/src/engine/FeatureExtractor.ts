@@ -36,28 +36,38 @@ export class FeatureExtractor {
   featuresToVector(features: ModelFeatures): number[] {
     const vector: number[] = [];
     
-    // Configuration features (20 values)
-    vector.push(features.config.breakpointCount);
-    vector.push(...features.config.breakpointRatios);
-    vector.push(features.config.tokenComplexity);
-    vector.push(...Object.values(features.config.originDistribution));
+    // Defensive null checks
+    if (!features) {
+      console.warn('⚠️ Features object is null/undefined, returning empty vector');
+      return [];
+    }
     
-    // Usage features (30 values)
-    vector.push(...features.usage.commonValues);
-    vector.push(...Object.values(features.usage.componentFrequencies).slice(0, 10));
-    vector.push(...Object.values(features.usage.propertyPatterns).slice(0, 10));
+    // Configuration features (20 values) - with null checks
+    const config = features.config || {};
+    vector.push(config.breakpointCount || 0);
+    vector.push(...(config.breakpointRatios || []));
+    vector.push(config.tokenComplexity || 0);
+    vector.push(...Object.values(config.originDistribution || {}));
     
-    // Performance features (25 values)
-    vector.push(...features.performance.avgRenderTimes);
-    vector.push(...features.performance.bundleSizes);
-    vector.push(...features.performance.memoryPatterns);
-    vector.push(...features.performance.layoutShiftFreq);
+    // Usage features (30 values) - with null checks
+    const usage = features.usage || {};
+    vector.push(...(usage.commonValues || []));
+    vector.push(...Object.values(usage.componentFrequencies || {}).slice(0, 10));
+    vector.push(...Object.values(usage.propertyPatterns || {}).slice(0, 10));
     
-    // Context features (53 values)
-    vector.push(this.encodeApplicationType(features.context.applicationType));
-    vector.push(...Object.values(features.context.deviceDistribution));
-    vector.push(...Object.values(features.context.userBehavior));
-    vector.push(this.encodeIndustry(features.context.industry));
+    // Performance features (25 values) - with null checks
+    const performance = features.performance || {};
+    vector.push(...(performance.avgRenderTimes || []));
+    vector.push(...(performance.bundleSizes || []));
+    vector.push(...(performance.memoryPatterns || []));
+    vector.push(...(performance.layoutShiftFreq || []));
+    
+    // Context features (53 values) - with null checks
+    const context = features.context || {};
+    vector.push(this.encodeApplicationType(context.applicationType));
+    vector.push(...Object.values(context.deviceDistribution || {}));
+    vector.push(...Object.values(context.userBehavior || {}));
+    vector.push(this.encodeIndustry(context.industry));
     
     // Pad or truncate to exactly 128 features
     while (vector.length < 128) {

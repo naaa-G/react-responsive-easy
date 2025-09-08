@@ -294,12 +294,12 @@ export class AnalyticsTracker {
 
   private sanitizeConfig(config: ResponsiveConfig): any {
     return {
-      breakpointCount: config.breakpoints.length,
+      breakpointCount: config?.breakpoints?.length || 0,
       strategy: {
-        origin: config.strategy.origin,
-        mode: config.strategy.mode
+        origin: config?.strategy?.origin || 'unknown',
+        mode: config?.strategy?.mode || 'unknown'
       },
-      tokenCount: Object.keys(config.strategy.tokens).length
+      tokenCount: Object.keys(config?.strategy?.tokens || {}).length
     };
   }
 

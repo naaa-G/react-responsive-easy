@@ -328,6 +328,15 @@ export class AIOptimizer {
 
       // Validate usage data structure - throw error for malformed data
       this.validateUsageData(usageData);
+      
+      // Validate configuration structure - throw error for missing required properties
+      if (!config.breakpoints || !Array.isArray(config.breakpoints) || config.breakpoints.length === 0) {
+        throw new Error('Configuration must include breakpoints array');
+      }
+      
+      if (!config.strategy || !config.strategy.tokens) {
+        throw new Error('Configuration must include strategy with tokens');
+      }
 
       console.log(`🎯 Starting optimization for ${usageData.length} components...`);
       
@@ -878,8 +887,8 @@ export class AIOptimizer {
   ): AccessibilityWarning[] {
     const warnings: AccessibilityWarning[] = [];
     
-    // Check font size accessibility
-    const minFontSize = config.strategy.accessibility.minFontSize;
+    // Check font size accessibility - with null safety
+    const minFontSize = config?.strategy?.accessibility?.minFontSize || 16;
     if (predictions[24] && predictions[24] > minFontSize) {
       warnings.push({
         type: 'font-size',
@@ -891,8 +900,8 @@ export class AIOptimizer {
       });
     }
     
-    // Check tap target sizes
-    const minTapTarget = config.strategy.accessibility.minTapTarget;
+    // Check tap target sizes - with null safety
+    const minTapTarget = config?.strategy?.accessibility?.minTapTarget || 44;
     if (predictions[25] && predictions[25] > minTapTarget) {
       warnings.push({
         type: 'tap-target',

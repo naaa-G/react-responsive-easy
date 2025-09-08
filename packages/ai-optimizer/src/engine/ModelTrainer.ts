@@ -163,7 +163,18 @@ export class ModelTrainer {
     const featureVectors: number[][] = [];
     const labelVectors: number[][] = [];
     
-    trainingData.forEach(data => {
+    trainingData.forEach((data, index) => {
+      // Validate features - throw error for malformed data (null features or null properties)
+      if (!data.features || data.features === null) {
+        throw new Error(`Invalid training data at index ${index}: features cannot be null`);
+      }
+      
+      // Check for null properties within features (malformed data)
+      if (data.features.config === null || data.features.usage === null || 
+          data.features.performance === null || data.features.context === null) {
+        throw new Error(`Invalid training data at index ${index}: features contain null properties`);
+      }
+      
       // Convert features to numerical vector
       const featureVector = this.featureExtractor.featuresToVector(data.features);
       featureVectors.push(featureVector);
