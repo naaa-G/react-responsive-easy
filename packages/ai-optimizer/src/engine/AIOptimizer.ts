@@ -325,6 +325,9 @@ export class AIOptimizer {
         throw new Error('Usage data is required and must be a non-empty array');
       }
 
+      // Validate usage data structure - throw error for malformed data
+      this.validateUsageData(usageData);
+
       console.log(`🎯 Starting optimization for ${usageData.length} components...`);
       
       // Use performance optimizer with caching
@@ -916,6 +919,14 @@ export class AIOptimizer {
     const startTime = performance.now();
     
     try {
+      // Validate all requests before processing
+      requests.forEach((request, index) => {
+        if (!request.config) {
+          throw new Error(`Request ${index}: Configuration is required`);
+        }
+        this.validateUsageData(request.usageData);
+      });
+      
       const results = await this.performanceOptimizer.batchOptimize(
         requests,
         async (batchRequests) => {
@@ -1033,6 +1044,14 @@ export class AIOptimizer {
     const startTime = performance.now();
     
     try {
+      // Validate all requests before processing
+      requests.forEach((request, index) => {
+        if (!request.config) {
+          throw new Error(`Request ${index}: Configuration is required`);
+        }
+        this.validateUsageData(request.usageData);
+      });
+      
       // Add items to batch processor with priority
       const itemIds = requests.map(request => 
         this.batchProcessor.addItem(
@@ -1435,6 +1454,85 @@ export class AIOptimizer {
     this.isInitialized = false;
   }
 
+  /**
+   * Validate usage data structure and throw errors for malformed data
+   */
+  private validateUsageData(usageData: ComponentUsageData[]): void {
+    if (!Array.isArray(usageData)) {
+      throw new Error('Usage data must be an array');
+    }
+
+    if (usageData.length === 0) {
+      throw new Error('Usage data cannot be empty');
+    }
+
+    for (let i = 0; i < usageData.length; i++) {
+      const data = usageData[i];
+      
+      if (!data || typeof data !== 'object') {
+        throw new Error(`Invalid usage data at index ${i}: must be an object`);
+      }
+
+      // Check required properties
+      if (!data.componentType || typeof data.componentType !== 'string') {
+        throw new Error(`Invalid usage data at index ${i}: componentType is required and must be a string`);
+      }
+
+      if (!data.componentId || typeof data.componentId !== 'string') {
+        throw new Error(`Invalid usage data at index ${i}: componentId is required and must be a string`);
+      }
+
+      // Check responsiveValues - this is critical for malformed data tests
+      if (!data.responsiveValues) {
+        throw new Error(`Invalid usage data at index ${i}: responsiveValues is required`);
+      }
+
+      if (!Array.isArray(data.responsiveValues)) {
+        throw new Error(`Invalid usage data at index ${i}: responsiveValues must be an array`);
+      }
+
+      // Validate each responsive value
+      data.responsiveValues.forEach((value, valueIndex) => {
+        if (!value || typeof value !== 'object') {
+          throw new Error(`Invalid responsive value at index ${i}.${valueIndex}: must be an object`);
+        }
+
+        if (!value.token || typeof value.token !== 'string') {
+          throw new Error(`Invalid responsive value at index ${i}.${valueIndex}: token is required and must be a string`);
+        }
+
+        if (!value.property || typeof value.property !== 'string') {
+          throw new Error(`Invalid responsive value at index ${i}.${valueIndex}: property is required and must be a string`);
+        }
+
+        if (typeof value.baseValue !== 'number') {
+          throw new Error(`Invalid responsive value at index ${i}.${valueIndex}: baseValue is required and must be a number`);
+        }
+      });
+
+      // Check performance data
+      if (!data.performance || typeof data.performance !== 'object') {
+        throw new Error(`Invalid usage data at index ${i}: performance is required and must be an object`);
+      }
+
+      if (typeof data.performance.renderTime !== 'number') {
+        throw new Error(`Invalid usage data at index ${i}: performance.renderTime is required and must be a number`);
+      }
+
+      if (typeof data.performance.bundleSize !== 'number') {
+        throw new Error(`Invalid usage data at index ${i}: performance.bundleSize is required and must be a number`);
+      }
+
+      if (typeof data.performance.memoryUsage !== 'number') {
+        throw new Error(`Invalid usage data at index ${i}: performance.memoryUsage is required and must be a number`);
+      }
+
+      if (typeof data.performance.layoutShift !== 'number') {
+        throw new Error(`Invalid usage data at index ${i}: performance.layoutShift is required and must be a number`);
+      }
+    }
+  }
+
   // Private helper methods
 
   private async processBatchOptimization(
@@ -1444,36 +1542,14 @@ export class AIOptimizer {
     
     for (const { config, usageData } of batch) {
       try {
+        // Validate data before processing - this will throw for malformed data
+        this.validateUsageData(usageData);
         const result = await this.optimizeScaling(config, usageData);
         results.push(result);
       } catch (error) {
-        // Create error result
-        const errorResult: OptimizationSuggestions = {
-          suggestedTokens: {},
-          scalingCurveRecommendations: [],
-          performanceImpacts: [],
-          accessibilityWarnings: [],
-          confidenceScore: 0,
-          estimatedImprovements: {
-            userExperience: {
-              interactionRate: 0,
-              accessibilityScore: 0,
-              visualHierarchy: 0
-            },
-            performance: {
-              renderTime: 0,
-              bundleSize: 0,
-              memoryUsage: 0,
-              layoutShift: 0
-            },
-            developerExperience: {
-              codeReduction: 0,
-              maintenanceEffort: 0,
-              debuggingTime: 0
-            }
-          }
-        };
-        results.push(errorResult);
+        // Re-throw validation errors instead of creating error results
+        // This ensures malformed data is properly rejected
+        throw error;
       }
     }
     
