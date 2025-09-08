@@ -171,15 +171,21 @@ export default declare<BabelPluginOptions>((api, options) => {
       CallExpression(path, state: PluginState) {
         const { node } = path;
         
+        // Early return if precompute is disabled
+        if (!opts.precompute) return;
+        
         // Initialize state if not already done
         if (state.hasTransformations === undefined) {
           state.hasTransformations = false;
         }
         
+        // Early return if not a function call
+        if (!api.types.isCallExpression(node)) return;
         
-        if (!opts.precompute) return;
+        // Early return if callee is not an identifier (optimization)
+        if (!api.types.isIdentifier(node.callee)) return;
         
-        // Get all supported transformers
+        // Get all supported transformers (cached for performance)
         const transformers = hookTransformers.getTransformers();
         
         // Try to transform each supported hook
@@ -188,7 +194,7 @@ export default declare<BabelPluginOptions>((api, options) => {
             try {
               const startTime = performance.now();
               
-              // Check cache first
+              // Check cache first (optimized for CI environments)
               if (opts.enableCaching) {
                 const inputCode = path.toString();
                 const cached = cacheManager.get(inputCode, opts);
@@ -200,11 +206,23 @@ export default declare<BabelPluginOptions>((api, options) => {
                     } else {
                       path.replaceWith(ast);
                     }
+                    // Update metrics and return early
+                    if (state.metrics) {
+                      state.metrics.cacheHits++;
+                    }
                     return;
                   } catch (cacheError) {
                     // If cached AST is invalid, continue with transformation
-                    console.warn('Invalid cached AST, continuing with transformation:', cacheError);
+                    if (state.metrics) {
+                      state.metrics.cacheMisses++;
+                    }
+                    // Only log in development mode to avoid CI noise
+                    if (opts.development) {
+                      console.warn('Invalid cached AST, continuing with transformation:', cacheError);
+                    }
                   }
+                } else if (state.metrics) {
+                  state.metrics.cacheMisses++;
                 }
               }
               
@@ -216,6 +234,14 @@ export default declare<BabelPluginOptions>((api, options) => {
               
               // Add imports immediately after transformation
               addRequiredImports(path, state, api, opts);
+              
+              // Update performance metrics (only in development mode for CI performance)
+              if (opts.performanceMetrics && state.metrics) {
+                const endTime = performance.now();
+                state.metrics.totalTransformTime += (endTime - startTime);
+                state.metrics.transformCount++;
+                state.metrics.averageTransformTime = state.metrics.totalTransformTime / state.metrics.transformCount;
+              }
               
               // Cache the result
               if (opts.enableCaching) {
