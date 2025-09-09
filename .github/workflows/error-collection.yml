@@ -36,8 +36,10 @@ jobs:
     - name: Run comprehensive error collection
       run: |
         echo "Starting comprehensive error collection for Node.js ${{ matrix.node-version }}"
-        node tools/error-collector.js
+        # Skip E2E tests in CI to avoid hanging on dev server
+        node tools/error-collector.js --skip-e2e
       continue-on-error: true  # Never fail - we want to collect all errors
+      timeout-minutes: 30  # GitHub Actions timeout
     
     - name: Upload error reports
       uses: actions/upload-artifact@v4
