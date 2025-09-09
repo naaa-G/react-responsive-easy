@@ -10,8 +10,8 @@ import type { ResponsiveState, BreakpointConfig } from '../types';
 
 interface ResponsiveControlsProps {
   state: ResponsiveState;
-  onBreakpointChange: () => void;
-  onConfigUpdate: () => void;
+  onBreakpointChange: (breakpoint: BreakpointConfig) => void;
+  onConfigUpdate: (config: any) => void;
 }
 
 export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({

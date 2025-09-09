@@ -74,7 +74,7 @@ class ContentScript {
   private async handleMessage(
     message: any, 
     _sender: chrome.runtime.MessageSender, 
-    __sendResponse: () => void
+    __sendResponse: (response?: any) => void
   ): Promise<void> {
     try {
       switch (message.type) {

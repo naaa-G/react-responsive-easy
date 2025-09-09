@@ -1390,7 +1390,7 @@ const ResponsiveControls = ({ state, onBreakpointChange, onConfigUpdate }) => {
             onConfigUpdate(config);
             setCustomConfig('');
         }
-        catch (error) {
+        catch {
             alert('Invalid JSON configuration');
         }
     }, [customConfig, onConfigUpdate]);
@@ -2508,7 +2508,11 @@ const BreakpointToolbar = ({ api }) => {
     const currentLabel = currentBreakpoint ?
         `${currentBreakpoint.name} (${currentBreakpoint.width}×${currentBreakpoint.height})` :
         'Select Breakpoint';
-    return (jsxRuntimeExports.jsx(components.WithTooltip, { placement: "top", trigger: "click", tooltipShown: isExpanded, onVisibilityChange: setIsExpanded, tooltip: jsxRuntimeExports.jsx(components.TooltipLinkList, { links: breakpointOptions }), children: jsxRuntimeExports.jsxs(components.IconButton, { title: currentLabel, active: isExpanded, placeholder: "", onPointerEnterCapture: () => { }, onPointerLeaveCapture: () => { }, children: [jsxRuntimeExports.jsx("span", { style: { fontSize: '14px' }, children: currentIcon }), jsxRuntimeExports.jsx("span", { style: {
+    return (jsxRuntimeExports.jsx(components.WithTooltip, { placement: "top", trigger: "click", tooltipShown: isExpanded, onVisibilityChange: setIsExpanded, tooltip: 
+        // @ts-ignore - React type conflict with bigint in ReactNode
+        jsxRuntimeExports.jsx(components.TooltipLinkList, { links: breakpointOptions }), children: 
+        // @ts-ignore - React type conflict with bigint in ReactNode
+        jsxRuntimeExports.jsxs(components.IconButton, { title: currentLabel, active: isExpanded, placeholder: "", onPointerEnterCapture: () => { }, onPointerLeaveCapture: () => { }, children: [jsxRuntimeExports.jsx("span", { style: { fontSize: '14px' }, children: currentIcon }), jsxRuntimeExports.jsx("span", { style: {
                         marginLeft: '4px',
                         fontSize: '11px',
                         maxWidth: '80px',

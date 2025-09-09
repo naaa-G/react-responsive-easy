@@ -27,5 +27,5 @@ Object.defineProperty(window, 'matchMedia', {
 if (typeof performance === 'undefined') {
   global.performance = {
     now: () => Date.now(),
-  } as any;
+  } as Performance;
 }

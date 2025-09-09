@@ -37,7 +37,11 @@ export const useResponsiveValue = (
       const result = scaleValueWithOptions(value, options);
       return result.scaled;
     } catch (error) {
-      console.warn('Failed to scale value:', error);
+      // Log error in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to scale value:', error);
+      }
       return value; // Fallback to original value
     }
   }, [value, currentBreakpoint, config, options, scaleValueWithOptions]);
@@ -161,7 +165,11 @@ export const useResponsiveValueInfo = (
     try {
       return scaleValueWithOptions(value, options);
     } catch (error) {
-      console.warn('Failed to get scaling info:', error);
+      // Log error in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to get scaling info:', error);
+      }
       // Return fallback info
       return {
         original: value,

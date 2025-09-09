@@ -52,7 +52,9 @@ export class HookTransformers {
    */
   private shouldTransformUseResponsiveValue(path: NodePath<any>): boolean {
     const { node } = path;
-    const shouldTransform = (
+    
+    // Check if it's a valid useResponsiveValue call
+    const isValidCall = (
       node.type === 'CallExpression' &&
       node.callee.type === 'Identifier' &&
       node.callee.name === 'useResponsiveValue' &&
@@ -60,8 +62,20 @@ export class HookTransformers {
       node.arguments[0].type === 'NumericLiteral'
     );
     
+    if (!isValidCall) {
+      return false;
+    }
     
-    return shouldTransform;
+    // Get the plugin state to check precompute option
+    const state = path.state as any;
+    const opts = state?.opts;
+    
+    // If precompute is disabled, don't transform
+    if (opts && opts.precompute === false) {
+      return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -125,13 +139,29 @@ export class HookTransformers {
    */
   private shouldTransformUseScaledStyle(path: NodePath<any>): boolean {
     const { node } = path;
-    return (
+    
+    const isValidCall = (
       node.type === 'CallExpression' &&
       node.callee.type === 'Identifier' &&
       node.callee.name === 'useScaledStyle' &&
       node.arguments.length > 0 &&
       node.arguments[0].type === 'ObjectExpression'
     );
+    
+    if (!isValidCall) {
+      return false;
+    }
+    
+    // Get the plugin state to check precompute option
+    const state = path.state as any;
+    const opts = state?.opts;
+    
+    // If precompute is disabled, don't transform
+    if (opts && opts.precompute === false) {
+      return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -182,12 +212,28 @@ export class HookTransformers {
    */
   private shouldTransformUseResponsiveStyle(path: NodePath<any>): boolean {
     const { node } = path;
-    return (
+    
+    const isValidCall = (
       node.type === 'CallExpression' &&
       node.callee.type === 'Identifier' &&
       node.callee.name === 'useResponsiveStyle' &&
       node.arguments.length > 0
     );
+    
+    if (!isValidCall) {
+      return false;
+    }
+    
+    // Get the plugin state to check precompute option
+    const state = path.state as any;
+    const opts = state?.opts;
+    
+    // If precompute is disabled, don't transform
+    if (opts && opts.precompute === false) {
+      return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -204,11 +250,27 @@ export class HookTransformers {
    */
   private shouldTransformUseBreakpoint(path: NodePath<any>): boolean {
     const { node } = path;
-    return (
+    
+    const isValidCall = (
       node.type === 'CallExpression' &&
       node.callee.type === 'Identifier' &&
       node.callee.name === 'useBreakpoint'
     );
+    
+    if (!isValidCall) {
+      return false;
+    }
+    
+    // Get the plugin state to check precompute option
+    const state = path.state as any;
+    const opts = state?.opts;
+    
+    // If precompute is disabled, don't transform
+    if (opts && opts.precompute === false) {
+      return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -225,11 +287,27 @@ export class HookTransformers {
    */
   private shouldTransformUseResponsiveLayout(path: NodePath<any>): boolean {
     const { node } = path;
-    return (
+    
+    const isValidCall = (
       node.type === 'CallExpression' &&
       node.callee.type === 'Identifier' &&
       node.callee.name === 'useResponsiveLayout'
     );
+    
+    if (!isValidCall) {
+      return false;
+    }
+    
+    // Get the plugin state to check precompute option
+    const state = path.state as any;
+    const opts = state?.opts;
+    
+    // If precompute is disabled, don't transform
+    if (opts && opts.precompute === false) {
+      return false;
+    }
+    
+    return true;
   }
 
   /**

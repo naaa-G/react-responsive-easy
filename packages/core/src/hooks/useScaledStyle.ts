@@ -54,7 +54,11 @@ export const useScaledStyle = (
         }
       }
     } catch (error) {
-      console.warn('Failed to scale styles:', error);
+      // Log error in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to scale styles:', error);
+      }
       return styles; // Fallback to original styles
     }
     
@@ -82,7 +86,7 @@ export const useScaledStyle = (
  * ```
  */
 export const useScaledStyleWithTokens = (
-  styles: Record<string, { value: number; token?: keyof any; options?: ScaleOptions }>
+  styles: Record<string, { value: number; token?: string; options?: ScaleOptions }>
 ): StyleObject => {
   const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
@@ -103,14 +107,18 @@ export const useScaledStyleWithTokens = (
       for (const [key, { value, token, options = {} }] of Object.entries(styles)) {
         const scaleOptions: ScaleOptions = {
           ...options,
-          token: token as any || options.token
+          token: token ?? options.token
         };
         
         const result = scaleValueWithOptions(value, scaleOptions);
         scaledStyles[key] = result.scaled;
       }
     } catch (error) {
-      console.warn('Failed to scale styles with tokens:', error);
+      // Log error in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to scale styles with tokens:', error);
+      }
       // Fallback to original values
       for (const [key, { value }] of Object.entries(styles)) {
         scaledStyles[key] = value;
@@ -170,7 +178,11 @@ export const useResponsiveCSSVariables = (
         cssVars[key] = `${result.scaled}px`;
       }
     } catch (error) {
-      console.warn('Failed to create responsive CSS variables:', error);
+      // Log error in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to create responsive CSS variables:', error);
+      }
       // Fallback to original values
       for (const [key, value] of Object.entries(variables)) {
         cssVars[key] = `${value}px`;

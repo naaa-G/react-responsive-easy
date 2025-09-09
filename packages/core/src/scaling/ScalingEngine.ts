@@ -151,7 +151,11 @@ export class ScalingEngine {
 
     const tokenConfig: ScalingToken = this.config.strategy.tokens[options.token];
     if (!tokenConfig) {
-      console.warn(`Token '${options.token}' not found in config, using default scaling`);
+      // Log warning in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn(`Token '${options.token}' not found in config, using default scaling`);
+      }
       return this.calculateScaledValue(value, targetBreakpoint);
     }
 
@@ -309,11 +313,11 @@ export class ScalingEngine {
     const parts = [
       value.toString(),
       targetBreakpoint.name,
-      options.token || 'default',
-      options.scale?.toString() || 'default',
-      options.min?.toString() || 'default',
-      options.max?.toString() || 'default',
-      options.step?.toString() || 'default'
+      options.token ?? 'default',
+      options.scale?.toString() ?? 'default',
+      options.min?.toString() ?? 'default',
+      options.max?.toString() ?? 'default',
+      options.step?.toString() ?? 'default'
     ];
     
     return parts.join('|');

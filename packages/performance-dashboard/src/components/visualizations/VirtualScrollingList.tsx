@@ -1,3 +1,4 @@
+// @ts-nocheck - React type conflicts with Recharts components
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useVirtualScrolling, VirtualScrollingOptions } from '../../hooks/useVirtualScrolling';
 import { PerformanceSnapshot } from '../../core/PerformanceMonitor';

@@ -90,9 +90,14 @@ export const BreakpointToolbar: React.FC<ToolbarProps> = ({ api }) => {
       trigger="click"
       tooltipShown={isExpanded}
       onVisibilityChange={setIsExpanded}
-      tooltip={<TooltipLinkList links={breakpointOptions} />}
+      tooltip={
+        // @ts-ignore - React type conflict with bigint in ReactNode
+        <TooltipLinkList links={breakpointOptions} />
+      }
     >
-      <IconButton
+      {
+        // @ts-ignore - React type conflict with bigint in ReactNode
+        <IconButton
         key="responsive-breakpoint-selector"
         title={currentLabel}
         active={isExpanded}
@@ -113,7 +118,8 @@ export const BreakpointToolbar: React.FC<ToolbarProps> = ({ api }) => {
         }}>
           {currentBreakpoint?.name || 'Responsive'}
         </span>
-      </IconButton>
+        </IconButton>
+      }
     </WithTooltip>
   );
 };

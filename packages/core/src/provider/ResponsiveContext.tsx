@@ -48,7 +48,7 @@ export const ResponsiveProvider = ({
       const found = config.breakpoints.find(bp => 
         bp.name === initialBreakpoint || bp.alias === initialBreakpoint
       );
-      return found || config.base;
+      return found ?? config.base;
     }
     
     // If it's already a Breakpoint object, use it
@@ -75,7 +75,11 @@ export const ResponsiveProvider = ({
         const testResult = scalingEngine.scaleValue(100, breakpoint);
         ratios[breakpoint.name] = testResult.ratio;
       } catch (error) {
-        console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
+        // Log error in development mode only
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
+        }
       }
     });
     setScalingRatios(ratios);
@@ -97,7 +101,11 @@ export const ResponsiveProvider = ({
         const testResult = scalingEngine.scaleValue(100, breakpoint);
         ratios[breakpoint.name] = testResult.ratio;
       } catch (error) {
-        console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
+        // Log error in development mode only
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
+        }
       }
     });
     setScalingRatios(ratios);
@@ -108,7 +116,11 @@ export const ResponsiveProvider = ({
     try {
       // Ensure we have a valid currentBreakpoint
       if (!currentBreakpoint) {
-        console.warn('No current breakpoint available, using base breakpoint');
+        // Log warning in development mode only
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.warn('No current breakpoint available, using base breakpoint');
+        }
         const result = scalingEngine.scaleValue(value, config.base, options);
         return result;
       }
@@ -131,7 +143,11 @@ export const ResponsiveProvider = ({
       
       return result;
     } catch (error) {
-      console.warn('Failed to scale value with options:', error);
+      // Log error in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to scale value with options:', error);
+      }
       // Return fallback value
       return {
         original: value,
@@ -204,7 +220,8 @@ export const ResponsiveProvider = ({
   
   // Debug logging
   useEffect(() => {
-    if (debug) {
+    if (debug && process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.log('🔍 ResponsiveProvider Debug:', {
         currentBreakpoint,
         scalingRatios,

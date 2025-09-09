@@ -13,7 +13,7 @@ export interface Breakpoint {
   /** Optional alias (e.g., 'base', 'mobile', 'desktop') */
   alias?: string;
   /** Optional custom properties */
-  custom?: Record<string, any>;
+  custom?: Record<string, unknown>;
 }
 
 /**
@@ -178,9 +178,9 @@ export interface PerformanceMetrics {
  */
 export class ScalingError extends Error {
   public code: 'INVALID_BREAKPOINT' | 'INVALID_CONFIG' | 'SCALING_FAILED' | 'CACHE_ERROR';
-  public details?: any;
+  public details?: unknown;
 
-  constructor(message: string, code: ScalingError['code'] = 'SCALING_FAILED', details?: any) {
+  constructor(message: string, code: ScalingError['code'] = 'SCALING_FAILED', details?: unknown) {
     super(message);
     this.name = 'ScalingError';
     this.code = code;
