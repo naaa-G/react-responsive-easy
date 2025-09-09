@@ -70,6 +70,55 @@ jobs:
         else
           echo "No error report generated"
         fi
+    
+    - name: Generate GitHub Actions Summary
+      if: always()
+      run: |
+        echo "# 🔍 Comprehensive Error Collection Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Node.js Version:** ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f error-report.json ]; then
+          errors=$(jq '.summary.totalErrors' error-report.json)
+          warnings=$(jq '.summary.totalWarnings' error-report.json)
+          packages=$(jq '.summary.packagesWithErrors' error-report.json)
+          
+          echo "## 📊 Error Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Errors | $errors |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Warnings | $warnings |" >> $GITHUB_STEP_SUMMARY
+          echo "| Packages with Errors | $packages |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$errors" -gt 0 ]; then
+            echo "## ❌ Critical Issues Found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **$errors errors** and **$warnings warnings** found across **$packages packages**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Download the error reports from the artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "2. Review the detailed error summary" >> $GITHUB_STEP_SUMMARY
+            echo "3. Fix errors systematically, starting with critical issues" >> $GITHUB_STEP_SUMMARY
+            echo "4. Re-run this workflow to verify fixes" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ✅ No Critical Issues Found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 All packages passed error collection!" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "## ❌ Error Report Generation Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The error collection process failed to generate a report." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** [Comprehensive Error Collection](https://github.com/${{ github.repository }}/actions/workflows/error-collection.yml)" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
   # Generate consolidated report
   consolidate-report:
@@ -150,6 +199,78 @@ jobs:
         name: consolidated-error-report
         path: consolidated-error-report.md
         retention-days: 30
+    
+    - name: Generate Consolidated GitHub Actions Summary
+      if: always()
+      run: |
+        echo "# 🔍 Consolidated Error Collection Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Generated:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "**Node.js Versions Tested:** 18, 20, 22" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Create a summary table
+        echo "## 📊 Error Summary by Node.js Version" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Node.js Version | Total Errors | Total Warnings | Packages with Errors | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------------|--------------|----------------|---------------------|--------|" >> $GITHUB_STEP_SUMMARY
+        
+        total_errors=0
+        total_warnings=0
+        total_packages=0
+        
+        for version in 18 20 22; do
+          if [ -f "error-reports/error-reports-node-$version/error-report.json" ]; then
+            errors=$(jq '.summary.totalErrors' "error-reports/error-reports-node-$version/error-report.json")
+            warnings=$(jq '.summary.totalWarnings' "error-reports/error-reports-node-$version/error-report.json")
+            packages=$(jq '.summary.packagesWithErrors' "error-reports/error-reports-node-$version/error-report.json")
+            
+            if [ "$errors" -gt 0 ]; then
+              status="❌ Issues Found"
+            else
+              status="✅ Clean"
+            fi
+            
+            echo "| $version | $errors | $warnings | $packages | $status |" >> $GITHUB_STEP_SUMMARY
+            
+            total_errors=$((total_errors + errors))
+            total_warnings=$((total_warnings + warnings))
+            total_packages=$((total_packages + packages))
+          else
+            echo "| $version | N/A | N/A | N/A | ⚠️ No Report |" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🎯 Overall Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total Errors Across All Versions:** $total_errors" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total Warnings Across All Versions:** $total_warnings" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total Packages with Errors:** $total_packages" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ $total_errors -gt 0 ]; then
+          echo "## ❌ Action Required" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **$total_errors errors** and **$total_warnings warnings** found across all Node.js versions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recommended Actions:" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Download detailed reports** from the workflow artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Focus on common errors** that appear across multiple Node.js versions" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Fix version-specific issues** after addressing common problems" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Test incrementally** - fix one package at a time" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Re-run this workflow** to verify fixes" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ✅ All Clear!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 No errors found across any Node.js version!" >> $GITHUB_STEP_SUMMARY
+          echo "The codebase is ready for production deployment." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** [Comprehensive Error Collection](https://github.com/${{ github.repository }}/actions/workflows/error-collection.yml)" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
     
     - name: Comment on PR (if applicable)
       if: github.event_name == 'pull_request'

@@ -457,11 +457,39 @@ jobs:
         path: coverage/
         retention-days: 30
 
+  # Error Collection Summary
+  error-summary:
+    name: Error Collection Summary
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Check for Error Collection Workflow
+      run: |
+        echo "# 🔍 Error Collection Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The comprehensive error collection workflow runs separately to collect all errors and warnings." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📋 Available Workflows:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "1. **Test Suite** (this workflow) - Runs unit tests, builds, linting, and E2E tests" >> $GITHUB_STEP_SUMMARY
+        echo "2. **Error Collection** - Comprehensive error collection across all packages and Node.js versions" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🔗 Quick Links:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- [View Error Collection Workflow](https://github.com/${{ github.repository }}/actions/workflows/error-collection.yml)" >> $GITHUB_STEP_SUMMARY
+        echo "- [View All Workflows](https://github.com/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📊 Current Test Status:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "This test suite focuses on functionality and basic quality checks." >> $GITHUB_STEP_SUMMARY
+        echo "For comprehensive error analysis, check the Error Collection workflow." >> $GITHUB_STEP_SUMMARY
+
   # Final Status
   status:
     name: Test Status
     runs-on: ubuntu-latest
-    needs: [unit-tests, build-tests, e2e-tests, cross-browser, performance-tests, bundle-analysis, security-audit, coverage]
+    needs: [unit-tests, build-tests, e2e-tests, cross-browser, performance-tests, bundle-analysis, security-audit, coverage, error-summary]
     if: always()
     
     steps:
