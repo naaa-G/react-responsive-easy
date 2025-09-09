@@ -30,14 +30,39 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
     
-    - name: Make error collector executable
-      run: chmod +x tools/error-collector.js
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
     
     - name: Run comprehensive error collection
       run: |
         echo "Starting comprehensive error collection for Node.js ${{ matrix.node-version }}"
+        echo "Working directory: $(pwd)"
+        echo "Node version: $(node --version)"
+        echo "PNPM version: $(pnpm --version)"
+        
         # Skip E2E tests in CI to avoid hanging on dev server
         node tools/error-collector.js --skip-e2e
+        
+        # Check if reports were generated
+        echo "Checking for generated reports..."
+        if [ -f "error-report.json" ]; then
+          echo "✅ error-report.json generated"
+          ls -la error-report.json
+        else
+          echo "❌ error-report.json not found"
+        fi
+        
+        if [ -f "error-summary.md" ]; then
+          echo "✅ error-summary.md generated"
+          ls -la error-summary.md
+        else
+          echo "❌ error-summary.md not found"
+        fi
+        
+        # List all files in root directory
+        echo "Files in root directory:"
+        ls -la *.json *.md 2>/dev/null || echo "No JSON or MD files found in root"
+        
       continue-on-error: true  # Never fail - we want to collect all errors
       timeout-minutes: 30  # GitHub Actions timeout
     

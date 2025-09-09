@@ -25,12 +25,14 @@ class ErrorCollector {
     this.warnings = [];
     this.packages = [];
     this.startTime = Date.now();
-    this.reportPath = path.join(process.cwd(), 'errors', 'error-report.json');
-    this.summaryPath = path.join(process.cwd(), 'errors', 'error-summary.md');
+    this.reportPath = path.join(process.cwd(), 'error-report.json');
+    this.summaryPath = path.join(process.cwd(), 'error-summary.md');
     this.skipE2E = options.skipE2E || false;
     this.isCI = process.env.CI || process.env.GITHUB_ACTIONS || process.env.GITHUB_WORKFLOW;
     this.activeProcesses = new Set();
     this.shouldStop = false;
+    
+    // Reports will be generated in the root directory
     
     // Configurable timeouts (in milliseconds)
     this.timeouts = {
@@ -725,8 +727,32 @@ Examples:
   }
   
   const collector = new ErrorCollector(options);
-  collector.run().catch(error => {
-    console.error('Error collection failed:', error);
+  collector.run().then(result => {
+    if (result) {
+      console.log('✅ Error collection completed successfully!');
+      console.log(`📊 Summary:`);
+      console.log(`   - Total errors: ${result.summary.totalErrors}`);
+      console.log(`   - Total warnings: ${result.summary.totalWarnings}`);
+      console.log(`   - Packages checked: ${result.summary.packagesChecked}`);
+      console.log(`   - Packages with errors: ${result.summary.packagesWithErrors}`);
+      console.log(`   - Duration: ${result.summary.duration}s`);
+      console.log('');
+      console.log('📁 Reports generated:');
+      console.log(`   - JSON: ${collector.reportPath}`);
+      console.log(`   - Markdown: ${collector.summaryPath}`);
+      console.log('');
+      if (result.summary.totalErrors > 0) {
+        console.log(`⚠️  Found ${result.summary.totalErrors} errors that need attention.`);
+        console.log('   Review the reports above for detailed information.');
+      } else {
+        console.log('🎉 No errors found!');
+      }
+    } else {
+      console.log('❌ Error collection completed but no report was generated.');
+    }
+  }).catch(error => {
+    console.error('❌ Error collection failed:', error.message);
+    console.error('Stack trace:', error.stack);
     process.exit(1);
   });
 }
