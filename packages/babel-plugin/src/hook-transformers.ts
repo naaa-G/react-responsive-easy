@@ -87,6 +87,7 @@ export class HookTransformers {
       const { api, opts } = state;
       
       if (!api || !opts) {
+        // eslint-disable-next-line no-console
         console.warn('Missing api or opts in state');
         return;
       }
@@ -129,7 +130,9 @@ export class HookTransformers {
     // Mark that transformations occurred
     state.hasTransformations = true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error in transformUseResponsiveValue:', error);
+      // eslint-disable-next-line no-console
       console.error('Stack:', (error as Error).stack);
     }
   }
@@ -173,6 +176,7 @@ export class HookTransformers {
       const { api, opts } = state;
       
       if (!api || !opts) {
+        // eslint-disable-next-line no-console
         console.warn('Missing api or opts in state');
         return;
       }
@@ -202,7 +206,9 @@ export class HookTransformers {
       (path.get('arguments.0') as any).replaceWith(transformedObject);
       state.hasTransformations = true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error in transformUseScaledStyle:', error);
+      // eslint-disable-next-line no-console
       console.error('Stack:', (error as Error).stack);
     }
   }
@@ -334,7 +340,7 @@ export class HookTransformers {
         token
       );
       
-      const unit = token && config.strategy.tokens[token]?.unit || 'px';
+      const unit = (token && config.strategy.tokens[token]?.unit) ?? 'px';
       
       cases.push(
         api.types.switchCase(
@@ -418,7 +424,7 @@ export class HookTransformers {
         token
       );
       
-      const unit = token && config.strategy.tokens[token]?.unit || 'px';
+      const unit = (token && config.strategy.tokens[token]?.unit) ?? 'px';
       
       return api.types.objectProperty(
         api.types.stringLiteral(breakpoint.name),
@@ -448,7 +454,7 @@ export class HookTransformers {
     if (typeof token === 'string' && token.includes('pre-computed')) {
       comment = ` Optimized by @react-responsive-easy/babel-plugin - ${token} `;
     } else {
-      comment = ` Optimized by @react-responsive-easy/babel-plugin from ${hookName}(${baseValue || ''}${token ? `, { token: '${token}' }` : ''}) `;
+      comment = ` Optimized by @react-responsive-easy/babel-plugin from ${hookName}(${baseValue ?? ''}${token ? `, { token: '${token}' }` : ''}) `;
     }
     api.types.addComment(node, 'leading', comment);
   }

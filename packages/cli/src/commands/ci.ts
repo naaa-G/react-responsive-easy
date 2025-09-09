@@ -16,9 +16,9 @@ import boxen from 'boxen';
 import figlet from 'figlet';
 // @ts-ignore
 import gradient from 'gradient-string';
-import { CICDService, CICDConfiguration, CICDPlatform } from '../services/CICDService';
-import { readFile, writeFile, access } from 'fs-extra';
-import { join, resolve } from 'path';
+import { CICDService, CICDConfiguration } from '../services/CICDService';
+import { readFile, writeFile } from 'fs-extra';
+import { join } from 'path';
 import inquirer from 'inquirer';
 
 
@@ -214,18 +214,19 @@ async function setupCI(options: CISetupOptions): Promise<void> {
           type: 'input',
           name: 'branch',
           message: 'Default branch:',
-          default: options.branch || 'main'
+          default: options.branch ?? 'main'
         },
         {
           type: 'list',
           name: 'environment',
           message: 'Environment:',
           choices: ['development', 'staging', 'production'],
-          default: options.environment || 'development'
+          default: options.environment ?? 'development'
         }
       ]);
 
-      options = { ...options, ...answers };
+      const updatedOptions = { ...options, ...answers };
+      Object.assign(options, updatedOptions);
     }
 
     // Validate required options
@@ -250,8 +251,8 @@ async function setupCI(options: CISetupOptions): Promise<void> {
     // Update configuration
     config.platform = options.platform;
     config.repository = options.repository;
-    config.branch = options.branch || 'main';
-    config.environment = options.environment || 'development';
+    config.branch = options.branch ?? 'main';
+    config.environment = options.environment ?? 'development';
 
     await saveConfig(config);
 
@@ -407,9 +408,9 @@ async function checkCIStatus(options: CIStatusOptions): Promise<void> {
       console.log(chalk.cyan('\n📊 Workflow Status:'));
       console.table(statuses.map((status, index) => ({
         Workflow: workflows[index]?.name ?? 'Unknown',
-        Status: status?.status || 'unknown',
+        Status: status?.status ?? 'unknown',
         Duration: status?.duration ? `${status.duration}ms` : 'N/A',
-        Start: status?.startTime?.toISOString() || 'N/A'
+        Start: status?.startTime?.toISOString() ?? 'N/A'
       })));
 
     } else if (options.workflow) {
@@ -422,7 +423,7 @@ async function checkCIStatus(options: CIStatusOptions): Promise<void> {
           chalk.cyan(`Workflow: ${status.workflow}\n`) +
           chalk.cyan(`Status: ${status.status}\n`) +
           chalk.cyan(`Start Time: ${status.startTime.toISOString()}\n`) +
-          chalk.cyan(`Duration: ${status.duration || 'N/A'}ms\n`) +
+          chalk.cyan(`Duration: ${status.duration ?? 'N/A'}ms\n`) +
           chalk.cyan(`Errors: ${status.errors.length}\n`) +
           chalk.cyan(`Warnings: ${status.warnings.length}`),
           {
@@ -474,10 +475,10 @@ async function generateCIReport(options: CIReportOptions): Promise<void> {
         workflow: 'All Workflows',
         timestamp: new Date(),
         summary: {
-          totalJobs: reports.reduce((sum, r) => sum + (r?.summary.totalJobs || 0), 0),
-          successfulJobs: reports.reduce((sum, r) => sum + (r?.summary.successfulJobs || 0), 0),
-          failedJobs: reports.reduce((sum, r) => sum + (r?.summary.failedJobs || 0), 0),
-          duration: reports.reduce((sum, r) => sum + (r?.summary.duration || 0), 0),
+          totalJobs: reports.reduce((sum, r) => sum + (r?.summary.totalJobs ?? 0), 0),
+          successfulJobs: reports.reduce((sum, r) => sum + (r?.summary.successfulJobs ?? 0), 0),
+          failedJobs: reports.reduce((sum, r) => sum + (r?.summary.failedJobs ?? 0), 0),
+          duration: reports.reduce((sum, r) => sum + (r?.summary.duration ?? 0), 0),
           status: 'success' as const,
           score: 95
         },
@@ -573,8 +574,8 @@ async function manageTemplates(options: any): Promise<void> {
         console.log(boxen(
           chalk.cyan(`Name: ${details.name}\n`) +
           chalk.cyan(`Platform: ${details.platform}\n`) +
-          chalk.cyan(`Triggers: ${details.triggers?.length || 0}\n`) +
-          chalk.cyan(`Jobs: ${details.jobs?.length || 0}`),
+          chalk.cyan(`Triggers: ${details.triggers?.length ?? 0}\n`) +
+          chalk.cyan(`Jobs: ${details.jobs?.length ?? 0}`),
           {
             title: 'Template Details',
             titleAlignment: 'center',
@@ -620,7 +621,7 @@ async function manageTemplates(options: any): Promise<void> {
 /**
  * Test CI/CD integration
  */
-async function testCI(options: any): Promise<void> {
+async function testCI(_options: any): Promise<void> {
   const spinner = ora('Testing CI/CD integration...').start();
 
   try {

@@ -11,7 +11,7 @@ import type { BreakpointConfig } from '../types';
 interface BreakpointPreviewProps {
   breakpoints: BreakpointConfig[];
   currentBreakpoint: BreakpointConfig | null;
-  onBreakpointChange: (breakpoint: BreakpointConfig) => void;
+  onBreakpointChange: (breakpoint: BreakpointConfig) => void; // eslint-disable-line no-unused-vars
 }
 
 export const BreakpointPreview: React.FC<BreakpointPreviewProps> = ({

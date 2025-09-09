@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { PerformanceSnapshot, PerformanceMetrics } from '../core/PerformanceMonitor';
 
 export interface MLModel {
@@ -9,7 +9,7 @@ export interface MLModel {
   accuracy: number;
   lastTrained: Date;
   isActive: boolean;
-  config: any;
+  config: unknown;
 }
 
 export interface AnomalyDetectionResult {
@@ -73,19 +73,19 @@ export interface MLState {
 }
 
 export interface MLActions {
-  initialize: () => Promise<void>;
+  initialize: () => void;
   trainModel: (modelId: string, data: PerformanceSnapshot[]) => Promise<void>;
   retrainAllModels: () => Promise<void>;
   detectAnomalies: (data: PerformanceSnapshot[]) => Promise<AnomalyDetectionResult[]>;
   generatePredictions: (data: PerformanceSnapshot[], horizon?: number) => Promise<PredictionResult[]>;
   recognizePatterns: (data: PerformanceSnapshot[]) => Promise<PatternRecognitionResult[]>;
   addModel: (model: Omit<MLModel, 'id' | 'lastTrained'>) => Promise<string>;
-  removeModel: (modelId: string) => Promise<void>;
-  updateModelConfig: (modelId: string, config: any) => Promise<void>;
-  getModelInsights: (modelId: string) => Promise<any>;
-  exportModel: (modelId: string) => Promise<any>;
-  importModel: (modelData: any) => Promise<string>;
-  getMLMetrics: () => Promise<any>;
+  removeModel: (modelId: string) => void;
+  updateModelConfig: (modelId: string, config: unknown) => void;
+  getModelInsights: (modelId: string) => unknown;
+  exportModel: (modelId: string) => unknown;
+  importModel: (modelData: unknown) => Promise<string>;
+  getMLMetrics: () => unknown;
 }
 
 /**
@@ -111,7 +111,7 @@ export function useAdvancedML(
   // Refs
   const modelsRef = useRef<Map<string, MLModel>>(new Map());
   const trainingDataRef = useRef<PerformanceSnapshot[]>([]);
-  const retrainingIntervalRef = useRef<NodeJS.Timeout>();
+  const retrainingIntervalRef = useRef<ReturnType<typeof setInterval>>();
   const workerRef = useRef<Worker | null>(null);
 
   // State
@@ -126,7 +126,7 @@ export function useAdvancedML(
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize ML system
-  const initialize = useCallback(async () => {
+  const initialize = useCallback(() => {
     try {
       // Create default models
       const defaultModels: MLModel[] = [
@@ -189,7 +189,11 @@ export function useAdvancedML(
       }
 
     } catch (error) {
-      console.error('Failed to initialize ML system:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('Failed to initialize ML system:', error);
+      }
     }
   }, [enableAnomalyDetection, enablePredictions, enablePatternRecognition, enableAutoRetraining, anomalyThreshold, predictionHorizon]);
 
@@ -199,15 +203,15 @@ export function useAdvancedML(
       clearInterval(retrainingIntervalRef.current);
     }
 
-    retrainingIntervalRef.current = setInterval(async () => {
+    retrainingIntervalRef.current = setInterval(() => {
       if (trainingDataRef.current.length >= minDataPoints) {
-        await retrainAllModels();
+        void retrainAllModels();
       }
     }, retrainingInterval * 60 * 60 * 1000); // Convert hours to milliseconds
   }, [retrainingInterval, minDataPoints]);
 
   // Training functions
-  const trainModel = useCallback(async (modelId: string, data: PerformanceSnapshot[]) => {
+  const trainModel = useCallback(async (modelId: string, _data: PerformanceSnapshot[]) => {
     const model = modelsRef.current.get(modelId);
     if (!model) throw new Error(`Model ${modelId} not found`);
 
@@ -239,7 +243,11 @@ export function useAdvancedML(
 
       setLastTraining(new Date());
     } catch (error) {
-      console.error(`Failed to train model ${modelId}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error(`Failed to train model ${modelId}:`, error);
+      }
     } finally {
       setIsTraining(false);
       setTrainingProgress(0);
@@ -255,9 +263,9 @@ export function useAdvancedML(
   }, [trainModel]);
 
   // Anomaly detection
-  const detectAnomalies = useCallback(async (data: PerformanceSnapshot[]): Promise<AnomalyDetectionResult[]> => {
+  const detectAnomalies = useCallback((data: PerformanceSnapshot[]): Promise<AnomalyDetectionResult[]> => {
     const anomalyModel = modelsRef.current.get('anomaly-detector');
-    if (!anomalyModel || !anomalyModel.isActive) return [];
+    if (!anomalyModel?.isActive) return Promise.resolve([]);
 
     const results: AnomalyDetectionResult[] = [];
 
@@ -290,20 +298,20 @@ export function useAdvancedML(
     }
 
     setAnomalies(prev => [...prev, ...results].slice(-100)); // Keep last 100
-    return results;
+    return Promise.resolve(results);
   }, []);
 
   // Predictions
-  const generatePredictions = useCallback(async (data: PerformanceSnapshot[], horizon: number = predictionHorizon): Promise<PredictionResult[]> => {
+  const generatePredictions = useCallback((data: PerformanceSnapshot[], horizon: number = predictionHorizon): Promise<PredictionResult[]> => {
     const predictionModel = modelsRef.current.get('performance-predictor');
-    if (!predictionModel || !predictionModel.isActive) return [];
+    if (!predictionModel?.isActive) return Promise.resolve([]);
 
     const results: PredictionResult[] = [];
     const metrics = ['cpu', 'memory', 'responseTime', 'throughput'];
 
     // Simulate predictions
     metrics.forEach(metric => {
-      const currentValue = Number(data[data.length - 1]?.metrics[metric as keyof PerformanceMetrics]) || 0;
+      const currentValue = Number(data[data.length - 1]?.metrics[metric as keyof PerformanceMetrics] ?? 0);
       const trend = Math.random() > 0.5 ? 'increasing' : 'decreasing';
       const change = (Math.random() - 0.5) * 0.2; // ±10% change
       const predictedValue = currentValue * (1 + change);
@@ -324,13 +332,13 @@ export function useAdvancedML(
     });
 
     setPredictions(prev => [...prev, ...results].slice(-50)); // Keep last 50
-    return results;
+    return Promise.resolve(results);
   }, [predictionHorizon]);
 
   // Pattern recognition
-  const recognizePatterns = useCallback(async (data: PerformanceSnapshot[]): Promise<PatternRecognitionResult[]> => {
+  const recognizePatterns = useCallback((_data: PerformanceSnapshot[]): Promise<PatternRecognitionResult[]> => {
     const patternModel = modelsRef.current.get('pattern-recognizer');
-    if (!patternModel || !patternModel.isActive) return [];
+    if (!patternModel?.isActive) return Promise.resolve([]);
 
     const results: PatternRecognitionResult[] = [];
 
@@ -356,13 +364,13 @@ export function useAdvancedML(
     });
 
     setPatterns(prev => [...prev, ...results].slice(-20)); // Keep last 20
-    return results;
+    return Promise.resolve(results);
   }, []);
 
   // Model management
-  const addModel = useCallback(async (model: Omit<MLModel, 'id' | 'lastTrained'>): Promise<string> => {
+  const addModel = useCallback((model: Omit<MLModel, 'id' | 'lastTrained'>): Promise<string> => {
     if (modelsRef.current.size >= maxModels) {
-      throw new Error(`Maximum number of models (${maxModels}) reached`);
+      return Promise.reject(new Error(`Maximum number of models (${maxModels}) reached`));
     }
 
     const newModel: MLModel = {
@@ -374,10 +382,10 @@ export function useAdvancedML(
     modelsRef.current.set(newModel.id, newModel);
     setModels(new Map(modelsRef.current));
 
-    return newModel.id;
+    return Promise.resolve(newModel.id);
   }, [maxModels]);
 
-  const removeModel = useCallback(async (modelId: string) => {
+  const removeModel = useCallback((modelId: string) => {
     if (modelsRef.current.has(modelId)) {
       modelsRef.current.delete(modelId);
       setModels(new Map(modelsRef.current));
@@ -389,7 +397,7 @@ export function useAdvancedML(
     }
   }, []);
 
-  const updateModelConfig = useCallback(async (modelId: string, config: any) => {
+  const updateModelConfig = useCallback((modelId: string, config: unknown) => {
     const model = modelsRef.current.get(modelId);
     if (model) {
       const updatedModel = { ...model, config };
@@ -398,13 +406,13 @@ export function useAdvancedML(
     }
   }, []);
 
-  const getModelInsights = useCallback(async (modelId: string) => {
+  const getModelInsights = useCallback((modelId: string) => {
     const model = modelsRef.current.get(modelId);
     if (!model) return null;
 
     return {
       model,
-      accuracy: modelAccuracy.get(modelId) || model.accuracy,
+      accuracy: modelAccuracy.get(modelId) ?? model.accuracy,
       trainingDataSize: trainingDataRef.current.length,
       lastPrediction: predictions[predictions.length - 1],
       recentAnomalies: anomalies.slice(-5),
@@ -416,40 +424,49 @@ export function useAdvancedML(
     };
   }, [predictions, anomalies, modelAccuracy]);
 
-  const exportModel = useCallback(async (modelId: string) => {
+  const exportModel = useCallback((modelId: string) => {
     const model = modelsRef.current.get(modelId);
     if (!model) throw new Error(`Model ${modelId} not found`);
 
     return {
       model,
       trainingData: trainingDataRef.current.slice(-1000), // Last 1000 data points
-      accuracy: modelAccuracy.get(modelId) || model.accuracy,
+      accuracy: modelAccuracy.get(modelId) ?? model.accuracy,
       exportedAt: new Date()
     };
   }, [modelAccuracy]);
 
-  const importModel = useCallback(async (modelData: any): Promise<string> => {
-    const modelId = await addModel(modelData.model);
+  const importModel = useCallback(async (modelData: unknown): Promise<string> => {
+    // Type-safe model data handling
+    const typedModelData = modelData as {
+      model: Omit<MLModel, 'id' | 'lastTrained'>;
+      trainingData?: PerformanceSnapshot[];
+      accuracy?: number;
+    };
     
-    if (modelData.trainingData) {
-      trainingDataRef.current = [...trainingDataRef.current, ...modelData.trainingData];
+    const modelId = await addModel(typedModelData.model);
+    
+    if (typedModelData.trainingData) {
+      trainingDataRef.current = [...trainingDataRef.current, ...typedModelData.trainingData];
     }
 
-    if (modelData.accuracy) {
+    if (typedModelData.accuracy) {
       setModelAccuracy(prev => {
         const newMap = new Map(prev);
-        newMap.set(modelId, modelData.accuracy);
+        newMap.set(modelId, typedModelData.accuracy!);
         return newMap;
       });
     }
 
-    return modelId;
+    return Promise.resolve(modelId);
   }, [addModel]);
 
-  const getMLMetrics = useCallback(async () => {
+  const getMLMetrics = useCallback(() => {
     const totalModels = modelsRef.current.size;
     const activeModels = Array.from(modelsRef.current.values()).filter(m => m.isActive).length;
-    const avgAccuracy = Array.from(modelAccuracy.values()).reduce((sum, acc) => sum + acc, 0) / modelAccuracy.size || 0;
+    const avgAccuracy = modelAccuracy.size > 0 
+      ? Array.from(modelAccuracy.values()).reduce((sum, acc) => sum + acc, 0) / modelAccuracy.size 
+      : 0;
 
     return {
       totalModels,
@@ -470,7 +487,7 @@ export function useAdvancedML(
   }, [anomalies.length, predictions.length, patterns.length, isTraining, lastTraining, modelAccuracy, minDataPoints]);
 
   // Update training data
-  const updateTrainingData = useCallback((newData: PerformanceSnapshot[]) => {
+  const _updateTrainingData = useCallback((newData: PerformanceSnapshot[]) => {
     trainingDataRef.current = [...trainingDataRef.current, ...newData];
     
     // Keep only recent data within training window
@@ -486,15 +503,15 @@ export function useAdvancedML(
       const recentData = trainingDataRef.current.slice(-10); // Last 10 snapshots
       
       if (enableAnomalyDetection) {
-        detectAnomalies(recentData);
+        void detectAnomalies(recentData);
       }
       
       if (enablePredictions && trainingDataRef.current.length >= minDataPoints) {
-        generatePredictions(trainingDataRef.current);
+        void generatePredictions(trainingDataRef.current);
       }
       
       if (enablePatternRecognition && trainingDataRef.current.length >= minDataPoints * 2) {
-        recognizePatterns(trainingDataRef.current);
+        void recognizePatterns(trainingDataRef.current);
       }
     }
   }, [isInitialized, enableAnomalyDetection, enablePredictions, enablePatternRecognition, minDataPoints, detectAnomalies, generatePredictions, recognizePatterns]);
@@ -573,7 +590,7 @@ export function useRealTimeMLAnalysis(
         setAnalysisResults({ anomalies, predictions, patterns });
       };
 
-      analyzeData();
+      void analyzeData();
     }
   }, [dataStream, mlActions]);
 

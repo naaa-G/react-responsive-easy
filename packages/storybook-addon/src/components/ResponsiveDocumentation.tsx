@@ -7,9 +7,10 @@
 
 import React, { useState } from 'react';
 import type { BreakpointConfig } from '../types';
+import type { ResponsiveConfig } from '@react-responsive-easy/core';
 
 interface ResponsiveDocumentationProps {
-  config: any;
+  config: ResponsiveConfig | null;
   breakpoints: BreakpointConfig[];
 }
 
@@ -148,7 +149,7 @@ function ResponsiveLayout() {
     mobile: 1,
     tablet: 2,
     desktop: 3
-  }[breakpoint.alias] || 1;
+  }[breakpoint.alias] ?? 1;
   
   return (
     <div style={{ 

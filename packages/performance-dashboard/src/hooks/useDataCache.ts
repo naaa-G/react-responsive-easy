@@ -37,7 +37,7 @@ export function useDataCache<T>(options: CacheOptions = {}) {
   const set = useCallback((key: string, data: T, customTtl?: number): void => {
     // Remove oldest entries if cache is full
     if (cache.current.size >= maxSize) {
-      const oldestKey = cache.current.keys().next().value;
+      const oldestKey = cache.current.keys().next().value as string;
       if (oldestKey) {
         cache.current.delete(oldestKey);
       }
@@ -46,7 +46,7 @@ export function useDataCache<T>(options: CacheOptions = {}) {
     cache.current.set(key, {
       data,
       timestamp: Date.now(),
-      ttl: customTtl || ttl
+      ttl: customTtl ?? ttl
     });
   }, [ttl, maxSize]);
 

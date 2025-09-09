@@ -7,7 +7,7 @@ export interface HistoricalViewProps {
   theme: DashboardTheme;
 }
 
-export const HistoricalView: React.FC<HistoricalViewProps> = ({ history, theme }) => {
+export const HistoricalView: React.FC<HistoricalViewProps> = ({ history, theme: _theme }) => {
   return (
     <div className="historical-view">
       <div className="panel-header">

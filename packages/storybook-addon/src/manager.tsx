@@ -18,7 +18,7 @@ addons.register(ADDON_ID, (api) => {
     title: 'Responsive',
     match: ({ viewMode }) => viewMode === 'story',
     render: ({ active, key }) => (
-      <ResponsivePanel active={active || false} api={api} key={String(key || 'responsive-panel')} />
+      <ResponsivePanel active={active ?? false} api={api} key={String(key ?? 'responsive-panel')} />
     ),
     paramKey: 'responsiveEasy'
   });

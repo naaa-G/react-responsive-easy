@@ -157,7 +157,7 @@ function generateConfigFile(config: any, preset?: string): string {
 
 export default defineConfig(${JSON.stringify(config, null, 2)});
 
-// Configuration preset: ${preset || 'custom'}
+// Configuration preset: ${preset ?? 'custom'}
 // 
 // Available options:
 // - base: Base breakpoint (largest screen size)
@@ -224,25 +224,19 @@ async function updatePackageJson(outputDir: string): Promise<void> {
     const packageJson = await fs.readJson(packagePath);
     
     // Add RRE scripts
-    if (!packageJson.scripts) {
-      packageJson.scripts = {};
-    }
+    packageJson.scripts ??= {};
     
     packageJson.scripts['rre:build'] = 'rre build';
     packageJson.scripts['rre:analyze'] = 'rre analyze';
     packageJson.scripts['rre:dev'] = 'rre dev';
     
     // Add RRE dependencies if not present
-    if (!packageJson.dependencies) {
-      packageJson.dependencies = {};
-    }
+    packageJson.dependencies ??= {};
     
-    if (!packageJson.dependencies['@react-responsive-easy/core']) {
-      packageJson.dependencies['@react-responsive-easy/core'] = '^0.0.1';
-    }
+    packageJson.dependencies['@react-responsive-easy/core'] ??= '^0.0.1';
     
     await fs.writeJson(packagePath, packageJson, { spaces: 2 });
-  } catch (error) {
+  } catch (_error) {
     // Silently fail - package.json update is optional
     console.warn(chalk.yellow('Warning: Could not update package.json'));
   }

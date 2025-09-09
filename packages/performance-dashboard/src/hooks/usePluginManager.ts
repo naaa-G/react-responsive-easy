@@ -28,43 +28,43 @@ export function usePluginManager() {
       // Set up event listeners
       const manager = pluginManagerRef.current;
       
-      manager.on('pluginLoading', (pluginId: string) => {
+      manager.on('pluginLoading', (_pluginId: string) => {
         setState(prev => ({ ...prev, isLoading: true }));
       });
       
-      manager.on('pluginLoaded', (pluginId: string, instance: any) => {
+      manager.on('pluginLoaded', (_pluginId: string, _instance: unknown) => {
         setState(prev => ({ ...prev, isLoading: false }));
       });
       
-      manager.on('pluginError', (pluginId: string, error: string) => {
+      manager.on('pluginError', (_pluginId: string, error: string) => {
         setState(prev => ({ ...prev, isLoading: false, error }));
       });
       
-      manager.on('pluginUnloaded', (pluginId: string) => {
+      manager.on('pluginUnloaded', (_pluginId: string) => {
         setState(prev => ({ ...prev }));
       });
       
-      manager.on('pluginEnabled', (pluginId: string) => {
+      manager.on('pluginEnabled', (_pluginId: string) => {
         setState(prev => ({ ...prev }));
       });
       
-      manager.on('pluginDisabled', (pluginId: string) => {
+      manager.on('pluginDisabled', (_pluginId: string) => {
         setState(prev => ({ ...prev }));
       });
       
-      manager.on('pluginConfigUpdated', (pluginId: string, config: PluginConfig) => {
+      manager.on('pluginConfigUpdated', (_pluginId: string, _config: PluginConfig) => {
         setState(prev => ({ ...prev }));
       });
       
-      manager.on('pluginInstalled', (pluginId: string) => {
+      manager.on('pluginInstalled', (_pluginId: string) => {
         setState(prev => ({ ...prev }));
       });
       
-      manager.on('pluginUninstalled', (pluginId: string) => {
+      manager.on('pluginUninstalled', (_pluginId: string) => {
         setState(prev => ({ ...prev }));
       });
       
-      manager.on('pluginUpdated', (pluginId: string, version: string) => {
+      manager.on('pluginUpdated', (_pluginId: string, _version: string) => {
         setState(prev => ({ ...prev }));
       });
       
@@ -72,15 +72,15 @@ export function usePluginManager() {
         setState(prev => ({ ...prev, registry: { ...prev.registry, isUpdating: true } }));
       });
       
-      manager.on('registryUpdated', (registry: any) => {
-        setState(prev => ({ ...prev, registry: { ...registry, isUpdating: false } }));
+      manager.on('registryUpdated', (registry: unknown) => {
+        setState(prev => ({ ...prev, registry: { ...prev.registry, ...registry as Record<string, unknown>, isUpdating: false } }));
       });
       
       manager.on('registryError', (error: string) => {
         setState(prev => ({ ...prev, error, registry: { ...prev.registry, isUpdating: false } }));
       });
       
-      manager.on('pluginLog', (pluginId: string, level: string, message: string) => {
+      manager.on('pluginLog', (_pluginId: string, _level: string, _message: string) => {
         // Handle plugin logs if needed
       });
     }
@@ -172,7 +172,7 @@ export function usePluginManager() {
         return await manager.exportPlugin(pluginId);
       },
       
-      importPlugin: async (pluginData: any) => {
+      importPlugin: async (pluginData: unknown) => {
         return await manager.importPlugin(pluginData);
       }
     };
@@ -236,31 +236,31 @@ export function usePluginManager() {
  * Hook for managing a specific plugin
  */
 export function usePlugin(pluginId: string) {
-  const { plugins, ...pluginManager } = usePluginManager();
+  const { plugins, ..._pluginManager } = usePluginManager();
   
   const plugin = useMemo(() => {
-    return plugins.get(pluginId) || null;
+    return plugins.get(pluginId) ?? null;
   }, [plugins, pluginId]);
 
   const logs = useMemo(() => {
-    return pluginManager.getPluginLogs(pluginId);
-  }, [pluginManager, pluginId]);
+    return _pluginManager.getPluginLogs(pluginId);
+  }, [_pluginManager, pluginId]);
 
   const actions = useMemo(() => {
     if (!plugin) return {};
 
     return {
-      reload: () => pluginManager.reloadPlugin(pluginId),
-      enable: () => pluginManager.enablePlugin(pluginId),
-      disable: () => pluginManager.disablePlugin(pluginId),
-      uninstall: () => pluginManager.uninstallPlugin(pluginId),
-      update: () => pluginManager.updatePlugin(pluginId),
+      reload: () => _pluginManager.reloadPlugin(pluginId),
+      enable: () => _pluginManager.enablePlugin(pluginId),
+      disable: () => _pluginManager.disablePlugin(pluginId),
+      uninstall: () => _pluginManager.uninstallPlugin(pluginId),
+      update: () => _pluginManager.updatePlugin(pluginId),
       updateConfig: (config: Partial<PluginConfig>) => 
-        pluginManager.updatePluginConfig(pluginId, config),
-      export: () => pluginManager.exportPlugin(pluginId),
-      getLogs: () => pluginManager.getPluginLogs(pluginId)
+        _pluginManager.updatePluginConfig(pluginId, config),
+      export: () => _pluginManager.exportPlugin(pluginId),
+      getLogs: () => _pluginManager.getPluginLogs(pluginId)
     };
-  }, [plugin, pluginManager, pluginId]);
+  }, [plugin, _pluginManager, pluginId]);
 
   return {
     plugin,
@@ -280,7 +280,7 @@ export function usePlugin(pluginId: string) {
  * Hook for plugin registry management
  */
 export function usePluginRegistry() {
-  const { availablePlugins, registry, updateRegistry, searchPlugins, ...pluginManager } = usePluginManager();
+  const { availablePlugins, registry, updateRegistry, searchPlugins, ..._pluginManager } = usePluginManager();
 
   const featuredPlugins = useMemo(() => {
     return availablePlugins.filter(plugin => 
@@ -327,7 +327,7 @@ export function usePluginRegistry() {
  * Hook for plugin development and testing
  */
 export function usePluginDevelopment() {
-  const pluginManager = usePluginManager();
+  const _pluginManager = usePluginManager();
 
   const createTestPlugin = useCallback((overrides: Partial<PluginManifest> = {}): PluginManifest => {
     return {
@@ -350,25 +350,25 @@ export function usePluginDevelopment() {
   }, []);
 
   const validateManifest = useCallback(async (manifest: PluginManifest) => {
-    return await pluginManager.validatePlugin(manifest);
-  }, [pluginManager]);
+    return await _pluginManager.validatePlugin(manifest);
+  }, [_pluginManager]);
 
   const testPlugin = useCallback(async (manifest: PluginManifest) => {
     try {
-      const pluginId = await pluginManager.loadPlugin(manifest);
+      const pluginId = await _pluginManager.loadPlugin(manifest);
       // Wait a bit to test
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await pluginManager.unloadPlugin(pluginId);
+      await _pluginManager.unloadPlugin(pluginId);
       return { success: true, pluginId };
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
-  }, [pluginManager]);
+  }, [_pluginManager]);
 
   return {
     createTestPlugin,
     validateManifest,
     testPlugin,
-    pluginManager
+    pluginManager: _pluginManager
   };
 }

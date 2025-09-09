@@ -11,7 +11,7 @@ import { ResponsiveProvider } from '@react-responsive-easy/core';
 import { DEFAULT_BREAKPOINTS } from '../constants';
 
 export const withResponsiveProvider: DecoratorFunction = (Story, context) => {
-  const parameters = context.parameters?.responsiveEasy || {};
+  const parameters = context.parameters?.responsiveEasy ?? {};
   
   // Skip if responsive behavior is disabled
   if (parameters.disable) {
@@ -19,7 +19,7 @@ export const withResponsiveProvider: DecoratorFunction = (Story, context) => {
   }
 
   // Use story-specific config or create default
-  const config = parameters.config || {
+  const config = parameters.config ?? {
     base: {
       name: 'Desktop',
       width: 1920,
@@ -54,13 +54,13 @@ export const withResponsiveProvider: DecoratorFunction = (Story, context) => {
   };
 
   // Determine initial breakpoint
-  const initialBreakpoint = parameters.breakpoints?.[0] || DEFAULT_BREAKPOINTS[0];
+  const initialBreakpoint = parameters.breakpoints?.[0] ?? DEFAULT_BREAKPOINTS[0];
 
   return (
     <ResponsiveProvider 
       config={config}
       initialBreakpoint={initialBreakpoint}
-      debug={parameters.debug || false}
+      debug={parameters.debug ?? false}
     >
       {Story(context) as React.ReactElement}
     </ResponsiveProvider>

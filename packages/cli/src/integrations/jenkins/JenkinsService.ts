@@ -9,7 +9,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as _uuidv4 } from 'uuid';
 
 export interface JenkinsJob {
   name: string;
@@ -159,7 +159,7 @@ export class JenkinsService extends EventEmitter {
   async getJobs(): Promise<JenkinsJob[]> {
     try {
       const response = await this.request('GET', '/api/json?tree=jobs[name,url,color,fullName,displayName,fullDisplayName,description,nextBuildNumber,buildable,builds[number,url,displayName,fullDisplayName,description,id,result,timestamp,duration,building,builtOn,changeSet,culprits,actions,artifacts,fingerprint,keepLog,mavenArtifacts,mavenVersionUsed,previousBuild,nextBuild,url,queueId,executor,workspace,scm,parameters,causes,upstreamProjects,downstreamProjects,subBuilds,subBuildCount,subBuildsCompleted,subBuildsSuccessful,subBuildsFailed,subBuildsUnstable,subBuildsAborted,subBuildsNotBuilt,subBuildsInProgress,subBuildsQueued,subBuildsTotal,subBuildsDuration,subBuildsTimestamp,subBuildsBuilding,subBuildsBuiltOn,subBuildsChangeSet,subBuildsCulprits,subBuildsActions,subBuildsArtifacts,subBuildsFingerprint,subBuildsKeepLog,subBuildsMavenArtifacts,subBuildsMavenVersionUsed,subBuildsPreviousBuild,subBuildsNextBuild,subBuildsUrl,subBuildsQueueId,subBuildsExecutor,subBuildsWorkspace,subBuildsScm,subBuildsParameters,subBuildsCauses,subBuildsUpstreamProjects,subBuildsDownstreamProjects],firstBuild,lastBuild,lastCompletedBuild,lastFailedBuild,lastStableBuild,lastSuccessfulBuild,lastUnstableBuild,lastUnsuccessfulBuild,nextBuildNumber,property,queueItem,concurrentBuild,keepDependencies,scm,canRoam,disabled,blockBuildWhenDownstreamBuilding,blockBuildWhenUpstreamBuilding,triggers,actions,url,lastDuration,healthReport,inQueue,queueItem');
-      return response.jobs || [];
+      return response.jobs ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get jobs: ${error}`));
       throw error;
@@ -185,7 +185,7 @@ export class JenkinsService extends EventEmitter {
   async getJobBuilds(jobName: string): Promise<JenkinsBuild[]> {
     try {
       const response = await this.request('GET', `/job/${encodeURIComponent(jobName)}/api/json?tree=builds[number,url,displayName,fullDisplayName,description,id,result,timestamp,duration,building,builtOn,changeSet,culprits,actions,artifacts,fingerprint,keepLog,mavenArtifacts,mavenVersionUsed,previousBuild,nextBuild,url,queueId,executor,workspace,scm,parameters,causes,upstreamProjects,downstreamProjects]`);
-      return response.builds || [];
+      return response.builds ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get job builds: ${error}`));
       throw error;
@@ -330,7 +330,7 @@ export class JenkinsService extends EventEmitter {
       }
 
       const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      if (contentType?.includes('application/json')) {
         return await response.json();
       } else {
         return await response.text();

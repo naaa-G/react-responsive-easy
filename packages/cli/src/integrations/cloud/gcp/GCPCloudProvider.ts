@@ -898,8 +898,8 @@ export class GCPCloudProvider extends EventEmitter {
           fingerprint: 'fingerprint',
           items: {}
         },
-        tags: config.tags || {},
-        labels: config.labels || {}
+        tags: config.tags ?? {},
+        labels: config.labels ?? {}
       };
 
       this.compute.instances.push(instance);
@@ -941,13 +941,13 @@ export class GCPCloudProvider extends EventEmitter {
         created: new Date(),
         updated: new Date(),
         versioning: {
-          enabled: config.versioning || false
+          enabled: config.versioning ?? false
         },
-        lifecycle: config.lifecycle || {
+        lifecycle: config.lifecycle ?? {
           rule: []
         },
-        cors: config.cors || [],
-        labels: config.labels || {},
+        cors: config.cors ?? [],
+        labels: config.labels ?? {},
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -997,13 +997,13 @@ export class GCPCloudProvider extends EventEmitter {
         status: 'ACTIVE',
         entryPoint: config.entryPoint,
         runtime: config.runtime,
-        timeout: config.timeout || '60s',
-        availableMemoryMb: config.availableMemoryMb || 256,
+        timeout: config.timeout ?? '60s',
+        availableMemoryMb: config.availableMemoryMb ?? 256,
         serviceAccountEmail: `${this.config.projectId}@appspot.gserviceaccount.com`,
         updateTime: new Date(),
         versionId: '1',
-        labels: config.labels || {},
-        environmentVariables: config.environmentVariables || {},
+        labels: config.labels ?? {},
+        environmentVariables: config.environmentVariables ?? {},
         buildEnvironmentVariables: {},
         network: '',
         maxInstances: 0,
@@ -1118,9 +1118,9 @@ export class GCPCloudProvider extends EventEmitter {
         },
         update: {
           manifest: config.template,
-          labels: config.labels || {}
+          labels: config.labels ?? {}
         },
-        labels: config.labels || {},
+        labels: config.labels ?? {},
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -1181,7 +1181,7 @@ export class GCPCloudProvider extends EventEmitter {
   /**
    * Get pricing information
    */
-  async getPricing(region: string): Promise<GCPPricing> {
+  async getPricing(_region: string): Promise<GCPPricing> {
     // Mock pricing data
     return {
       currency: 'USD',

@@ -1,4 +1,3 @@
-// @ts-nocheck - React type conflicts with Recharts components
 import React, { useMemo } from 'react';
 import {
   LineChart,
@@ -34,19 +33,19 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
 }) => {
   // Prepare chart data
   const chartData = useMemo(() => {
-    return history.map((snapshot, index) => ({
+    return history.map((snapshot, _index) => ({
       time: new Date(snapshot.timestamp).toLocaleTimeString(),
       timestamp: snapshot.timestamp,
-      layoutShift: snapshot.metrics.layoutShift.current,
+      layoutShift: snapshot.metrics.layoutShift?.current ?? 0,
       memoryUsage: snapshot.metrics.memory ? (snapshot.metrics.memory.usage * 100) : 0,
-      lcp: snapshot.metrics.paintTiming.lcp || 0,
-      fcp: snapshot.metrics.paintTiming.fcp || 0,
-      renderTime: snapshot.metrics.responsiveElements.averageRenderTime || 0,
-      elementCount: snapshot.metrics.responsiveElements.count,
+      lcp: snapshot.metrics.paintTiming?.lcp ?? 0,
+      fcp: snapshot.metrics.paintTiming?.fcp ?? 0,
+      renderTime: snapshot.metrics.responsiveElements?.averageRenderTime ?? 0,
+      elementCount: snapshot.metrics.responsiveElements?.count ?? 0,
       cacheHitRate: snapshot.metrics.custom?.cacheHitRate ? (snapshot.metrics.custom.cacheHitRate * 100) : 0,
-      scalingOps: snapshot.metrics.custom?.scalingOperations || 0,
-      resourceRequests: snapshot.metrics.resources.recentRequests,
-      transferSize: snapshot.metrics.resources.totalSize / 1024 // KB
+      scalingOps: snapshot.metrics.custom?.scalingOperations ?? 0,
+      resourceRequests: snapshot.metrics.resources?.recentRequests ?? 0,
+      transferSize: (snapshot.metrics.resources?.totalSize ?? 0) / 1024 // KB
     }));
   }, [history]);
 
@@ -55,8 +54,8 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
     if (!metrics.memory) return [];
     
     return [
-      { name: 'Used', value: metrics.memory.used / 1024 / 1024, color: '#ff6b6b' },
-      { name: 'Free', value: (metrics.memory.total - metrics.memory.used) / 1024 / 1024, color: '#51cf66' }
+      { name: 'Used', value: (metrics.memory.used ?? 0) / 1024 / 1024, color: '#ff6b6b' },
+      { name: 'Free', value: ((metrics.memory.total ?? 0) - (metrics.memory.used ?? 0)) / 1024 / 1024, color: '#51cf66' }
     ];
   }, [metrics.memory]);
 
@@ -64,9 +63,9 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
   const layoutShiftSources = useMemo(() => {
     const sources: Record<string, number> = {};
     
-    metrics.layoutShift.entries.forEach(entry => {
-      entry.sources.forEach(source => {
-        sources[source.element] = (sources[source.element] || 0) + entry.value;
+    metrics.layoutShift?.entries?.forEach(entry => {
+      entry.sources?.forEach(source => {
+        sources[source.element] = (sources[source.element] ?? 0) + (entry.value ?? 0);
       });
     });
     
@@ -74,11 +73,11 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
       .map(([element, value]) => ({ element, value, color: getElementColor(element) }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
-  }, [metrics.layoutShift.entries]);
+  }, [metrics.layoutShift?.entries]);
 
   // Render time distribution
   const renderTimeData = useMemo(() => {
-    const times = metrics.responsiveElements.renderTimes;
+    const times = metrics.responsiveElements?.renderTimes ?? [];
     const buckets = [
       { range: '0-5ms', count: 0, color: '#51cf66' },
       { range: '5-10ms', count: 0, color: '#ffd43b' },
@@ -94,7 +93,7 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
     });
     
     return buckets;
-  }, [metrics.responsiveElements.renderTimes]);
+  }, [metrics.responsiveElements?.renderTimes]);
 
   // Chart colors based on theme
   const colors = {
@@ -106,20 +105,41 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
     text: theme === 'dark' ? '#ced4da' : '#495057'
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      color: string;
+      dataKey: string;
+      value: number;
+      unit?: string;
+    }>;
+    label?: string;
+  }
+
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload?.length) {
       return (
         <div className="chart-tooltip">
           <p className="tooltip-label">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} style={{ color: entry.color }}>
-              {entry.dataKey}: {entry.value.toFixed(2)}{entry.unit || ''}
+              {entry.dataKey}: {entry.value.toFixed(2)}{entry.unit ?? ''}
             </p>
           ))}
         </div>
       );
     }
     return null;
+  };
+
+  // Helper function to get element color
+  const getElementColor = (element: string): string => {
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
+    const hash = element.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return colors[Math.abs(hash) % colors.length];
   };
 
   if (expanded) {
@@ -177,77 +197,14 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
                 <Tooltip content={<CustomTooltip />} />
                 <Line
                   type="monotone"
-                  dataKey="fcp"
-                  stroke={colors.success}
-                  strokeWidth={2}
-                  name="FCP"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
                   dataKey="lcp"
                   stroke={colors.primary}
                   strokeWidth={2}
-                  name="LCP"
                   dot={false}
                 />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Render Performance */}
-          <div className="chart-container large">
-            <h3>Render Performance</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                <XAxis dataKey="time" stroke={colors.text} />
-                <YAxis stroke={colors.text} />
-                <Tooltip content={<CustomTooltip />} />
                 <Line
                   type="monotone"
-                  dataKey="renderTime"
-                  stroke={colors.warning}
-                  strokeWidth={2}
-                  name="Avg Render Time"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Element Count */}
-          <div className="chart-container medium">
-            <h3>Responsive Elements</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                <XAxis dataKey="time" stroke={colors.text} />
-                <YAxis stroke={colors.text} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="elementCount"
-                  stroke={colors.primary}
-                  fill={colors.primary}
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Cache Performance */}
-          <div className="chart-container medium">
-            <h3>Cache Hit Rate</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                <XAxis dataKey="time" stroke={colors.text} />
-                <YAxis stroke={colors.text} />
-                <Tooltip content={<CustomTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="cacheHitRate"
+                  dataKey="fcp"
                   stroke={colors.success}
                   strokeWidth={2}
                   dot={false}
@@ -255,56 +212,25 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
-
-        {/* Additional Analysis Charts */}
-        <div className="analysis-charts">
-          {/* Memory Breakdown */}
-          {memoryData.length > 0 && (
-            <div className="chart-container small">
-              <h3>Memory Breakdown</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={memoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    dataKey="value"
-                  >
-                    {memoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [`${value.toFixed(1)} MB`, 'Memory']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
 
           {/* Layout Shift Sources */}
-          {layoutShiftSources.length > 0 && (
-            <div className="chart-container small">
-              <h3>Layout Shift Sources</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={layoutShiftSources}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                  <XAxis dataKey="element" stroke={colors.text} />
-                  <YAxis stroke={colors.text} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" fill={colors.danger} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          <div className="chart-container large">
+            <h3>Layout Shift Sources</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={layoutShiftSources}>
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                <XAxis dataKey="element" stroke={colors.text} />
+                <YAxis stroke={colors.text} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" fill={colors.danger} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
 
           {/* Render Time Distribution */}
-          <div className="chart-container small">
+          <div className="chart-container large">
             <h3>Render Time Distribution</h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={renderTimeData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
                 <XAxis dataKey="range" stroke={colors.text} />
@@ -318,6 +244,35 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Memory Breakdown */}
+          <div className="chart-container large">
+            <h3>Memory Breakdown</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={memoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {memoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: unknown) => {
+                    const numValue = typeof value === 'number' ? value : 0;
+                    return [`${numValue.toFixed(2)} MB`, 'Memory'];
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     );
@@ -326,43 +281,9 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
   return (
     <div className="charts-compact">
       <div className="charts-grid">
-        {/* Layout Shift */}
+        {/* Performance Overview */}
         <div className="chart-container">
-          <h4>Layout Shift</h4>
-          <ResponsiveContainer width="100%" height={150}>
-            <LineChart data={chartData.slice(-20)}>
-              <Line
-                type="monotone"
-                dataKey="layoutShift"
-                stroke={colors.danger}
-                strokeWidth={2}
-                dot={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Memory Usage */}
-        <div className="chart-container">
-          <h4>Memory %</h4>
-          <ResponsiveContainer width="100%" height={150}>
-            <AreaChart data={chartData.slice(-20)}>
-              <Area
-                type="monotone"
-                dataKey="memoryUsage"
-                stroke={colors.warning}
-                fill={colors.warning}
-                fillOpacity={0.3}
-              />
-              <Tooltip content={<CustomTooltip />} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Render Time */}
-        <div className="chart-container">
-          <h4>Render Time</h4>
+          <h3>Performance Overview</h3>
           <ResponsiveContainer width="100%" height={150}>
             <LineChart data={chartData.slice(-20)}>
               <Line
@@ -377,14 +298,48 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
           </ResponsiveContainer>
         </div>
 
-        {/* Cache Hit Rate */}
+        {/* Memory Usage */}
         <div className="chart-container">
-          <h4>Cache Hit %</h4>
+          <h3>Memory Usage</h3>
+          <ResponsiveContainer width="100%" height={150}>
+            <AreaChart data={chartData.slice(-20)}>
+              <Area
+                type="monotone"
+                dataKey="memoryUsage"
+                stroke={colors.warning}
+                fill={colors.warning}
+                fillOpacity={0.3}
+              />
+              <Tooltip content={<CustomTooltip />} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Layout Shift */}
+        <div className="chart-container">
+          <h3>Layout Shift</h3>
           <ResponsiveContainer width="100%" height={150}>
             <LineChart data={chartData.slice(-20)}>
               <Line
                 type="monotone"
-                dataKey="cacheHitRate"
+                dataKey="layoutShift"
+                stroke={colors.danger}
+                strokeWidth={2}
+                dot={false}
+              />
+              <Tooltip content={<CustomTooltip />} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Resource Usage */}
+        <div className="chart-container">
+          <h3>Resource Usage</h3>
+          <ResponsiveContainer width="100%" height={150}>
+            <LineChart data={chartData.slice(-20)}>
+              <Line
+                type="monotone"
+                dataKey="resourceRequests"
                 stroke={colors.success}
                 strokeWidth={2}
                 dot={false}
@@ -397,13 +352,3 @@ export const RealTimeCharts: React.FC<RealTimeChartsProps> = ({
     </div>
   );
 };
-
-// Helper functions
-function getElementColor(element: string): string {
-  const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a55eea'];
-  const hash = element.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  return colors[Math.abs(hash) % colors.length];
-}

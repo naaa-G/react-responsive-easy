@@ -7,14 +7,26 @@ export interface RecommendationsPanelProps {
   theme: DashboardTheme;
 }
 
+interface EnhancedRecommendation {
+  id: number;
+  title: string;
+  description: string;
+  category: 'performance' | 'memory' | 'rendering' | 'caching';
+  priority: 'high' | 'medium' | 'low';
+  impact: 'high' | 'medium' | 'low';
+  effort: 'high' | 'medium' | 'low';
+  implementation: string[];
+  resources: Array<{ title: string; url: string }>;
+}
+
 export const RecommendationsPanel: React.FC<RecommendationsPanelProps> = ({
   report,
-  theme
+  theme: _theme
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'performance' | 'memory' | 'rendering' | 'caching'>('all');
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
 
-  if (!report || !report.recommendations.length) {
+  if (!report?.recommendations?.length) {
     return (
       <div className="recommendations-panel">
         <div className="panel-header">
@@ -30,7 +42,7 @@ export const RecommendationsPanel: React.FC<RecommendationsPanelProps> = ({
   }
 
   // Enhanced recommendations with categories and priorities
-  const enhancedRecommendations = report.recommendations.map((rec, index) => {
+  const enhancedRecommendations: EnhancedRecommendation[] = (report.recommendations || []).map((rec: string, index: number) => {
     return {
       id: index,
       title: extractTitle(rec),
@@ -51,7 +63,7 @@ export const RecommendationsPanel: React.FC<RecommendationsPanelProps> = ({
 
   // Sort by priority
   const sortedRecommendations = filteredRecommendations.sort((a, b) => {
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
     return priorityOrder[b.priority] - priorityOrder[a.priority];
   });
 
@@ -245,10 +257,10 @@ function extractTitle(recommendation: string): string {
   if (firstSentence.includes('responsive elements')) return 'Optimize Responsive Elements';
   
   // Fallback to first few words
-  return firstSentence.split(' ').slice(0, 4).join(' ') + '...';
+  return `${firstSentence.split(' ').slice(0, 4).join(' ')  }...`;
 }
 
-function categorizeRecommendation(recommendation: string): string {
+function categorizeRecommendation(recommendation: string): 'performance' | 'memory' | 'rendering' | 'caching' {
   const text = recommendation.toLowerCase();
   
   if (text.includes('layout shift') || text.includes('rendering') || text.includes('paint')) return 'rendering';
@@ -262,7 +274,7 @@ function getPriority(recommendation: string, report: PerformanceReport): 'high' 
   const text = recommendation.toLowerCase();
   
   // High priority if performance score is low
-  if (report.summary.overall < 70) {
+  if (report.summary?.overall && report.summary.overall < 70) {
     if (text.includes('layout shift') || text.includes('memory') || text.includes('lcp')) {
       return 'high';
     }

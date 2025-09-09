@@ -178,34 +178,34 @@ describe('PerformanceMonitor', () => {
   });
 
   describe('Event System', () => {
-    it('should subscribe to events', () => {
+    it('should subscribe to events', async () => {
       const unsubscribe = monitor.on('metrics-updated', mockCallback);
       
-      monitor.start();
+      await monitor.start();
       monitor.collectMetrics();
       
       expect(mockCallback).toHaveBeenCalled();
       unsubscribe();
     });
 
-    it('should unsubscribe from events', () => {
+    it('should unsubscribe from events', async () => {
       const unsubscribe = monitor.on('metrics-updated', mockCallback);
       unsubscribe();
       
-      monitor.start();
+      await monitor.start();
       monitor.collectMetrics();
       
       expect(mockCallback).not.toHaveBeenCalled();
     });
 
-    it('should handle multiple subscribers', () => {
+    it('should handle multiple subscribers', async () => {
       const callback1 = vi.fn();
       const callback2 = vi.fn();
       
       const unsubscribe1 = monitor.on('metrics-updated', callback1);
       const unsubscribe2 = monitor.on('metrics-updated', callback2);
       
-      monitor.start();
+      await monitor.start();
       monitor.collectMetrics();
       
       expect(callback1).toHaveBeenCalled();
@@ -215,7 +215,7 @@ describe('PerformanceMonitor', () => {
       unsubscribe2();
     });
 
-    it('should handle callback errors gracefully', () => {
+    it('should handle callback errors gracefully', async () => {
       const errorCallback = vi.fn(() => {
         throw new Error('Callback error');
       });
@@ -226,7 +226,7 @@ describe('PerformanceMonitor', () => {
       monitor.on('metrics-updated', errorCallback);
       monitor.on('metrics-updated', normalCallback);
       
-      monitor.start();
+      await monitor.start();
       monitor.collectMetrics();
       
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -240,8 +240,8 @@ describe('PerformanceMonitor', () => {
   });
 
   describe('History Management', () => {
-    beforeEach(() => {
-      monitor.start();
+    beforeEach(async () => {
+      await monitor.start();
     });
 
     it('should maintain performance history', () => {
@@ -323,8 +323,8 @@ describe('PerformanceMonitor', () => {
   });
 
   describe('Alert System', () => {
-    beforeEach(() => {
-      monitor.start();
+    beforeEach(async () => {
+      await monitor.start();
     });
 
     it('should generate alerts for threshold violations', () => {
@@ -371,8 +371,8 @@ describe('PerformanceMonitor', () => {
   });
 
   describe('Report Generation', () => {
-    beforeEach(() => {
-      monitor.start();
+    beforeEach(async () => {
+      await monitor.start();
     });
 
     it('should generate comprehensive reports', async () => {
@@ -433,8 +433,8 @@ describe('PerformanceMonitor', () => {
   });
 
   describe('Performance Characteristics', () => {
-    it('should handle rapid metrics collection', () => {
-      monitor.start();
+    it('should handle rapid metrics collection', async () => {
+      await monitor.start();
       
       const startTime = performance.now();
       
@@ -450,8 +450,8 @@ describe('PerformanceMonitor', () => {
       expect(duration).toBeLessThan(1000);
     });
 
-    it('should maintain memory efficiency', () => {
-      monitor.start();
+    it('should maintain memory efficiency', async () => {
+      await monitor.start();
       
       // Collect many metrics
       for (let i = 0; i < 1000; i++) {
@@ -465,7 +465,7 @@ describe('PerformanceMonitor', () => {
     });
 
     it('should handle concurrent operations', async () => {
-      monitor.start();
+      await monitor.start();
       
       const promises = Array.from({ length: 10 }, () => 
         new Promise<void>((resolve) => {
@@ -537,8 +537,8 @@ describe('PerformanceMonitor', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should handle invalid metrics gracefully', () => {
-      monitor.start();
+    it('should handle invalid metrics gracefully', async () => {
+      await monitor.start();
       
       // Mock invalid memory data
       const originalMemory = (window.performance as any).memory;
@@ -556,14 +556,14 @@ describe('PerformanceMonitor', () => {
   });
 
   describe('Integration Tests', () => {
-    it('should work with real DOM elements', () => {
+    it('should work with real DOM elements', async () => {
       // Create a test element
       const testElement = document.createElement('div');
       testElement.setAttribute('data-responsive', 'true');
       testElement.className = 'test-responsive-element';
       document.body.appendChild(testElement);
       
-      monitor.start();
+      await monitor.start();
       monitor.collectMetrics();
       
       const metrics = monitor.getMetrics();
@@ -573,8 +573,8 @@ describe('PerformanceMonitor', () => {
       document.body.removeChild(testElement);
     });
 
-    it('should integrate with performance timing', () => {
-      monitor.start();
+    it('should integrate with performance timing', async () => {
+      await monitor.start();
       
       // Simulate some performance activity
       performance.mark('test-start');

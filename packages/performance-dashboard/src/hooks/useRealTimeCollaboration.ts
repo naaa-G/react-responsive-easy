@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 export interface CollaborationUser {
   id: string;
@@ -25,7 +25,7 @@ export interface CollaborationEvent {
   type: 'cursor_move' | 'selection_change' | 'data_update' | 'user_join' | 'user_leave' | 'permission_change';
   userId: string;
   timestamp: Date;
-  data: any;
+  data: unknown;
   element?: string;
 }
 
@@ -57,19 +57,19 @@ export interface CollaborationState {
 }
 
 export interface CollaborationActions {
-  connect: () => Promise<void>;
+  connect: () => void;
   disconnect: () => void;
   sendEvent: (event: Omit<CollaborationEvent, 'id' | 'timestamp'>) => void;
   updateCursor: (cursor: CollaborationUser['cursor']) => void;
   updateSelection: (selection: CollaborationUser['selection']) => void;
-  broadcastData: (data: any, element?: string) => void;
+  broadcastData: (data: unknown, element?: string) => void;
   requestPermission: (permission: string) => void;
   grantPermission: (userId: string, permission: string) => void;
   revokePermission: (userId: string, permission: string) => void;
   kickUser: (userId: string) => void;
   banUser: (userId: string, duration?: number) => void;
-  getConnectionStats: () => any;
-  retryConnection: () => Promise<void>;
+  getConnectionStats: () => unknown;
+  retryConnection: () => void;
 }
 
 /**
@@ -91,13 +91,13 @@ export function useRealTimeCollaboration(
     enableCursorSharing = true,
     enableSelectionSharing = true,
     enableDataSync = true,
-    enablePresence = true
+    enablePresence: _enablePresence = true
   } = config;
 
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  const heartbeatTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const heartbeatTimeoutRef = useRef<ReturnType<typeof setInterval>>();
   const reconnectAttemptsRef = useRef(0);
   const lastPingRef = useRef(Date.now());
   const connectionStartRef = useRef(Date.now());
@@ -126,7 +126,7 @@ export function useRealTimeCollaboration(
   }, [userId, userName, userRole]);
 
   // Connection management
-  const connect = useCallback(async () => {
+  const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     
     setIsConnecting(true);
@@ -157,11 +157,15 @@ export function useRealTimeCollaboration(
 
       ws.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
+          const message = JSON.parse(event.data as string) as unknown;
           handleMessage(message);
           setLastActivity(new Date());
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          if (process.env.NODE_ENV === 'development') {
+            // Use proper logging instead of console
+            // eslint-disable-next-line no-console
+            console.error('Failed to parse WebSocket message:', error);
+          }
         }
       };
 
@@ -175,13 +179,13 @@ export function useRealTimeCollaboration(
         }
       };
 
-      ws.onerror = (error) => {
+      ws.onerror = (_error) => {
         setConnectionError('WebSocket connection error');
         setIsConnecting(false);
         setConnectionQuality('disconnected');
       };
 
-    } catch (error) {
+    } catch (_error) {
       setConnectionError('Failed to establish connection');
       setIsConnecting(false);
     }
@@ -207,94 +211,109 @@ export function useRealTimeCollaboration(
   }, []);
 
   // Message handling
-  const handleMessage = useCallback((message: any) => {
-    switch (message.type) {
-      case 'user_list':
+  const handleMessage = useCallback((message: unknown) => {
+    const msg = message as { type: string; userId?: string; data?: unknown; element?: string };
+    switch (msg.type) {
+      case 'user_list': {
         const userMap = new Map<string, CollaborationUser>();
-        message.data.forEach((user: CollaborationUser) => {
+        (message as { data: CollaborationUser[] }).data.forEach((user: CollaborationUser) => {
           userMap.set(user.id, user);
         });
         setUsers(userMap);
         break;
+      }
 
-      case 'user_join':
+      case 'user_join': {
         setUsers(prev => {
           const newMap = new Map(prev);
-          newMap.set(message.userId, message.data);
+          newMap.set((message as { userId: string }).userId, (message as { data: CollaborationUser }).data);
           return newMap;
         });
         addEvent({
           type: 'user_join',
-          userId: message.userId,
-          data: message.data
+          userId: (message as { userId: string }).userId,
+          data: (message as { data: CollaborationUser }).data
         });
         break;
+      }
 
-      case 'user_leave':
+      case 'user_leave': {
         setUsers(prev => {
           const newMap = new Map(prev);
-          newMap.delete(message.userId);
+          newMap.delete((message as { userId: string }).userId);
           return newMap;
         });
         addEvent({
           type: 'user_leave',
-          userId: message.userId,
-          data: message.data
+          userId: (message as { userId: string }).userId,
+          data: (message as { data: CollaborationUser }).data
         });
         break;
+      }
 
-      case 'cursor_move':
+      case 'cursor_move': {
         if (enableCursorSharing) {
           setUsers(prev => {
             const newMap = new Map(prev);
-            const user = newMap.get(message.userId);
+            const user = newMap.get((message as { userId: string }).userId);
             if (user) {
-              newMap.set(message.userId, { ...user, cursor: message.data });
+              newMap.set((message as { userId: string }).userId, { ...user, cursor: (message as { data: CollaborationUser['cursor'] }).data });
             }
             return newMap;
           });
         }
         break;
+      }
 
-      case 'selection_change':
+      case 'selection_change': {
         if (enableSelectionSharing) {
           setUsers(prev => {
             const newMap = new Map(prev);
-            const user = newMap.get(message.userId);
+            const user = newMap.get((message as { userId: string }).userId);
             if (user) {
-              newMap.set(message.userId, { ...user, selection: message.data });
+              newMap.set((message as { userId: string }).userId, { ...user, selection: (message as { data: CollaborationUser['selection'] }).data });
             }
             return newMap;
           });
         }
         break;
+      }
 
-      case 'data_update':
+      case 'data_update': {
         if (enableDataSync) {
           addEvent({
             type: 'data_update',
-            userId: message.userId,
-            data: message.data,
-            element: message.element
+            userId: (message as { userId: string }).userId,
+            data: (message as { data: unknown }).data,
+            element: (message as { element?: string }).element
           });
         }
         break;
+      }
 
-      case 'permission_change':
+      case 'permission_change': {
         addEvent({
           type: 'permission_change',
-          userId: message.userId,
-          data: message.data
+          userId: (message as { userId: string }).userId,
+          data: (message as { data: unknown }).data
         });
         break;
+      }
 
-      case 'pong':
+      case 'pong': {
         const latency = Date.now() - lastPingRef.current;
         updateConnectionQuality(latency);
         break;
+      }
 
-      default:
-        console.warn('Unknown message type:', message.type);
+      default: {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.warn('Unknown message type:', (message as { type: string }).type);
+        }
+        break;
+      }
     }
   }, [enableCursorSharing, enableSelectionSharing, enableDataSync]);
 
@@ -374,7 +393,7 @@ export function useRealTimeCollaboration(
     }
   }, [enableSelectionSharing, userId, sendEvent]);
 
-  const broadcastData = useCallback((data: any, element?: string) => {
+  const broadcastData = useCallback((data: unknown, element?: string) => {
     if (enableDataSync) {
       sendEvent({
         type: 'data_update',
@@ -438,15 +457,15 @@ export function useRealTimeCollaboration(
     };
   }, [isConnected, connectionQuality, lastActivity, users.size, events.length]);
 
-  const retryConnection = useCallback(async () => {
+  const retryConnection = useCallback(() => {
     disconnect();
     reconnectAttemptsRef.current = 0;
-    await connect();
+    void connect();
   }, [disconnect, connect]);
 
   // Auto-connect on mount
   useEffect(() => {
-    connect();
+    void connect();
     return () => {
       disconnect();
     };

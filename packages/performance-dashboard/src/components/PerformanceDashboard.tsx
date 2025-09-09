@@ -1,4 +1,3 @@
-// @ts-nocheck - React type conflicts with Recharts components
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PerformanceMonitor, PerformanceMetrics, PerformanceAlert, PerformanceReport } from '../core/PerformanceMonitor';
 import { MetricsOverview } from './MetricsOverview';
@@ -8,6 +7,32 @@ import { RecommendationsPanel } from './RecommendationsPanel';
 import { HistoricalView } from './HistoricalView';
 import { ResponsiveElementsView } from './ResponsiveElementsView';
 import { VisualizationManager } from './visualizations/VisualizationManager';
+
+// Type definitions for dashboard
+interface DashboardConfig {
+  showAlerts?: boolean;
+  showRecommendations?: boolean;
+  showHistorical?: boolean;
+  autoStart?: boolean;
+  refreshInterval?: number;
+}
+
+type DashboardTheme = 'light' | 'dark' | 'auto';
+
+type DashboardView = 
+  | 'overview' 
+  | 'charts' 
+  | 'elements' 
+  | 'historical' 
+  | 'alerts' 
+  | 'recommendations'
+  | 'visualizations';
+
+interface DashboardSettings {
+  theme: DashboardTheme;
+  autoRefresh: boolean;
+  refreshInterval: number;
+}
 
 /**
  * Main Performance Dashboard Component
@@ -25,19 +50,19 @@ export interface PerformanceDashboardProps {
   /** Event handlers */
   onAlertClick?: (alert: PerformanceAlert) => void;
   onExportData?: () => void;
-  onSettingsChange?: (settings: any) => void;
+  onSettingsChange?: (settings: DashboardSettings) => void;
 }
 
 export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   monitor: externalMonitor,
   config = {},
-  theme = 'light',
+  theme = 'light' as DashboardTheme,
   onAlertClick,
   onExportData,
-  onSettingsChange
+  onSettingsChange: _onSettingsChange
 }) => {
   // State
-  const [monitor] = useState(() => externalMonitor || new PerformanceMonitor());
+  const [monitor] = useState(() => externalMonitor ?? new PerformanceMonitor());
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -69,8 +94,15 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
 
   // Generate report
   const generateReport = useCallback(async () => {
-    const newReport = await monitor.generateReport();
-    setReport(newReport);
+    try {
+      const newReport = await monitor.generateReport();
+      setReport(newReport);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Failed to generate report:', error);
+      }
+    }
   }, [monitor]);
 
   // Export data
@@ -98,12 +130,14 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
 
   // Setup event listeners
   useEffect(() => {
-    const unsubscribeMetrics = monitor.on('metrics-updated', (newMetrics: PerformanceMetrics) => {
+    const unsubscribeMetrics = monitor.on('metrics-updated', (data: unknown) => {
+      const newMetrics = data as PerformanceMetrics;
       setMetrics(newMetrics);
     });
 
-    const unsubscribeAlerts = monitor.on('performance-alert', (data: any) => {
-      const alert = data.alert;
+    const unsubscribeAlerts = monitor.on('performance-alert', (data: unknown) => {
+      const alertData = data as { alert?: PerformanceAlert };
+      const alert = alertData.alert;
       if (alert) {
         setAlerts(prev => [...prev.slice(-19), alert]); // Keep last 20 alerts
       }
@@ -128,7 +162,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   // Auto-start monitoring
   useEffect(() => {
     if (dashboardConfig.autoStart && !isMonitoring) {
-      monitor.start();
+      void monitor.start();
     }
   }, [monitor, dashboardConfig.autoStart, isMonitoring]);
 
@@ -138,7 +172,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
 
     const interval = setInterval(() => {
       if (isMonitoring) {
-        generateReport();
+        void generateReport();
       }
     }, refreshInterval);
 
@@ -232,16 +266,28 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
             history={monitor.getHistory()}
             theme={theme}
             onVisualizationChange={(type) => {
-              console.log('Visualization changed:', type);
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('Visualization changed:', type);
+              }
             }}
             onDataExport={(format, data) => {
-              console.log('Data export:', format, data);
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('Data export:', format, data);
+              }
             }}
             onLayoutSave={(layout) => {
-              console.log('Layout saved:', layout);
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('Layout saved:', layout);
+              }
             }}
             onLayoutLoad={(layoutId) => {
-              console.log('Layout loaded:', layoutId);
+              if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.log('Layout loaded:', layoutId);
+              }
             }}
           />
         );
@@ -273,7 +319,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
           
           <button 
             className="btn btn-secondary"
-            onClick={generateReport}
+            onClick={() => void generateReport()}
             disabled={!isMonitoring}
           >
             📊 Generate Report
@@ -388,24 +434,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   );
 };
 
-// Type definitions
-export interface DashboardConfig {
-  showAlerts?: boolean;
-  showRecommendations?: boolean;
-  showHistorical?: boolean;
-  autoStart?: boolean;
-  refreshInterval?: number;
-}
-
-export type DashboardTheme = 'light' | 'dark' | 'auto';
-
-export type DashboardView = 
-  | 'overview' 
-  | 'charts' 
-  | 'elements' 
-  | 'historical' 
-  | 'alerts' 
-  | 'recommendations'
-  | 'visualizations';
+// Export type definitions
+export type { DashboardConfig, DashboardTheme, DashboardView, DashboardSettings };
 
 export default PerformanceDashboard;

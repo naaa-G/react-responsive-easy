@@ -17,7 +17,7 @@ function transformCode(code: string, options = {}) {
     ]
   });
   
-  return result?.code || '';
+  return result?.code ?? '';
 }
 
 describe('Integration Tests', () => {
@@ -388,7 +388,7 @@ describe('Integration Tests', () => {
       expect(output).toContain('switch');
       
       // Should generate multiple switch statements
-      const switchCount = (output.match(/switch/g) || []).length;
+      const switchCount = (output.match(/switch/g) ?? []).length;
       expect(switchCount).toBeGreaterThan(1);
     });
 

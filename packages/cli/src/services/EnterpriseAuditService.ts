@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import chalk from 'chalk';
+import _chalk from 'chalk';
 import * as crypto from 'crypto';
 
 // Audit and Compliance Types
@@ -465,7 +465,7 @@ export class EnterpriseAuditService extends EventEmitter {
     }
     
     setInterval(() => {
-      this.processBatch();
+      this.processBatch().catch(() => undefined);
     }, this.config.flushInterval * 1000);
   }
 
@@ -498,11 +498,11 @@ export class EnterpriseAuditService extends EventEmitter {
    * Process audit events
    */
   private async processEvents(events: AuditEvent[]): Promise<void> {
-    for (const event of events) {
+    const eventPromises = events.map(async (event) => {
       try {
         // Apply filters
         if (!this.shouldLogEvent(event)) {
-          continue;
+          return;
         }
 
         // Apply rules
@@ -520,7 +520,9 @@ export class EnterpriseAuditService extends EventEmitter {
       } catch (error) {
         this.emit('event-processing-error', { event, error });
       }
-    }
+    });
+    
+    await Promise.all(eventPromises);
   }
 
   /**
@@ -550,6 +552,8 @@ export class EnterpriseAuditService extends EventEmitter {
    * Apply audit rules
    */
   private async applyRules(event: AuditEvent): Promise<void> {
+    const rulePromises: Promise<void>[] = [];
+    
     for (const rule of this.config.rules) {
       if (!rule.enabled) continue;
       
@@ -559,16 +563,20 @@ export class EnterpriseAuditService extends EventEmitter {
             // Already logged
             break;
           case 'alert':
-            await this.createAlert(event, rule);
+            rulePromises.push(this.createAlert(event, rule));
             break;
           case 'block':
-            await this.blockAction(event, rule);
+            rulePromises.push(this.blockAction(event, rule));
             break;
           case 'notify':
-            await this.sendNotification(event, rule);
+            rulePromises.push(this.sendNotification(event, rule));
             break;
         }
       }
+    }
+    
+    if (rulePromises.length > 0) {
+      await Promise.all(rulePromises);
     }
   }
 
@@ -590,7 +598,7 @@ export class EnterpriseAuditService extends EventEmitter {
    */
   private safeEvaluateExpression(condition: string, event: AuditEvent): boolean {
     // Replace placeholders with actual values
-    let expr = condition
+    const expr = condition
       .replace(/\{eventType\}/g, `"${event.eventType}"`)
       .replace(/\{category\}/g, `"${event.category}"`)
       .replace(/\{severity\}/g, `"${event.severity}"`)
@@ -621,9 +629,7 @@ export class EnterpriseAuditService extends EventEmitter {
     if (expr.includes('==')) {
       const [left, right] = expr.split('==').map(s => s.trim());
       return this.parseValue(left!) == this.parseValue(right!);
-    }
-    
-    if (expr.includes('!=')) {
+    } else if (expr.includes('!=')) {
       const [left, right] = expr.split('!=').map(s => s.trim());
       return this.parseValue(left!) != this.parseValue(right!);
     }
@@ -632,9 +638,7 @@ export class EnterpriseAuditService extends EventEmitter {
     if (expr.includes('&&')) {
       const parts = expr.split('&&').map(s => s.trim());
       return parts.every(part => this.parseBooleanExpression(part));
-    }
-    
-    if (expr.includes('||')) {
+    } else if (expr.includes('||')) {
       const parts = expr.split('||').map(s => s.trim());
       return parts.some(part => this.parseBooleanExpression(part));
     }
@@ -642,10 +646,8 @@ export class EnterpriseAuditService extends EventEmitter {
     // Handle negation
     if (expr.startsWith('!')) {
       return !this.parseBooleanExpression(expr.substring(1).trim());
-    }
-
-    // Handle parentheses
-    if (expr.startsWith('(') && expr.endsWith(')')) {
+    } else if (expr.startsWith('(') && expr.endsWith(')')) {
+      // Handle parentheses
       return this.parseBooleanExpression(expr.slice(1, -1));
     }
 
@@ -666,23 +668,23 @@ export class EnterpriseAuditService extends EventEmitter {
    * Parse values safely
    */
   private parseValue(value: string): any {
-    value = value.trim();
+    const trimmedValue = value.trim();
     
     // Handle strings
-    if (value.startsWith('"') && value.endsWith('"')) {
-      return value.slice(1, -1);
+    if (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) {
+      return trimmedValue.slice(1, -1);
     }
     
     // Handle booleans
-    if (value === 'true') return true;
-    if (value === 'false') return false;
+    if (trimmedValue === 'true') return true;
+    if (trimmedValue === 'false') return false;
     
     // Handle numbers
-    if (!isNaN(Number(value))) {
-      return Number(value);
+    if (!isNaN(Number(trimmedValue))) {
+      return Number(trimmedValue);
     }
     
-    return value;
+    return trimmedValue;
   }
 
   /**
@@ -743,9 +745,10 @@ export class EnterpriseAuditService extends EventEmitter {
    * Check compliance
    */
   private async checkCompliance(event: AuditEvent): Promise<void> {
-    for (const standard of this.config.compliance.standards) {
-      await this.checkStandardCompliance(event, standard);
-    }
+    const compliancePromises = this.config.compliance.standards.map(standard => 
+      this.checkStandardCompliance(event, standard)
+    );
+    await Promise.all(compliancePromises);
   }
 
   /**
@@ -827,7 +830,7 @@ export class EnterpriseAuditService extends EventEmitter {
    * Mask path
    */
   private maskPath(path: string): string {
-    return path.replace(/\/[^\/]+/g, '/***');
+    return path.replace(/\/[^/]+/g, '/***');
   }
 
   /**
@@ -946,7 +949,7 @@ export class EnterpriseAuditService extends EventEmitter {
       name: config.name,
       type: config.type,
       period: config.period,
-      filters: config.filters || {},
+      filters: config.filters ?? {},
       data: filteredEvents,
       summary,
       findings,
@@ -1010,12 +1013,12 @@ export class EnterpriseAuditService extends EventEmitter {
     let successCount = 0;
     
     events.forEach(event => {
-      eventsByType[event.eventType] = (eventsByType[event.eventType] || 0) + 1;
-      eventsByCategory[event.category] = (eventsByCategory[event.category] || 0) + 1;
-      eventsBySeverity[event.severity] = (eventsBySeverity[event.severity] || 0) + 1;
-      eventsByUser[event.user.id] = (eventsByUser[event.user.id] || 0) + 1;
-      eventsByResource[event.resource.type] = (eventsByResource[event.resource.type] || 0) + 1;
-      eventsByAction[event.action.type] = (eventsByAction[event.action.type] || 0) + 1;
+      eventsByType[event.eventType] = (eventsByType[event.eventType] ?? 0) + 1;
+      eventsByCategory[event.category] = (eventsByCategory[event.category] ?? 0) + 1;
+      eventsBySeverity[event.severity] = (eventsBySeverity[event.severity] ?? 0) + 1;
+      eventsByUser[event.user.id] = (eventsByUser[event.user.id] ?? 0) + 1;
+      eventsByResource[event.resource.type] = (eventsByResource[event.resource.type] ?? 0) + 1;
+      eventsByAction[event.action.type] = (eventsByAction[event.action.type] ?? 0) + 1;
       
       totalDuration += event.action.duration;
       if (event.result.success) successCount++;
@@ -1066,9 +1069,9 @@ export class EnterpriseAuditService extends EventEmitter {
     const timePatterns = new Map<number, number>();
     
     events.forEach(event => {
-      userActivity.set(event.user.id, (userActivity.get(event.user.id) || 0) + 1);
-      resourceAccess.set(event.resource.id, (resourceAccess.get(event.resource.id) || 0) + 1);
-      timePatterns.set(event.timestamp.getHours(), (timePatterns.get(event.timestamp.getHours()) || 0) + 1);
+      userActivity.set(event.user.id, (userActivity.get(event.user.id) ?? 0) + 1);
+      resourceAccess.set(event.resource.id, (resourceAccess.get(event.resource.id) ?? 0) + 1);
+      timePatterns.set(event.timestamp.getHours(), (timePatterns.get(event.timestamp.getHours()) ?? 0) + 1);
     });
     
     // Detect unusual user activity
@@ -1118,12 +1121,12 @@ export class EnterpriseAuditService extends EventEmitter {
     const hourlyEvents = new Map<number, number>();
     events.forEach(event => {
       const hour = Math.floor(event.timestamp.getTime() / (1000 * 60 * 60));
-      hourlyEvents.set(hour, (hourlyEvents.get(hour) || 0) + 1);
+      hourlyEvents.set(hour, (hourlyEvents.get(hour) ?? 0) + 1);
     });
     
     if (hourlyEvents.size > 1) {
       const hours = Array.from(hourlyEvents.keys()).sort();
-      const values = hours.map(hour => hourlyEvents.get(hour) || 0);
+      const values = hours.map(hour => hourlyEvents.get(hour) ?? 0);
       
       // Simple trend calculation
       const firstHalf = values.slice(0, Math.floor(values.length / 2));
@@ -1272,7 +1275,7 @@ export class EnterpriseAuditService extends EventEmitter {
       const notImplemented = standard.requirements.filter(r => r.status === 'not_implemented').length;
       
       const score = totalRequirements > 0 ? (implemented + partial * 0.5) / totalRequirements * 100 : 0;
-      const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
+      const _grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
       
       return {
         name: standard.name,

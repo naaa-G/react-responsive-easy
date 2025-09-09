@@ -17,9 +17,7 @@ import figlet from 'figlet';
 // @ts-ignore
 import gradient from 'gradient-string';
 import { CloudService } from '../services/CloudService';
-import { AWSCloudProvider } from '../integrations/cloud/aws/AWSCloudProvider';
-import { AzureCloudProvider } from '../integrations/cloud/azure/AzureCloudProvider';
-import { GCPCloudProvider } from '../integrations/cloud/gcp/GCPCloudProvider';
+// Cloud providers are imported by CloudService internally
 
 const program = new Command();
 
@@ -104,7 +102,7 @@ export function createCloudCommands(): Command {
           environment: options.environment,
           status: 'pending' as any,
           config: {
-            template: options.template || 'default',
+            template: options.template ?? 'default',
             parameters: {},
             tags: {
               Environment: options.environment,
@@ -222,7 +220,7 @@ export function createCloudCommands(): Command {
           console.log(chalk.gray(`Provider: ${options.provider}`));
           console.log(chalk.gray(`Region: ${options.region}`));
           console.log(chalk.gray(`Environment: ${options.environment}`));
-          console.log(chalk.gray(`Template: ${options.template || 'default'}`));
+          console.log(chalk.gray(`Template: ${options.template ?? 'default'}`));
           console.log(chalk.gray(`Estimated Cost: $${deployment.costs.estimated}/month`));
           return;
         }
@@ -258,7 +256,7 @@ export function createCloudCommands(): Command {
     .option('-p, --provider <provider>', 'Cloud provider (aws, azure, gcp)')
     .option('-d, --deployment <id>', 'Deployment ID')
     .option('--all', 'Show all deployments')
-    .action(async (options) => {
+    .action(async (_options) => {
       const spinner = ora('Checking deployment status...').start();
       
       try {
@@ -468,7 +466,7 @@ export function createCloudCommands(): Command {
         spinner.succeed('Configuration completed');
         
         console.log(chalk.blue('\n⚙️  Cloud Configuration:'));
-        console.log(chalk.gray(`Provider: ${options.provider || 'all'}`));
+        console.log(chalk.gray(`Provider: ${options.provider ?? 'all'}`));
         
         if (options.credentials) {
           console.log(chalk.green('✅ Credentials configured'));
@@ -512,8 +510,8 @@ export function createCloudCommands(): Command {
         spinner.succeed('Cleanup completed');
         
         console.log(chalk.green('\n✅ Cloud resources cleaned up successfully!'));
-        console.log(chalk.blue(`Provider: ${options.provider || 'all'}`));
-        console.log(chalk.blue(`Deployment: ${options.deployment || 'all'}`));
+        console.log(chalk.blue(`Provider: ${options.provider ?? 'all'}`));
+        console.log(chalk.blue(`Deployment: ${options.deployment ?? 'all'}`));
         
       } catch (error) {
         spinner.fail('Cleanup failed');

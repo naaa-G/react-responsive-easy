@@ -9,7 +9,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as _uuidv4 } from 'uuid';
 
 export interface GitLabPipeline {
   id: number;
@@ -258,11 +258,11 @@ export class GitLabCIService extends EventEmitter {
       await this.request('POST', `/projects/${this.projectId}/variables`, {
         key,
         value,
-        variable_type: options.variable_type || 'env_var',
-        protected: options.protected || false,
-        masked: options.masked || false,
-        raw: options.raw || false,
-        environment_scope: options.environment_scope || '*'
+        variable_type: options.variable_type ?? 'env_var',
+        protected: options.protected ?? false,
+        masked: options.masked ?? false,
+        raw: options.raw ?? false,
+        environment_scope: options.environment_scope ?? '*'
       });
       this.emit('variable-created', { key, value });
     } catch (error) {
@@ -337,7 +337,7 @@ export class GitLabCIService extends EventEmitter {
       }
 
       const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      if (contentType?.includes('application/json')) {
         return await response.json();
       } else {
         return await response.text();

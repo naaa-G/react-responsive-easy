@@ -3,16 +3,36 @@
  */
 
 import type { ResponsiveArgs, BreakpointConfig } from '../types';
+import type { ResponsiveConfig } from '@react-responsive-easy/core';
 import { DEFAULT_BREAKPOINTS } from '../constants';
+
+// Define proper types for Storybook arg types
+interface StorybookArgType {
+  name?: string;
+  description?: string;
+  control?: {
+    type?: string;
+    min?: number;
+    max?: number;
+    step?: number;
+    options?: string[];
+  };
+  table?: {
+    category?: string;
+    subcategory?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
 
 /**
  * Generate responsive args for a Storybook story
  */
 export function generateResponsiveArgs(
-  baseArgs: Record<string, any>,
+  baseArgs: Record<string, unknown>,
   breakpoints: BreakpointConfig[] = [...DEFAULT_BREAKPOINTS]
 ): ResponsiveArgs {
-  const responsiveValues: Record<string, any> = {};
+  const responsiveValues: Record<string, unknown> = {};
 
   // Generate responsive values for each arg
   Object.entries(baseArgs).forEach(([key, value]) => {
@@ -37,9 +57,9 @@ export function generateResponsiveArgs(
       // Handle style objects
       responsiveValues[key] = breakpoints.reduce((acc, bp) => {
         const scale = calculateScale(bp, DEFAULT_BREAKPOINTS[2]);
-        acc[bp.alias] = scaleStyleObject(value, scale);
+        acc[bp.alias] = scaleStyleObject(value as Record<string, unknown>, scale);
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, unknown>);
     }
   });
 
@@ -64,24 +84,24 @@ function calculateScale(target: BreakpointConfig, base: BreakpointConfig): numbe
 /**
  * Check if a value is a style object
  */
-function isStyleObject(value: any): boolean {
+function isStyleObject(value: unknown): boolean {
   return (
     typeof value === 'object' &&
     value !== null &&
     !Array.isArray(value) &&
-    (value.hasOwnProperty('width') ||
-     value.hasOwnProperty('height') ||
-     value.hasOwnProperty('fontSize') ||
-     value.hasOwnProperty('padding') ||
-     value.hasOwnProperty('margin'))
+    (Object.prototype.hasOwnProperty.call(value, 'width') ||
+     Object.prototype.hasOwnProperty.call(value, 'height') ||
+     Object.prototype.hasOwnProperty.call(value, 'fontSize') ||
+     Object.prototype.hasOwnProperty.call(value, 'padding') ||
+     Object.prototype.hasOwnProperty.call(value, 'margin'))
   );
 }
 
 /**
  * Scale a style object
  */
-function scaleStyleObject(styles: Record<string, any>, scale: number): Record<string, any> {
-  const scaledStyles: Record<string, any> = {};
+function scaleStyleObject(styles: Record<string, unknown>, scale: number): Record<string, unknown> {
+  const scaledStyles: Record<string, unknown> = {};
 
   Object.entries(styles).forEach(([property, value]) => {
     if (typeof value === 'number') {
@@ -118,10 +138,10 @@ function scaleBoxShadow(shadow: string, scale: number): string {
  * Generate argTypes for responsive controls
  */
 export function generateResponsiveArgTypes(
-  baseArgTypes: Record<string, any>,
+  baseArgTypes: Record<string, StorybookArgType>,
   breakpoints: BreakpointConfig[] = [...DEFAULT_BREAKPOINTS]
-): Record<string, any> {
-  const argTypes: Record<string, any> = {
+): Record<string, StorybookArgType> {
+  const argTypes: Record<string, StorybookArgType> = {
     ...baseArgTypes,
     breakpoint: {
       name: 'Current Breakpoint',
@@ -152,7 +172,9 @@ export function generateResponsiveArgTypes(
     enabled: {
       name: 'Responsive Enabled',
       description: 'Enable or disable responsive behavior',
-      control: 'boolean',
+      control: {
+        type: 'boolean'
+      },
       table: {
         category: 'Responsive',
         subcategory: 'Controls'
@@ -166,8 +188,8 @@ export function generateResponsiveArgTypes(
       breakpoints.forEach(bp => {
         argTypes[`${key}_${bp.alias}`] = {
           ...argType,
-          name: `${argType.name || key} (${bp.name})`,
-          description: `${argType.description || ''} for ${bp.name} breakpoint`,
+          name: `${argType.name ?? key} (${bp.name})`,
+          description: `${argType.description ?? ''} for ${bp.name} breakpoint`,
           table: {
             ...argType.table,
             category: 'Responsive',
@@ -184,16 +206,17 @@ export function generateResponsiveArgTypes(
 /**
  * Check if a property should have responsive controls
  */
-function isScalableProperty(key: string, argType: any): boolean {
+function isScalableProperty(key: string, argType: StorybookArgType): boolean {
   const scalableProps = [
     'width', 'height', 'fontSize', 'padding', 'margin', 'borderRadius',
     'top', 'left', 'right', 'bottom', 'size', 'spacing', 'gap'
   ];
 
+  const argTypeObj = argType as { control?: { type?: string } };
   return (
     scalableProps.some(prop => key.toLowerCase().includes(prop)) ||
-    argType.control?.type === 'number' ||
-    argType.control?.type === 'range'
+    argTypeObj.control?.type === 'number' ||
+    argTypeObj.control?.type === 'range'
   );
 }
 
@@ -201,13 +224,13 @@ function isScalableProperty(key: string, argType: any): boolean {
  * Create responsive story parameters
  */
 export function createResponsiveParameters(
-  config?: any,
+  config?: ResponsiveConfig,
   breakpoints?: BreakpointConfig[]
-): any {
+): Record<string, unknown> {
   return {
     responsiveEasy: {
       config,
-      breakpoints: breakpoints || DEFAULT_BREAKPOINTS,
+      breakpoints: breakpoints ?? DEFAULT_BREAKPOINTS,
       performance: {
         enabled: true,
         thresholds: {

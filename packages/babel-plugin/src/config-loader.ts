@@ -92,7 +92,7 @@ export function validateConfig(config: any): config is LoadedConfig {
   }
   
   // Validate base breakpoint
-  if (!config.base || !config.base.width || !config.base.height) {
+  if (!config.base?.width || !config.base?.height) {
     return false;
   }
   
@@ -102,7 +102,7 @@ export function validateConfig(config: any): config is LoadedConfig {
   }
   
   // Validate strategy
-  if (!config.strategy || !config.strategy.origin) {
+  if (!config.strategy?.origin) {
     return false;
   }
   

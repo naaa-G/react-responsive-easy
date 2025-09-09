@@ -7,11 +7,12 @@
 
 import React, { useState, useCallback } from 'react';
 import type { ResponsiveState, BreakpointConfig } from '../types';
+import type { ResponsiveConfig } from '@react-responsive-easy/core';
 
 interface ResponsiveControlsProps {
   state: ResponsiveState;
-  onBreakpointChange: (breakpoint: BreakpointConfig) => void;
-  onConfigUpdate: (config: any) => void;
+  onBreakpointChange: (breakpoint: BreakpointConfig) => void; // eslint-disable-line no-unused-vars
+  onConfigUpdate: (config: ResponsiveConfig) => void; // eslint-disable-line no-unused-vars
 }
 
 export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({
@@ -32,7 +33,11 @@ export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({
       onConfigUpdate(config);
       setCustomConfig('');
     } catch {
-      alert('Invalid JSON configuration');
+      // In production, this should be handled by a proper error reporting system
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-alert
+        alert('Invalid JSON configuration');
+      }
     }
   }, [customConfig, onConfigUpdate]);
 
@@ -40,7 +45,16 @@ export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({
     if (state.config) {
       const configStr = JSON.stringify(state.config, null, 2);
       navigator.clipboard.writeText(configStr).then(() => {
-        alert('Configuration copied to clipboard!');
+        // In production, this should be handled by a proper notification system
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-alert
+          alert('Configuration copied to clipboard!');
+        }
+      }).catch((error) => {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Failed to copy configuration:', error);
+        }
       });
     }
   }, [state.config]);
@@ -84,7 +98,8 @@ export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({
           <button 
             className="btn btn-secondary"
             onClick={() => {
-              if (state.config) {
+              if (state.config && process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
                 console.log('Current Responsive Config:', state.config);
               }
             }}

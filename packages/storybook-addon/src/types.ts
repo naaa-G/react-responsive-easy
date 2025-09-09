@@ -2,6 +2,7 @@
  * Type definitions for React Responsive Easy Storybook Addon
  */
 
+/* eslint-disable no-unused-vars */
 import type { ResponsiveConfig } from '@react-responsive-easy/core';
 
 export interface ResponsiveAddonConfig {
@@ -55,7 +56,7 @@ export interface ResponsiveArgs {
   /** Current breakpoint */
   breakpoint?: BreakpointConfig;
   /** Responsive values for different breakpoints */
-  responsiveValues?: Record<string, any>;
+  responsiveValues?: Record<string, unknown>;
   /** Scaling factor */
   scale?: number;
   /** Whether responsive behavior is enabled */
@@ -72,18 +73,26 @@ export interface ResponsiveState {
   availableBreakpoints: BreakpointConfig[];
   isOverlayVisible: boolean;
   isPerformanceVisible: boolean;
-  performanceData: any;
+  performanceData: PerformanceMetrics | null;
   config: ResponsiveConfig | null;
 }
 
 export interface AddonPanelProps {
   active: boolean;
-  api: any;
+  api: {
+    on: (event: string, callback: (...args: unknown[]) => void) => void;
+    off: (event: string, callback: (...args: unknown[]) => void) => void;
+    emit: (event: string, data?: unknown) => void;
+  };
   key: string;
 }
 
 export interface ToolbarProps {
-  api: any;
+  api: {
+    on: (event: string, callback: (...args: unknown[]) => void) => void;
+    off: (event: string, callback: (...args: unknown[]) => void) => void;
+    emit: (event: string, data?: unknown) => void;
+  };
 }
 
 export interface PerformanceMetrics {
@@ -97,7 +106,7 @@ export interface PerformanceMetrics {
 export interface ResponsiveTestCase {
   name: string;
   breakpoint: BreakpointConfig;
-  expectedValues: Record<string, any>;
+  expectedValues: Record<string, unknown>;
   description?: string;
 }
 

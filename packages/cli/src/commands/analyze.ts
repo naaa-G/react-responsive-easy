@@ -198,9 +198,9 @@ function analyzeBreakpointDistribution(breakpoints: any[]): any {
 }
 
 function calculateStrategyComplexity(strategy: any): string {
-  const tokenCount = Object.keys(strategy.tokens || {}).length;
+  const tokenCount = Object.keys(strategy.tokens ?? {}).length;
   const hasCustomRounding = strategy.rounding && strategy.rounding.mode !== 'nearest';
-  const hasCustomCurves = Object.values(strategy.tokens || {}).some((token: any) => 
+  const hasCustomCurves = Object.values(strategy.tokens ?? {}).some((token: any) => 
     token.curve && token.curve !== 'linear'
   );
   
@@ -226,7 +226,7 @@ function analyzeTokens(tokens: any): any {
       hasMax: !!token.max,
       hasStep: !!token.step,
       hasCurve: !!token.curve && token.curve !== 'linear',
-      scale: token.scale || 1
+      scale: token.scale ?? 1
     };
   });
   
@@ -243,11 +243,11 @@ function analyzeTokenAccessibility(tokens: any): any {
   
   const issues = [];
   
-  if (fontSize && fontSize.min && fontSize.min < 12) {
+  if (fontSize?.min && fontSize.min < 12) {
     issues.push('Font size minimum below 12px may affect readability');
   }
   
-  if (spacing && spacing.min && spacing.min < 4) {
+  if (spacing?.min && spacing.min < 4) {
     issues.push('Spacing minimum below 4px may affect touch targets');
   }
   
@@ -259,7 +259,7 @@ function analyzeTokenAccessibility(tokens: any): any {
 
 function estimateConfigurationOverhead(config: any): string {
   const breakpointCount = config.breakpoints.length;
-  const tokenCount = Object.keys(config.strategy.tokens || {}).length;
+  const tokenCount = Object.keys(config.strategy.tokens ?? {}).length;
   
   // Rough estimation of runtime overhead
   const baseOverhead = 5; // KB
@@ -277,7 +277,7 @@ function findOptimizationOpportunities(config: any): string[] {
     opportunities.push('Consider reducing breakpoints to 4-6 for optimal performance');
   }
   
-  if (Object.keys(config.strategy.tokens || {}).length > 5) {
+  if (Object.keys(config.strategy.tokens ?? {}).length > 5) {
     opportunities.push('Consider consolidating similar token types');
   }
   
@@ -311,38 +311,48 @@ async function analyzeFiles(
     fileDetails: [] as any[]
   };
   
-  for (const file of files) {
+  const fileProcessingPromises = files.map(async (file) => {
     try {
       const content = await fs.readFile(file, 'utf-8');
       const fileAnalysis = analyzeFile(file, content, config);
       
-      if (fileAnalysis.hasResponsiveCode) {
-        analysis.responsiveFiles++;
-      }
-      
-      analysis.totalResponsiveValues += fileAnalysis.responsiveValues;
-      analysis.hookUsage.useResponsiveValue += fileAnalysis.hooks.useResponsiveValue;
-      analysis.hookUsage.useScaledStyle += fileAnalysis.hooks.useScaledStyle;
-      analysis.hookUsage.useBreakpoint += fileAnalysis.hooks.useBreakpoint;
-      analysis.hookUsage.useBreakpointMatch += fileAnalysis.hooks.useBreakpointMatch;
-      
-      if (fileAnalysis.issues.length > 0) {
-        analysis.issues.push(...fileAnalysis.issues.map((issue: any) => ({
-          ...issue,
-          file
-        })));
-      }
-      
-      if (options.detailed) {
-        analysis.fileDetails.push(fileAnalysis);
-      }
-      
+      return { file, fileAnalysis };
     } catch (error) {
+      return { file, error: `Failed to analyze file: ${error}` };
+    }
+  });
+  
+  const fileResults = await Promise.all(fileProcessingPromises);
+  
+  for (const { file, fileAnalysis, error } of fileResults) {
+    if (error) {
       analysis.issues.push({
         type: 'error',
-        message: `Failed to analyze file: ${error}`,
+        message: error,
         file
       });
+      continue;
+    }
+    
+    if (fileAnalysis!.hasResponsiveCode) {
+      analysis.responsiveFiles++;
+    }
+    
+    analysis.totalResponsiveValues += fileAnalysis!.responsiveValues;
+    analysis.hookUsage.useResponsiveValue += fileAnalysis!.hooks.useResponsiveValue;
+    analysis.hookUsage.useScaledStyle += fileAnalysis!.hooks.useScaledStyle;
+    analysis.hookUsage.useBreakpoint += fileAnalysis!.hooks.useBreakpoint;
+    analysis.hookUsage.useBreakpointMatch += fileAnalysis!.hooks.useBreakpointMatch;
+    
+    if (fileAnalysis!.issues.length > 0) {
+      analysis.issues.push(...fileAnalysis!.issues.map((issue: any) => ({
+        ...issue,
+        file
+      })));
+    }
+    
+    if (options.detailed) {
+      analysis.fileDetails.push(fileAnalysis!);
     }
   }
   
@@ -352,7 +362,7 @@ async function analyzeFiles(
   return analysis;
 }
 
-function analyzeFile(file: string, content: string, config: any): any {
+function analyzeFile(file: string, content: string, _config: any): any {
   const analysis = {
     file,
     hasResponsiveCode: false,
@@ -490,7 +500,7 @@ function estimateBundleSize(fileAnalysis: any, config: any): string {
 
 function calculateScalingComplexity(config: any): string {
   const breakpointCount = config.breakpoints.length;
-  const tokenCount = Object.keys(config.strategy.tokens || {}).length;
+  const tokenCount = Object.keys(config.strategy.tokens ?? {}).length;
   
   if (breakpointCount <= 3 && tokenCount <= 3) return 'Low';
   if (breakpointCount <= 5 && tokenCount <= 5) return 'Medium';
@@ -511,7 +521,7 @@ function findPerformanceOptimizations(fileAnalysis: any, config: any): string[] 
   return optimizations;
 }
 
-function generateAccessibilityRecommendations(config: any, fileAnalysis: any): string[] {
+function generateAccessibilityRecommendations(config: any, _fileAnalysis: any): string[] {
   const recommendations = [];
   
   if (!config.strategy.tokens?.fontSize?.min || config.strategy.tokens.fontSize.min < 12) {
@@ -525,7 +535,7 @@ function generateAccessibilityRecommendations(config: any, fileAnalysis: any): s
   return recommendations;
 }
 
-function displayAnalysis(analysis: any, options: any): void {
+function displayAnalysis(analysis: any, _options: any): void {
   console.log(chalk.blue('\n🔍 React Responsive Easy Analysis Report'));
   console.log(chalk.gray('='.repeat(60)));
   

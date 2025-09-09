@@ -10,13 +10,10 @@
 
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { createHash } from 'crypto';
-import { readFile, writeFile, mkdir, access, readdir, stat, unlink } from 'fs-extra';
-import { join, resolve, dirname, basename, extname } from 'path';
-import { spawn, exec } from 'child_process';
+import { exec } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const _execAsync = promisify(exec);
 
 // Plugin Types
 export interface Plugin {
@@ -406,8 +403,8 @@ export class PluginManager extends EventEmitter {
       installation = {
         id: installationId,
         pluginId,
-        version: options.version || 'latest',
-        source: options.source || 'npm',
+        version: options.version ?? 'latest',
+        source: options.source ?? 'npm',
         status: 'pending',
         progress: 0,
         startedAt: new Date(),
@@ -429,14 +426,14 @@ export class PluginManager extends EventEmitter {
       installation.progress = 25;
       this.emit('installation-progress', installation);
 
-      const pluginData = await this.downloadPlugin(pluginId, options.version || 'latest', options.source || 'npm');
+      const pluginData = await this.downloadPlugin(pluginId, options.version ?? 'latest', options.source ?? 'npm');
 
       // Install dependencies
       installation.status = 'installing';
       installation.progress = 50;
       this.emit('installation-progress', installation);
 
-      const dependencies = await this.installDependencies(pluginData.dependencies);
+      const _dependencies = await this.installDependencies(pluginData.dependencies);
 
       // Load plugin
       installation.progress = 75;
@@ -497,10 +494,10 @@ export class PluginManager extends EventEmitter {
   /**
    * Load a plugin
    */
-  async loadPlugin(pluginData: any, installationId?: string): Promise<Plugin> {
+  async loadPlugin(pluginData: any, _installationId?: string): Promise<Plugin> {
     try {
       const plugin: Plugin = {
-        id: pluginData.id || uuidv4(),
+        id: pluginData.id ?? uuidv4(),
         name: pluginData.name,
         version: pluginData.version,
         description: pluginData.description,
@@ -508,19 +505,19 @@ export class PluginManager extends EventEmitter {
         license: pluginData.license,
         homepage: pluginData.homepage,
         repository: pluginData.repository,
-        keywords: pluginData.keywords || [],
-        category: pluginData.category || 'utility',
-        type: pluginData.type || 'command',
+        keywords: pluginData.keywords ?? [],
+        category: pluginData.category ?? 'utility',
+        type: pluginData.type ?? 'command',
         status: 'installed',
-        dependencies: pluginData.dependencies || [],
-        peerDependencies: pluginData.peerDependencies || [],
-        devDependencies: pluginData.devDependencies || [],
-        engines: pluginData.engines || { node: '>=14.0.0' },
-        main: pluginData.main || 'index.js',
-        entry: pluginData.entry || pluginData.main || 'index.js',
-        commands: pluginData.commands || [],
-        hooks: pluginData.hooks || [],
-        permissions: pluginData.permissions || [],
+        dependencies: pluginData.dependencies ?? [],
+        peerDependencies: pluginData.peerDependencies ?? [],
+        devDependencies: pluginData.devDependencies ?? [],
+        engines: pluginData.engines ?? { node: '>=14.0.0' },
+        main: pluginData.main ?? 'index.js',
+        entry: pluginData.entry ?? pluginData.main ?? 'index.js',
+        commands: pluginData.commands ?? [],
+        hooks: pluginData.hooks ?? [],
+        permissions: pluginData.permissions ?? [],
         config: {
           enabled: true,
           autoLoad: true,
@@ -537,16 +534,16 @@ export class PluginManager extends EventEmitter {
           ...pluginData.config
         },
         metadata: {
-          size: pluginData.size || 0,
-          checksum: pluginData.checksum || '',
-          verified: pluginData.verified || false,
-          source: pluginData.source || 'npm',
+          size: pluginData.size ?? 0,
+          checksum: pluginData.checksum ?? '',
+          verified: pluginData.verified ?? false,
+          source: pluginData.source ?? 'npm',
           sourceUrl: pluginData.sourceUrl,
-          tags: pluginData.tags || [],
-          rating: pluginData.rating || 0,
-          downloads: pluginData.downloads || 0,
-          lastPublished: pluginData.lastPublished || new Date(),
-          compatibility: pluginData.compatibility || {
+          tags: pluginData.tags ?? [],
+          rating: pluginData.rating ?? 0,
+          downloads: pluginData.downloads ?? 0,
+          lastPublished: pluginData.lastPublished ?? new Date(),
+          compatibility: pluginData.compatibility ?? {
             cliVersion: '2.0.0',
             nodeVersion: process.version,
             platform: [process.platform],
@@ -554,7 +551,7 @@ export class PluginManager extends EventEmitter {
             tested: false,
             issues: []
           },
-          security: pluginData.security || {
+          security: pluginData.security ?? {
             verified: false,
             signature: false,
             permissions: [],
@@ -562,7 +559,7 @@ export class PluginManager extends EventEmitter {
             riskLevel: 'medium',
             lastAudit: new Date()
           },
-          performance: pluginData.performance || {
+          performance: pluginData.performance ?? {
             loadTime: 0,
             memoryUsage: 0,
             cpuUsage: 0,
@@ -715,12 +712,12 @@ export class PluginManager extends EventEmitter {
   /**
    * Helper methods
    */
-  private async checkConflicts(pluginId: string, version?: string): Promise<string[]> {
+  private async checkConflicts(_pluginId: string, _version?: string): Promise<string[]> {
     // Mock implementation - in real implementation, check for conflicts
     return [];
   }
 
-  private async downloadPlugin(pluginId: string, version: string, source: string): Promise<any> {
+  private async downloadPlugin(pluginId: string, version: string, _source: string): Promise<any> {
     // Mock implementation - in real implementation, download plugin
     return {
       id: pluginId,
@@ -761,17 +758,17 @@ export class PluginManager extends EventEmitter {
     plugin.status = 'inactive';
   }
 
-  private async checkCommandPermissions(plugin: Plugin, command: PluginCommand): Promise<void> {
+  private async checkCommandPermissions(_plugin: Plugin, _command: PluginCommand): Promise<void> {
     // Mock implementation - in real implementation, check permissions
     return;
   }
 
-  private async executeCommandDirect(plugin: Plugin, command: PluginCommand, args: any[], options: Record<string, any>): Promise<any> {
+  private async executeCommandDirect(_plugin: Plugin, _command: PluginCommand, _args: any[], _options: Record<string, any>): Promise<any> {
     // Mock implementation - in real implementation, execute command
     return { success: true, result: 'Command executed successfully' };
   }
 
-  private async removePluginFiles(plugin: Plugin): Promise<void> {
+  private async removePluginFiles(_plugin: Plugin): Promise<void> {
     // Mock implementation - in real implementation, remove plugin files
     return;
   }
@@ -799,7 +796,7 @@ export class PluginManager extends EventEmitter {
    * Get plugin by ID
    */
   getPlugin(pluginId: string): Plugin | null {
-    return this.plugins.get(pluginId) || null;
+    return this.plugins.get(pluginId) ?? null;
   }
 
   /**
@@ -827,7 +824,7 @@ export class PluginManager extends EventEmitter {
    * Get plugin registry
    */
   getRegistry(registryId: string): PluginRegistry | null {
-    return this.registries.get(registryId) || null;
+    return this.registries.get(registryId) ?? null;
   }
 
   /**
@@ -898,7 +895,7 @@ export class PluginSandbox {
     this.config = config;
   }
 
-  async executeCommand(plugin: Plugin, command: PluginCommand, args: any[], options: Record<string, any>): Promise<any> {
+  async executeCommand(_plugin: Plugin, _command: PluginCommand, _args: any[], _options: Record<string, any>): Promise<any> {
     // Mock implementation - in real implementation, execute in sandbox
     return { success: true, result: 'Command executed in sandbox' };
   }

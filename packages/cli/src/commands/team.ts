@@ -16,9 +16,8 @@ import boxen from 'boxen';
 import figlet from 'figlet';
 // @ts-ignore
 import gradient from 'gradient-string';
-import { TeamService, Team, Workspace, Project, TeamMember, UserRole } from '../services/TeamService';
-import { readFile, writeFile, access } from 'fs-extra';
-import { join, resolve } from 'path';
+import { TeamService } from '../services/TeamService';
+import { writeFile } from 'fs-extra';
 import inquirer from 'inquirer';
 
 interface TeamCreateOptions {
@@ -221,6 +220,7 @@ async function createTeam(options: TeamCreateOptions): Promise<void> {
   try {
     const teamService = new TeamService();
     
+    let updatedOptions = options;
     if (options.interactive) {
       const answers = await inquirer.prompt([
         {
@@ -245,28 +245,28 @@ async function createTeam(options: TeamCreateOptions): Promise<void> {
             { name: 'Public - Anyone can see', value: 'public' },
             { name: 'Restricted - Limited visibility', value: 'restricted' }
           ],
-          default: options.visibility || 'private'
+          default: options.visibility ?? 'private'
         },
         {
           type: 'number',
           name: 'maxMembers',
           message: 'Maximum number of members:',
-          default: parseInt(String(options.maxMembers || '50'), 10),
+          default: parseInt(String(options.maxMembers ?? '50'), 10),
           validate: (input: number) => input > 0 || 'Maximum members must be greater than 0'
         }
       ]);
 
-      options = { ...options, ...answers };
+      updatedOptions = { ...options, ...answers };
     }
 
     spinner.text = 'Creating team...';
     const team = await teamService.createTeam({
-      name: options.name,
-      description: options.description || '',
+      name: updatedOptions.name,
+      description: updatedOptions.description ?? '',
       createdBy: 'current-user', // In real implementation, get from auth
       settings: {
-        visibility: options.visibility as any,
-        maxMembers: parseInt(String(options.maxMembers || '50'), 10)
+        visibility: updatedOptions.visibility as any,
+        maxMembers: parseInt(String(updatedOptions.maxMembers ?? '50'), 10)
       }
     });
 
@@ -304,6 +304,7 @@ async function createWorkspace(options: WorkspaceCreateOptions): Promise<void> {
   try {
     const teamService = new TeamService();
     
+    let updatedOptions = options;
     if (options.interactive) {
       const answers = await inquirer.prompt([
         {
@@ -329,7 +330,7 @@ async function createWorkspace(options: WorkspaceCreateOptions): Promise<void> {
             { name: 'Client - For client-specific work', value: 'client' },
             { name: 'Custom - Custom workspace type', value: 'custom' }
           ],
-          default: options.type || 'project'
+          default: options.type ?? 'project'
         },
         {
           type: 'list',
@@ -340,21 +341,21 @@ async function createWorkspace(options: WorkspaceCreateOptions): Promise<void> {
             { name: 'Public - Anyone can see', value: 'public' },
             { name: 'Restricted - Limited visibility', value: 'restricted' }
           ],
-          default: options.visibility || 'private'
+          default: options.visibility ?? 'private'
         }
       ]);
 
-      options = { ...options, ...answers };
+      updatedOptions = { ...options, ...answers };
     }
 
     spinner.text = 'Creating workspace...';
-    const workspace = await teamService.createWorkspace(options.teamId, {
-      name: options.name,
-      description: options.description || '',
-      type: options.type as any,
+    const workspace = await teamService.createWorkspace(updatedOptions.teamId, {
+      name: updatedOptions.name,
+      description: updatedOptions.description ?? '',
+      type: updatedOptions.type as any,
       createdBy: 'current-user', // In real implementation, get from auth
       settings: {
-        visibility: options.visibility as any
+        visibility: updatedOptions.visibility as any
       }
     });
 
@@ -392,6 +393,7 @@ async function createProject(options: ProjectCreateOptions): Promise<void> {
   try {
     const teamService = new TeamService();
     
+    let updatedOptions = options;
     if (options.interactive) {
       const answers = await inquirer.prompt([
         {
@@ -417,7 +419,7 @@ async function createProject(options: ProjectCreateOptions): Promise<void> {
             { name: 'Library - Code library or framework', value: 'library' },
             { name: 'Template - Project template', value: 'template' }
           ],
-          default: options.type || 'responsive'
+          default: options.type ?? 'responsive'
         },
         {
           type: 'list',
@@ -428,21 +430,21 @@ async function createProject(options: ProjectCreateOptions): Promise<void> {
             { name: 'Public - Anyone can see', value: 'public' },
             { name: 'Restricted - Limited visibility', value: 'restricted' }
           ],
-          default: options.visibility || 'private'
+          default: options.visibility ?? 'private'
         }
       ]);
 
-      options = { ...options, ...answers };
+      updatedOptions = { ...options, ...answers };
     }
 
     spinner.text = 'Creating project...';
-    const project = await teamService.createProject(options.workspaceId, {
-      name: options.name,
-      description: options.description || '',
-      type: options.type as any,
+    const project = await teamService.createProject(updatedOptions.workspaceId, {
+      name: updatedOptions.name,
+      description: updatedOptions.description ?? '',
+      type: updatedOptions.type as any,
       createdBy: 'current-user', // In real implementation, get from auth
       settings: {
-        visibility: options.visibility as any
+        visibility: updatedOptions.visibility as any
       }
     });
 
@@ -480,6 +482,7 @@ async function inviteUser(options: TeamInviteOptions): Promise<void> {
   try {
     const teamService = new TeamService();
     
+    let updatedOptions = options;
     if (options.interactive) {
       const answers = await inquirer.prompt([
         {
@@ -503,7 +506,7 @@ async function inviteUser(options: TeamInviteOptions): Promise<void> {
             { name: 'Designer - Design access', value: 'designer' },
             { name: 'Viewer - Read-only access', value: 'viewer' }
           ],
-          default: options.role || 'developer'
+          default: options.role ?? 'developer'
         },
         {
           type: 'input',
@@ -513,7 +516,7 @@ async function inviteUser(options: TeamInviteOptions): Promise<void> {
         }
       ]);
 
-      options = { ...options, ...answers };
+      updatedOptions = { ...options, ...answers };
     }
 
     spinner.text = 'Sending invitation...';
@@ -524,17 +527,17 @@ async function inviteUser(options: TeamInviteOptions): Promise<void> {
       invitedBy: string;
       message?: string;
     } = {
-      email: options.email,
-      role: options.role || 'developer',
-      workspaceIds: options.workspaceIds ? String(options.workspaceIds).split(',') : [],
+      email: updatedOptions.email,
+      role: updatedOptions.role ?? 'developer',
+      workspaceIds: updatedOptions.workspaceIds ? String(updatedOptions.workspaceIds).split(',') : [],
       invitedBy: 'current-user', // In real implementation, get from auth
     };
     
-    if (options.message !== undefined) {
-      inviteOptions.message = options.message;
+    if (updatedOptions.message !== undefined) {
+      inviteOptions.message = updatedOptions.message;
     }
     
-    const invitation = await teamService.inviteUser(options.teamId, inviteOptions);
+    const invitation = await teamService.inviteUser(updatedOptions.teamId, inviteOptions);
 
     spinner.succeed(chalk.green('✅ User invited successfully'));
 
@@ -667,7 +670,7 @@ async function showTeamInfo(options: { teamId: string; format: string }): Promis
       if (team.members.length > 0) {
         console.log(chalk.cyan('\n👥 Team Members:'));
         console.table(team.members.map(member => ({
-          Name: member.name || member.email,
+          Name: member.name ?? member.email,
           Email: member.email,
           Role: member.role.name,
           Status: member.status,
@@ -824,7 +827,7 @@ async function manageMembers(options: any): Promise<void> {
 
       console.log(chalk.cyan(`\n👥 Team Members (${team.members.length}):`));
       console.table(team.members.map(member => ({
-        Name: member.name || member.email,
+        Name: member.name ?? member.email,
         Email: member.email,
         Role: member.role.name,
         Status: member.status,

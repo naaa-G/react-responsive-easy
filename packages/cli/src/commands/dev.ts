@@ -125,9 +125,9 @@ async function checkProjectSetup(): Promise<any> {
   if (hasPackageJson) {
     try {
       const packageJson = await fs.readJson('package.json');
-      hasCoreDependency = packageJson.dependencies?.['@react-responsive-easy/core'] ||
+      hasCoreDependency = packageJson.dependencies?.['@react-responsive-easy/core'] ??
                          packageJson.devDependencies?.['@react-responsive-easy/core'];
-    } catch (error) {
+    } catch (_error) {
       // Silently fail
     }
   }
@@ -446,7 +446,7 @@ window.mockProvider = null; // Will be set by initDevEnvironment
 `;
 }
 
-function generateDevCSS(config: any, options: any): string {
+function generateDevCSS(config: any, _options: any): string {
   return `
 /* React Responsive Easy Development Server Styles */
 
@@ -793,7 +793,7 @@ async function startDevelopmentServer(devFiles: any, options: any): Promise<void
   }
 }
 
-function showServerInfo(options: any, config: any, devFiles: any): void {
+function showServerInfo(options: any, config: any, _devFiles: any): void {
   console.log(chalk.blue('\n📊 Development Server Information:'));
   console.log(chalk.gray(`  • Port: ${options.port}`));
   console.log(chalk.gray(`  • Host: ${options.host}`));
@@ -813,7 +813,7 @@ function showServerInfo(options: any, config: any, devFiles: any): void {
   });
 }
 
-function showResponsiveTestingInstructions(config: any): void {
+function showResponsiveTestingInstructions(_config: any): void {
   console.log(chalk.blue('\n🧪 Responsive Testing Instructions:'));
   console.log(chalk.cyan('  1. Open the HTML file in your browser'));
   console.log(chalk.cyan('  2. Use the responsive preview panel to switch breakpoints'));

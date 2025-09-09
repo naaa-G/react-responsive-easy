@@ -7,16 +7,36 @@ import type { StoryObj } from '@storybook/react';
 import { generateResponsiveArgs, generateResponsiveArgTypes, createResponsiveParameters } from './generateArgs';
 import { DEFAULT_BREAKPOINTS } from '../constants';
 import type { BreakpointConfig } from '../types';
+import type { ResponsiveConfig } from '@react-responsive-easy/core';
 
 /**
  * Create a responsive story with automatic args and controls
  */
-export function createResponsiveStory<T = {}>(
+// Define the StorybookArgType interface locally for this file
+interface StorybookArgType {
+  name?: string;
+  description?: string;
+  control?: {
+    type?: string;
+    min?: number;
+    max?: number;
+    step?: number;
+    options?: string[];
+  };
+  table?: {
+    category?: string;
+    subcategory?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export function createResponsiveStory<T = Record<string, unknown>>(
   component: React.ComponentType<T>,
   options: {
     args?: Partial<T>;
-    argTypes?: Record<string, any>;
-    config?: any;
+    argTypes?: Record<string, StorybookArgType>;
+    config?: ResponsiveConfig;
     breakpoints?: BreakpointConfig[];
     title?: string;
     description?: string;
@@ -32,7 +52,7 @@ export function createResponsiveStory<T = {}>(
   } = options;
 
   // Generate responsive args and argTypes
-  const responsiveArgs = generateResponsiveArgs(args as Record<string, any>, [...breakpoints]);
+  const responsiveArgs = generateResponsiveArgs(args as Record<string, unknown>, [...breakpoints]);
   const responsiveArgTypes = generateResponsiveArgTypes(argTypes, [...breakpoints]);
 
   return {
@@ -45,7 +65,7 @@ export function createResponsiveStory<T = {}>(
       ...createResponsiveParameters(config, [...breakpoints]),
       docs: {
         description: {
-          story: description || `
+          story: description ?? `
 This story demonstrates responsive behavior across different breakpoints.
 Use the Responsive panel to switch between breakpoints and monitor performance.
           `.trim()
@@ -53,14 +73,14 @@ Use the Responsive panel to switch between breakpoints and monitor performance.
       }
     },
     name: title,
-    render: (args: T) => React.createElement(component as any, args as any)
+    render: (args: T) => React.createElement(component, args)
   } as unknown as StoryObj<T>;
 }
 
 /**
  * Create multiple stories for each breakpoint
  */
-export function createBreakpointStories<T = {}>(
+export function createBreakpointStories<T = Record<string, unknown>>(
   component: React.ComponentType<T>,
   baseStory: StoryObj<T>,
   breakpoints: BreakpointConfig[] = [...DEFAULT_BREAKPOINTS]
@@ -102,7 +122,7 @@ export function createBreakpointStories<T = {}>(
 /**
  * Create a comparison story showing all breakpoints
  */
-export function createComparisonStory<T = {}>(
+export function createComparisonStory<T = Record<string, unknown>>(
   component: React.ComponentType<T>,
   baseStory: StoryObj<T>,
   breakpoints: BreakpointConfig[] = [...DEFAULT_BREAKPOINTS]
@@ -164,7 +184,7 @@ export function createComparisonStory<T = {}>(
                   overflow: 'hidden'
                 }
               },
-              React.createElement(component as any, args as any)
+              React.createElement(component, args)
             )
           )
         )
@@ -185,7 +205,7 @@ export function createComparisonStory<T = {}>(
 /**
  * Create a performance testing story
  */
-export function createPerformanceStory<T = {}>(
+export function createPerformanceStory<T = Record<string, unknown>>(
   component: React.ComponentType<T>,
   baseStory: StoryObj<T>,
   options: {
@@ -200,30 +220,36 @@ export function createPerformanceStory<T = {}>(
     name: 'Performance Test',
     render: (args: T) => {
       const [isRunning, setIsRunning] = React.useState(false);
-      const [results, setResults] = React.useState<any[]>([]);
+      const [results, setResults] = React.useState<Array<{
+        breakpoint: string;
+        time: number;
+        avgTime: number;
+      }>>([]);
 
       const runPerformanceTest = async () => {
         setIsRunning(true);
         setResults([]);
 
-        for (const breakpoint of breakpoints) {
-          const start = performance.now();
-          
-          // Simulate breakpoint changes
-          for (let i = 0; i < iterations; i++) {
-            await new Promise(resolve => requestAnimationFrame(resolve));
-          }
-          
-          const end = performance.now();
-          const result = {
-            breakpoint: breakpoint.name,
-            time: end - start,
-            avgTime: (end - start) / iterations
-          };
-          
-          setResults(prev => [...prev, result]);
-        }
+        const results = await Promise.all(
+          breakpoints.map(async (breakpoint) => {
+            const start = performance.now();
+            
+            // Simulate breakpoint changes
+            const promises = Array.from({ length: iterations }, () => 
+              new Promise(resolve => requestAnimationFrame(resolve))
+            );
+            await Promise.all(promises);
+            
+            const end = performance.now();
+            return {
+              breakpoint: breakpoint.name,
+              time: end - start,
+              avgTime: (end - start) / iterations
+            };
+          })
+        );
 
+        setResults(results);
         setIsRunning(false);
       };
 
@@ -286,7 +312,7 @@ export function createPerformanceStory<T = {}>(
         React.createElement(
           'div',
           { style: { border: '1px solid #ddd', padding: '20px', borderRadius: '8px' } },
-          React.createElement(component as any, args as any)
+          React.createElement(component, args)
         )
       );
     },

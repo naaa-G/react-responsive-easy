@@ -10,9 +10,7 @@
 
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { createHash, randomBytes } from 'crypto';
-import { readFile, writeFile, mkdir, access } from 'fs-extra';
-import { join, resolve } from 'path';
+import { randomBytes } from 'crypto';
 
 // Enterprise Team Management Types
 export interface Team {
@@ -1104,7 +1102,7 @@ export class TeamService extends EventEmitter {
    * Get team by ID
    */
   getTeam(teamId: string): Team | null {
-    return this.teams.get(teamId) || null;
+    return this.teams.get(teamId) ?? null;
   }
 
   /**
@@ -1118,7 +1116,7 @@ export class TeamService extends EventEmitter {
    * Get role by ID
    */
   getRole(roleId: string): UserRole | null {
-    return this.roles.get(roleId) || null;
+    return this.roles.get(roleId) ?? null;
   }
 
   /**

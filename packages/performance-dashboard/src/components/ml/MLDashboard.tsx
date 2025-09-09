@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   useAdvancedML, 
   useRealTimeMLAnalysis,
@@ -33,7 +33,7 @@ export interface MLDashboardProps {
  * Enterprise-grade ML Dashboard for advanced analytics and predictions
  * Provides real-time anomaly detection, predictions, and pattern recognition
  */
-export const MLDashboard: React.FC<MLDashboardProps> = ({
+export const MLDashboard = ({
   data,
   config = {},
   onAnomalyDetected,
@@ -46,14 +46,14 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
   showPredictions = true,
   showPatternRecognition = true,
   showTrainingProgress = true,
-  showModelInsights = true,
+  showModelInsights: _showModelInsights = true,
   autoRefresh = true,
   refreshInterval = 30000
-}) => {
+}: MLDashboardProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'anomalies' | 'predictions' | 'patterns' | 'models'>('overview');
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [_selectedModel, _setSelectedModel] = useState<string | null>(null);
   const [isTraining, setIsTraining] = useState(false);
-  const [trainingProgress, setTrainingProgress] = useState(0);
+  const [_trainingProgress, _setTrainingProgress] = useState(0);
 
   // ML configuration
   const mlConfig: MLConfig = {
@@ -79,7 +79,7 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
   // Initialize ML system
   useEffect(() => {
     if (!mlState.isInitialized) {
-      mlActions.initialize();
+      void mlActions.initialize();
     }
   }, [mlState.isInitialized, mlActions]);
 
@@ -112,11 +112,11 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
   useEffect(() => {
     if (!autoRefresh) return;
 
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
       if (data.length > 0) {
-        await mlActions.detectAnomalies(data.slice(-10));
-        await mlActions.generatePredictions(data);
-        await mlActions.recognizePatterns(data);
+        void mlActions.detectAnomalies(data.slice(-10));
+        void mlActions.generatePredictions(data);
+        void mlActions.recognizePatterns(data);
       }
     }, refreshInterval);
 
@@ -126,15 +126,18 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
   // Training handler
   const handleTrainModel = useCallback(async (modelId: string) => {
     setIsTraining(true);
-    setTrainingProgress(0);
+    _setTrainingProgress(0);
     
     try {
       await mlActions.trainModel(modelId, data);
     } catch (error) {
-      console.error('Training failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Training failed:', error);
+      }
     } finally {
       setIsTraining(false);
-      setTrainingProgress(0);
+      _setTrainingProgress(0);
     }
   }, [mlActions, data]);
 
@@ -201,14 +204,14 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
       <div className="model-actions">
         <button
           className="action-button primary"
-          onClick={() => handleTrainModel(model.id)}
+          onClick={() => void handleTrainModel(model.id)}
           disabled={isTraining}
         >
           {isTraining ? 'Training...' : 'Train'}
         </button>
         <button
           className="action-button secondary"
-          onClick={() => setSelectedModel(model.id)}
+          onClick={() => _setSelectedModel(model.id)}
         >
           Details
         </button>
@@ -488,7 +491,7 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
               <h3>Anomaly Detection</h3>
               <button
                 className="action-button primary"
-                onClick={() => mlActions.detectAnomalies(data)}
+                onClick={() => void mlActions.detectAnomalies(data)}
               >
                 Detect Anomalies
               </button>
@@ -505,7 +508,7 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
               <h3>Performance Predictions</h3>
               <button
                 className="action-button primary"
-                onClick={() => mlActions.generatePredictions(data)}
+                onClick={() => void mlActions.generatePredictions(data)}
               >
                 Generate Predictions
               </button>
@@ -522,7 +525,7 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
               <h3>Pattern Recognition</h3>
               <button
                 className="action-button primary"
-                onClick={() => mlActions.recognizePatterns(data)}
+                onClick={() => void mlActions.recognizePatterns(data)}
               >
                 Recognize Patterns
               </button>
@@ -539,7 +542,7 @@ export const MLDashboard: React.FC<MLDashboardProps> = ({
               <h3>Model Management</h3>
               <button
                 className="action-button primary"
-                onClick={() => mlActions.retrainAllModels()}
+                onClick={() => void mlActions.retrainAllModels()}
                 disabled={isTraining}
               >
                 {isTraining ? 'Training...' : 'Retrain All Models'}

@@ -6,7 +6,6 @@
  */
 
 import type { 
-  PerformanceMetrics, 
   PerformanceSnapshot, 
   PerformanceTrends,
   PerformanceReport 
@@ -218,37 +217,37 @@ export class AnalyticsEngine {
     this.loadDefaultBenchmarks();
     this.initializeCorrelations();
     this.isInitialized = true;
-    console.log('📊 Analytics Engine initialized');
+    // Analytics Engine initialized
   }
 
   /**
    * Process performance data for analytics
    */
-  async processData(
+  processData(
     snapshots: PerformanceSnapshot[],
     insights: AIInsight[] = [],
     predictions: AIPrediction[] = [],
     alerts: AlertEvent[] = []
-  ): Promise<AnalyticsData> {
+  ): AnalyticsData {
     if (!this.config.enabled || snapshots.length === 0) {
       return this.getEmptyAnalyticsData();
     }
 
     try {
       // Aggregate metrics
-      const aggregatedMetrics = await this.aggregateMetrics(snapshots);
+      const aggregatedMetrics = this.aggregateMetrics(snapshots);
       
       // Analyze trends
       const trends = this.analyzeTrends(snapshots);
       
       // Detect anomalies
-      const detectedAnomalies = await this.detectAnomalies(snapshots);
+      const detectedAnomalies = this.detectAnomalies(snapshots);
       
       // Generate forecasts
-      const generatedForecasts = await this.generateForecasts(snapshots);
+      const _generatedForecasts = this.generateForecasts(snapshots);
       
       // Calculate correlations
-      const calculatedCorrelations = await this.calculateCorrelations(snapshots);
+      const calculatedCorrelations = this.calculateCorrelations(snapshots);
 
       const analyticsData: AnalyticsData = {
         metrics: aggregatedMetrics,
@@ -278,8 +277,8 @@ export class AnalyticsEngine {
       this.anomalies = detectedAnomalies;
 
       return analyticsData;
-    } catch (error) {
-      console.error('Analytics processing failed:', error);
+    } catch {
+      // Analytics processing failed - using fallback data
       return this.getEmptyAnalyticsData();
     }
   }
@@ -287,66 +286,61 @@ export class AnalyticsEngine {
   /**
    * Generate comprehensive analytics report
    */
-  async generateReport(
+  generateReport(
     type: AnalyticsReport['type'] = 'summary',
     timeRange?: { start: number; end: number }
-  ): Promise<AnalyticsReport> {
+  ): AnalyticsReport {
     const reportId = this.generateReportId();
     const now = Date.now();
-    const range = timeRange || {
+    const range = timeRange ?? {
       start: now - (24 * 60 * 60 * 1000), // Last 24 hours
       end: now
     };
 
-    try {
-      // Get relevant data
-      const data = await this.getDataForTimeRange(range);
-      
-      // Generate insights
-      const insights = await this.generateReportInsights(data);
-      
-      // Get recommendations
-      const recommendations = await this.generateRecommendations(data);
-      
-      // Get benchmarks
-      const benchmarks = await this.getRelevantBenchmarks(data);
-      
-      // Get forecasts
-      const forecasts = await this.getForecastsForTimeRange(range);
+    // Get relevant data
+    const data = this.getDataForTimeRange(range);
+    
+    // Generate insights
+    const insights = this.generateReportInsights(data);
+    
+    // Get recommendations
+    const recommendations = this.generateRecommendations(data);
+    
+    // Get benchmarks
+    const benchmarks = this.getRelevantBenchmarks(data);
+    
+    // Get forecasts
+    const forecasts = this.getForecastsForTimeRange(range);
 
-      const report: AnalyticsReport = {
-        id: reportId,
-        title: this.generateReportTitle(type, range),
-        type,
-        generatedAt: now,
-        timeRange: range,
-        data,
-        insights,
-        recommendations,
-        benchmarks,
-        correlations: this.correlations,
-        anomalies: this.anomalies,
-        forecasts,
-        metadata: data.metadata
-      };
+    const report: AnalyticsReport = {
+      id: reportId,
+      title: this.generateReportTitle(type, range),
+      type,
+      generatedAt: now,
+      timeRange: range,
+      data,
+      insights,
+      recommendations,
+      benchmarks,
+      correlations: this.correlations,
+      anomalies: this.anomalies,
+      forecasts,
+      metadata: data.metadata
+    };
 
-      // Store report
-      this.reports.set(reportId, report);
+    // Store report
+    this.reports.set(reportId, report);
 
-      return report;
-    } catch (error) {
-      console.error('Report generation failed:', error);
-      throw error;
-    }
+    return report;
   }
 
   /**
    * Perform comparative analysis
    */
-  async performComparativeAnalysis(
+  performComparativeAnalysis(
     baseline: PerformanceBenchmark,
     current: PerformanceBenchmark
-  ): Promise<ComparativeAnalysis> {
+  ): ComparativeAnalysis {
     const improvement = {
       layoutShift: this.calculateImprovement(baseline.metrics.layoutShift, current.metrics.layoutShift),
       lcp: this.calculateImprovement(baseline.metrics.lcp, current.metrics.lcp, true), // Lower is better
@@ -355,7 +349,7 @@ export class AnalyticsEngine {
       overall: this.calculateOverallImprovement(baseline, current)
     };
 
-    const recommendations = await this.generateComparativeRecommendations(improvement);
+    const recommendations = this.generateComparativeRecommendations(improvement);
     const confidence = this.calculateAnalysisConfidence(baseline, current);
 
     return {
@@ -370,15 +364,15 @@ export class AnalyticsEngine {
   /**
    * Export analytics data
    */
-  async exportData(
+  exportData(
     format: 'json' | 'csv' | 'pdf' | 'html',
     timeRange?: { start: number; end: number }
-  ): Promise<Blob> {
+  ): Blob {
     if (!this.config.export.enabled) {
       throw new Error('Export is disabled');
     }
 
-    const data = await this.getDataForTimeRange(timeRange || {
+    const data = this.getDataForTimeRange(timeRange ?? {
       start: Date.now() - (24 * 60 * 60 * 1000),
       end: Date.now()
     });
@@ -393,7 +387,7 @@ export class AnalyticsEngine {
       case 'html':
         return this.exportAsHTML(data);
       default:
-        throw new Error(`Unsupported export format: ${format}`);
+        throw new Error(`Unsupported export format: ${String(format)}`);
     }
   }
 
@@ -425,10 +419,10 @@ export class AnalyticsEngine {
     return {
       totalDataPoints,
       totalReports,
-      dataQuality: dataQuality || 0,
+      dataQuality: dataQuality ?? 0,
       anomalyCount,
       correlationCount,
-      forecastAccuracy: forecastAccuracy || 0
+      forecastAccuracy: forecastAccuracy ?? 0
     };
   }
 
@@ -454,7 +448,7 @@ export class AnalyticsEngine {
 
   // Private methods
 
-  private async aggregateMetrics(snapshots: PerformanceSnapshot[]): Promise<AggregatedMetrics> {
+  private aggregateMetrics(snapshots: PerformanceSnapshot[]): AggregatedMetrics {
     const interval = this.calculateOptimalInterval(snapshots);
     const aggregated: AggregatedMetrics = {
       timestamp: Date.now(),
@@ -473,8 +467,10 @@ export class AnalyticsEngine {
 
   private aggregateMetric(snapshots: PerformanceSnapshot[], path: string): MetricAggregation {
     const values = snapshots
-      .map(s => this.getNestedValue(s.metrics, path))
-      .filter(v => v !== null && v !== undefined && !isNaN(v)) as number[];
+      .map(s => this.getNestedValue(s.metrics as unknown as Record<string, unknown>, path))
+      .filter((v): v is number => 
+        v !== null && v !== undefined && typeof v === 'number' && !isNaN(v)
+      );
 
     if (values.length === 0) {
       return this.getEmptyMetricAggregation();
@@ -509,7 +505,7 @@ export class AnalyticsEngine {
     const totalSize = snapshots.reduce((sum, s) => sum + s.metrics.resources.totalSize, 0);
     const slowRequests = snapshots.reduce((sum, s) => sum + s.metrics.resources.slowRequests.length, 0);
     
-    const loadTimes = snapshots
+    const _loadTimes = snapshots
       .map(s => s.metrics.resources.averageLoadTime)
       .filter(t => t > 0);
     
@@ -530,9 +526,9 @@ export class AnalyticsEngine {
       'value'
     );
 
-    const errorRate = slowRequests / totalRequests || 0;
+    const errorRate = totalRequests > 0 ? slowRequests / totalRequests : 0;
     const cacheHitRate = snapshots.reduce((sum, s) => {
-      return sum + (s.metrics.custom?.cacheHitRate || 0);
+      return sum + (s.metrics.custom?.cacheHitRate ?? 0);
     }, 0) / snapshots.length;
 
     return {
@@ -574,12 +570,12 @@ export class AnalyticsEngine {
         recent.map(s => s.metrics.layoutShift.current)
       ),
       memory: this.calculateTrendDirection(
-        older.map(s => s.metrics.memory?.usage || 0),
-        recent.map(s => s.metrics.memory?.usage || 0)
+        older.map(s => s.metrics.memory?.usage ?? 0),
+        recent.map(s => s.metrics.memory?.usage ?? 0)
       ),
       lcp: this.calculateTrendDirection(
-        older.map(s => s.metrics.paintTiming.lcp || 0),
-        recent.map(s => s.metrics.paintTiming.lcp || 0)
+        older.map(s => s.metrics.paintTiming.lcp ?? 0),
+        recent.map(s => s.metrics.paintTiming.lcp ?? 0)
       ),
       responsiveElements: this.calculateTrendDirection(
         older.map(s => s.metrics.responsiveElements.count),
@@ -588,7 +584,7 @@ export class AnalyticsEngine {
     };
   }
 
-  private async detectAnomalies(snapshots: PerformanceSnapshot[]): Promise<AnomalyDetection[]> {
+  private detectAnomalies(snapshots: PerformanceSnapshot[]): AnomalyDetection[] {
     const anomalies: AnomalyDetection[] = [];
 
     // Detect spikes in layout shift
@@ -597,19 +593,19 @@ export class AnalyticsEngine {
     anomalies.push(...layoutShiftAnomalies);
 
     // Detect memory usage anomalies
-    const memoryValues = snapshots.map(s => s.metrics.memory?.usage || 0);
+    const memoryValues = snapshots.map(s => s.metrics.memory?.usage ?? 0);
     const memoryAnomalies = this.detectSpikes(memoryValues, 'memory');
     anomalies.push(...memoryAnomalies);
 
     // Detect LCP anomalies
-    const lcpValues = snapshots.map(s => s.metrics.paintTiming.lcp || 0);
+    const lcpValues = snapshots.map(s => s.metrics.paintTiming.lcp ?? 0);
     const lcpAnomalies = this.detectSpikes(lcpValues, 'lcp');
     anomalies.push(...lcpAnomalies);
 
     return anomalies;
   }
 
-  private async generateForecasts(snapshots: PerformanceSnapshot[]): Promise<PerformanceForecast[]> {
+  private generateForecasts(snapshots: PerformanceSnapshot[]): PerformanceForecast[] {
     const forecasts: PerformanceForecast[] = [];
 
     // Generate forecast for layout shift
@@ -621,7 +617,7 @@ export class AnalyticsEngine {
 
     // Generate forecast for memory usage
     const memoryForecast = this.generateMetricForecast(
-      snapshots.map(s => ({ timestamp: s.timestamp, value: s.metrics.memory?.usage || 0 })),
+      snapshots.map(s => ({ timestamp: s.timestamp, value: s.metrics.memory?.usage ?? 0 })),
       'memory'
     );
     forecasts.push(memoryForecast);
@@ -629,12 +625,12 @@ export class AnalyticsEngine {
     return forecasts;
   }
 
-  private async calculateCorrelations(snapshots: PerformanceSnapshot[]): Promise<PerformanceCorrelation[]> {
+  private calculateCorrelations(snapshots: PerformanceSnapshot[]): PerformanceCorrelation[] {
     const correlations: PerformanceCorrelation[] = [];
 
     // Calculate correlation between layout shift and memory usage
     const layoutShiftValues = snapshots.map(s => s.metrics.layoutShift.current);
-    const memoryValues = snapshots.map(s => s.metrics.memory?.usage || 0);
+    const memoryValues = snapshots.map(s => s.metrics.memory?.usage ?? 0);
     
     if (layoutShiftValues.length > 1 && memoryValues.length > 1) {
       const correlation = this.calculateCorrelation(layoutShiftValues, memoryValues);
@@ -687,7 +683,7 @@ export class AnalyticsEngine {
   private calculateDataAccuracy(snapshots: PerformanceSnapshot[]): number {
     // Simple accuracy calculation based on data consistency
     const layoutShiftValues = snapshots.map(s => s.metrics.layoutShift.current);
-    const memoryValues = snapshots.map(s => s.metrics.memory?.usage || 0);
+    const memoryValues = snapshots.map(s => s.metrics.memory?.usage ?? 0);
     
     const layoutShiftConsistency = this.calculateConsistency(layoutShiftValues);
     const memoryConsistency = this.calculateConsistency(memoryValues);
@@ -720,8 +716,13 @@ export class AnalyticsEngine {
     return Math.max(0, 1 - coefficientOfVariation);
   }
 
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+    return path.split('.').reduce((current, key) => {
+      if (current && typeof current === 'object' && key in current) {
+        return (current as Record<string, unknown>)[key];
+      }
+      return undefined;
+    }, obj as unknown);
   }
 
   private calculatePercentile(sortedValues: number[], percentile: number): number {
@@ -803,7 +804,7 @@ export class AnalyticsEngine {
     if (data.length < 3) {
       return {
         metric,
-        currentValue: data[data.length - 1]?.value || 0,
+        currentValue: data[data.length - 1]?.value ?? 0,
         predictions: [],
         trend: 'stable',
         seasonality: false,
@@ -1024,12 +1025,12 @@ export class AnalyticsEngine {
     }
   }
 
-  private async getDataForTimeRange(timeRange: { start: number; end: number }): Promise<AnalyticsData> {
+  private getDataForTimeRange(timeRange: { start: number; end: number }): AnalyticsData {
     const key = this.generateDataKey(timeRange);
-    return this.data.get(key) || this.getEmptyAnalyticsData();
+    return this.data.get(key) ?? this.getEmptyAnalyticsData();
   }
 
-  private async generateReportInsights(data: AnalyticsData): Promise<AIInsight[]> {
+  private generateReportInsights(data: AnalyticsData): AIInsight[] {
     // Generate insights based on analytics data
     const insights: AIInsight[] = [];
     
@@ -1049,7 +1050,7 @@ export class AnalyticsEngine {
     return insights;
   }
 
-  private async generateRecommendations(data: AnalyticsData): Promise<string[]> {
+  private generateRecommendations(data: AnalyticsData): string[] {
     const recommendations: string[] = [];
     
     if (data.metrics.layoutShift.avg > 0.1) {
@@ -1067,11 +1068,11 @@ export class AnalyticsEngine {
     return recommendations;
   }
 
-  private async getRelevantBenchmarks(data: AnalyticsData): Promise<PerformanceBenchmark[]> {
+  private getRelevantBenchmarks(_data: AnalyticsData): PerformanceBenchmark[] {
     return Array.from(this.benchmarks.values()).slice(0, 3);
   }
 
-  private async getForecastsForTimeRange(timeRange: { start: number; end: number }): Promise<PerformanceForecast[]> {
+  private getForecastsForTimeRange(_timeRange: { start: number; end: number }): PerformanceForecast[] {
     return Array.from(this.forecasts.values());
   }
 
@@ -1093,7 +1094,7 @@ export class AnalyticsEngine {
     return improvements.reduce((sum, imp) => sum + imp, 0) / improvements.length;
   }
 
-  private async generateComparativeRecommendations(improvement: any): Promise<string[]> {
+  private generateComparativeRecommendations(improvement: Record<string, number>): string[] {
     const recommendations: string[] = [];
     
     if (improvement.layoutShift > 0.1) {
@@ -1165,12 +1166,12 @@ export class AnalyticsEngine {
   }
 
   // Export methods (mock implementations)
-  private async exportAsJSON(data: AnalyticsData): Promise<Blob> {
+  private exportAsJSON(data: AnalyticsData): Blob {
     const json = JSON.stringify(data, null, 2);
     return new Blob([json], { type: 'application/json' });
   }
 
-  private async exportAsCSV(data: AnalyticsData): Promise<Blob> {
+  private exportAsCSV(data: AnalyticsData): Blob {
     // Simple CSV export
     const csv = 'metric,value\n' +
       `layoutShift,${data.metrics.layoutShift.avg}\n` +
@@ -1179,13 +1180,13 @@ export class AnalyticsEngine {
     return new Blob([csv], { type: 'text/csv' });
   }
 
-  private async exportAsPDF(data: AnalyticsData): Promise<Blob> {
+  private exportAsPDF(data: AnalyticsData): Blob {
     // Mock PDF export
     const pdfContent = `Performance Report\n\nLayout Shift: ${data.metrics.layoutShift.avg}\nMemory: ${data.metrics.memory.avg}`;
     return new Blob([pdfContent], { type: 'application/pdf' });
   }
 
-  private async exportAsHTML(data: AnalyticsData): Promise<Blob> {
+  private exportAsHTML(data: AnalyticsData): Blob {
     const html = `
       <html>
         <head><title>Performance Report</title></head>

@@ -9,7 +9,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as _uuidv4 } from 'uuid';
 
 // Azure Types
 export interface AzureConfig {
@@ -1025,7 +1025,7 @@ export class AzureCloudProvider extends EventEmitter {
         sku: config.sku,
         hostNames: [`${config.name}.azurewebsites.net`],
         enabledHostNames: [`${config.name}.azurewebsites.net`],
-        httpsOnly: config.httpsOnly || true,
+        httpsOnly: config.httpsOnly ?? true,
         clientAffinityEnabled: false,
         clientCertEnabled: false,
         clientCertMode: 'Required',
@@ -1133,7 +1133,7 @@ export class AzureCloudProvider extends EventEmitter {
           minimumElasticInstanceCount: 0,
           azureStorageAccounts: {}
         },
-        tags: config.tags || {},
+        tags: config.tags ?? {},
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -1176,12 +1176,12 @@ export class AzureCloudProvider extends EventEmitter {
         location: config.location,
         kind: config.kind,
         sku: config.sku,
-        accessTier: config.accessTier || 'Hot',
-        httpsOnly: config.httpsOnly || true,
+        accessTier: config.accessTier ?? 'Hot',
+        httpsOnly: config.httpsOnly ?? true,
         allowBlobPublicAccess: false,
         minimumTlsVersion: 'TLS1_2',
         allowSharedKeyAccess: true,
-        tags: config.tags || {},
+        tags: config.tags ?? {},
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -1226,7 +1226,7 @@ export class AzureCloudProvider extends EventEmitter {
         sku: config.sku,
         hostNames: [`${config.name}.azurewebsites.net`],
         enabledHostNames: [`${config.name}.azurewebsites.net`],
-        httpsOnly: config.httpsOnly || true,
+        httpsOnly: config.httpsOnly ?? true,
         clientAffinityEnabled: false,
         clientCertEnabled: false,
         clientCertMode: 'Required',
@@ -1334,7 +1334,7 @@ export class AzureCloudProvider extends EventEmitter {
           minimumElasticInstanceCount: 0,
           azureStorageAccounts: {}
         },
-        tags: config.tags || {},
+        tags: config.tags ?? {},
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -1373,14 +1373,14 @@ export class AzureCloudProvider extends EventEmitter {
         name: config.name,
         resourceGroup: config.resourceGroup,
         template: config.template,
-        parameters: config.parameters || {},
-        mode: config.mode || 'Incremental',
+        parameters: config.parameters ?? {},
+        mode: config.mode ?? 'Incremental',
         provisioningState: 'Running',
         timestamp: new Date(),
         duration: 'PT0S',
         outputs: {},
         dependencies: [],
-        tags: config.tags || {},
+        tags: config.tags ?? {},
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -1440,7 +1440,7 @@ export class AzureCloudProvider extends EventEmitter {
   /**
    * Get pricing information
    */
-  async getPricing(region: string): Promise<AzurePricing> {
+  async getPricing(_region: string): Promise<AzurePricing> {
     // Mock pricing data
     return {
       currency: 'USD',

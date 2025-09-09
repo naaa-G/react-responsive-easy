@@ -87,7 +87,8 @@ export { CloudService } from './services/CloudService';
 export type { 
   CloudProvider, 
   CloudDeployment, 
-  CloudAnalytics 
+  CloudAnalytics,
+  CloudServiceInstance
 } from './services/CloudService';
 
 export { AnalyticsService } from './services/AnalyticsService';

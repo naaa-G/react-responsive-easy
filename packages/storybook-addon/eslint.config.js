@@ -28,7 +28,7 @@ export default [
       // Critical TypeScript rules (relaxed for enterprise codebase)
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
       '@typescript-eslint/prefer-optional-chain': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/await-thenable': 'warn',

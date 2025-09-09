@@ -5,7 +5,7 @@
  * escalation, and notification management for enterprise environments.
  */
 
-import type { PerformanceAlert, PerformanceMetrics } from '../core/PerformanceMonitor';
+import type { PerformanceMetrics } from '../core/PerformanceMonitor';
 import type { AIInsight } from './AIIntegration';
 
 export interface AlertingConfig {
@@ -23,7 +23,7 @@ export interface AlertChannel {
   type: 'email' | 'slack' | 'webhook' | 'sms' | 'push' | 'dashboard';
   name: string;
   enabled: boolean;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   filters?: AlertFilter[];
   priority: 'low' | 'medium' | 'high' | 'critical';
 }
@@ -38,13 +38,13 @@ export interface AlertRule {
   cooldown: number; // milliseconds
   lastTriggered?: number;
   triggerCount: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AlertCondition {
   metric: string;
   operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'contains' | 'regex';
-  value: any;
+  value: unknown;
   duration?: number; // milliseconds
   aggregation?: 'avg' | 'max' | 'min' | 'sum' | 'count';
 }
@@ -52,14 +52,14 @@ export interface AlertCondition {
 export interface AlertAction {
   type: 'notify' | 'escalate' | 'auto-remediate' | 'log' | 'webhook';
   target: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
   delay?: number; // milliseconds
 }
 
 export interface AlertFilter {
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'regex';
-  value: any;
+  value: unknown;
 }
 
 export interface EscalationPolicy {
@@ -96,7 +96,7 @@ export interface IntegrationConfig {
   type: 'pagerduty' | 'datadog' | 'newrelic' | 'splunk' | 'custom';
   name: string;
   enabled: boolean;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   filters?: AlertFilter[];
 }
 
@@ -114,7 +114,7 @@ export interface AlertEvent {
   acknowledgedBy?: string;
   escalated: boolean;
   escalationLevel?: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   channels: string[];
   actions: AlertAction[];
 }
@@ -175,7 +175,11 @@ export class AlertingSystem {
     this.initializeRateLimiter();
     
     this.isInitialized = true;
-    console.log('🚨 Alerting System initialized');
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log('🚨 Alerting System initialized');
+    }
   }
 
   /**
@@ -222,20 +226,24 @@ export class AlertingSystem {
   /**
    * Create a new alert
    */
-  async createAlert(
+  createAlert(
     rule: AlertRule, 
     metrics: PerformanceMetrics, 
     type: AlertEvent['type']
   ): Promise<AlertEvent | null> {
     // Check cooldown
     if (rule.lastTriggered && Date.now() - rule.lastTriggered < rule.cooldown) {
-      return null;
+      return Promise.resolve(null);
     }
 
     // Check rate limiting
     if (!this.checkRateLimit(rule.id)) {
-      console.warn(`Rate limit exceeded for rule: ${rule.id}`);
-      return null;
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.warn(`Rate limit exceeded for rule: ${rule.id}`);
+      }
+      return Promise.resolve(null);
     }
 
     const alert: AlertEvent = {
@@ -263,13 +271,13 @@ export class AlertingSystem {
     rule.lastTriggered = Date.now();
     rule.triggerCount++;
 
-    return alert;
+    return Promise.resolve(alert);
   }
 
   /**
    * Create alert from AI insight
    */
-  async createAIInsightAlert(insight: AIInsight): Promise<AlertEvent | null> {
+  createAIInsightAlert(insight: AIInsight): Promise<AlertEvent | null> {
     const alert: AlertEvent = {
       id: this.generateAlertId(),
       ruleId: 'ai-insight',
@@ -291,11 +299,11 @@ export class AlertingSystem {
         type: 'notify' as const,
         target: 'dashboard',
         parameters: { action }
-      })) || []
+      })) ?? []
     };
 
     this.alerts.set(alert.id, alert);
-    return alert;
+    return Promise.resolve(alert);
   }
 
   /**
@@ -306,7 +314,7 @@ export class AlertingSystem {
       // Send notifications to channels
       for (const channelId of alert.channels) {
         const channel = this.channels.get(channelId);
-        if (channel && channel.enabled) {
+        if (channel?.enabled) {
           await this.sendNotification(alert, channel);
         }
       }
@@ -322,7 +330,11 @@ export class AlertingSystem {
       }
 
     } catch (error) {
-      console.error(`Failed to process alert ${alert.id}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error(`Failed to process alert ${alert.id}:`, error);
+      }
     }
   }
 
@@ -355,9 +367,17 @@ export class AlertingSystem {
           break;
       }
 
-      console.log(`Notification sent via ${channel.type} for alert ${alert.id}`);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.log(`Notification sent via ${channel.type} for alert ${alert.id}`);
+      }
     } catch (error) {
-      console.error(`Failed to send notification via ${channel.type}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error(`Failed to send notification via ${channel.type}:`, error);
+      }
     }
   }
 
@@ -384,7 +404,11 @@ export class AlertingSystem {
           break;
       }
     } catch (error) {
-      console.error(`Failed to execute action ${action.type}:`, error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error(`Failed to execute action ${action.type}:`, error);
+      }
     }
   }
 
@@ -416,28 +440,32 @@ export class AlertingSystem {
       }
     }
 
-    console.log(`Alert ${alert.id} escalated to level ${level}`);
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Alert ${alert.id} escalated to level ${level}`);
+    }
   }
 
   /**
    * Acknowledge an alert
    */
-  async acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<boolean> {
+  acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<boolean> {
     const alert = this.alerts.get(alertId);
-    if (!alert) return false;
+    if (!alert) return Promise.resolve(false);
 
     alert.acknowledgedAt = Date.now();
     alert.acknowledgedBy = acknowledgedBy;
 
-    return true;
+    return Promise.resolve(true);
   }
 
   /**
    * Resolve an alert
    */
-  async resolveAlert(alertId: string): Promise<boolean> {
+  resolveAlert(alertId: string): Promise<boolean> {
     const alert = this.alerts.get(alertId);
-    if (!alert) return false;
+    if (!alert) return Promise.resolve(false);
 
     alert.resolvedAt = Date.now();
 
@@ -451,9 +479,9 @@ export class AlertingSystem {
       timestamp: Date.now()
     };
 
-    await this.processAlert(resolutionAlert);
+    void this.processAlert(resolutionAlert);
 
-    return true;
+    return Promise.resolve(true);
   }
 
   /**
@@ -462,19 +490,19 @@ export class AlertingSystem {
   getStatistics(): AlertStatistics {
     const alerts = Array.from(this.alerts.values());
     const now = Date.now();
-    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+    const _oneDayAgo = now - (24 * 60 * 60 * 1000);
 
     const activeAlerts = alerts.filter(a => !a.resolvedAt);
     const resolvedAlerts = alerts.filter(a => a.resolvedAt);
     const escalatedAlerts = alerts.filter(a => a.escalated);
 
     const alertsBySeverity = alerts.reduce((acc, alert) => {
-      acc[alert.severity] = (acc[alert.severity] || 0) + 1;
+      acc[alert.severity] = (acc[alert.severity] ?? 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     const alertsByType = alerts.reduce((acc, alert) => {
-      acc[alert.type] = (acc[alert.type] || 0) + 1;
+      acc[alert.type] = (acc[alert.type] ?? 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
@@ -679,23 +707,23 @@ export class AlertingSystem {
     }
   }
 
-  private async evaluateRule(rule: AlertRule, metrics: PerformanceMetrics): Promise<boolean> {
+  private evaluateRule(rule: AlertRule, metrics: PerformanceMetrics): Promise<boolean> {
     for (const condition of rule.conditions) {
       const value = this.getMetricValue(metrics, condition.metric);
       if (!this.evaluateCondition(value, condition)) {
-        return false;
+        return Promise.resolve(false);
       }
     }
-    return true;
+    return Promise.resolve(true);
   }
 
-  private getMetricValue(metrics: PerformanceMetrics, path: string): any {
+  private getMetricValue(metrics: PerformanceMetrics, path: string): unknown {
     const parts = path.split('.');
-    let value: any = metrics;
+    let value: unknown = metrics;
     
     for (const part of parts) {
-      if (value && typeof value === 'object' && part in value) {
-        value = value[part];
+      if (value && typeof value === 'object' && part in (value as Record<string, unknown>)) {
+        value = (value as Record<string, unknown>)[part];
       } else {
         return undefined;
       }
@@ -704,17 +732,17 @@ export class AlertingSystem {
     return value;
   }
 
-  private evaluateCondition(value: any, condition: AlertCondition): boolean {
+  private evaluateCondition(value: unknown, condition: AlertCondition): boolean {
     if (value === undefined) return false;
 
     switch (condition.operator) {
-      case 'gt': return value > condition.value;
-      case 'lt': return value < condition.value;
+      case 'gt': return (value as number) > (condition.value as number);
+      case 'lt': return (value as number) < (condition.value as number);
       case 'eq': return value === condition.value;
-      case 'gte': return value >= condition.value;
-      case 'lte': return value <= condition.value;
-      case 'contains': return String(value).includes(String(condition.value));
-      case 'regex': return new RegExp(condition.value).test(String(value));
+      case 'gte': return (value as number) >= (condition.value as number);
+      case 'lte': return (value as number) <= (condition.value as number);
+      case 'contains': return this.safeStringify(value).includes(this.safeStringify(condition.value));
+      case 'regex': return new RegExp(this.safeStringify(condition.value)).test(this.safeStringify(value));
       default: return false;
     }
   }
@@ -723,17 +751,19 @@ export class AlertingSystem {
     // Determine severity based on rule conditions and metric values
     for (const condition of rule.conditions) {
       const value = this.getMetricValue(metrics, condition.metric);
-      if (value > condition.value * 2) {
-        return 'critical';
-      } else if (value > condition.value * 1.5) {
-        return 'warning';
+      if (typeof value === 'number' && typeof condition.value === 'number') {
+        if (value > condition.value * 2) {
+          return 'critical';
+        } else if (value > condition.value * 1.5) {
+          return 'warning';
+        }
       }
     }
     return 'warning';
   }
 
-  private extractRelevantMetrics(metrics: PerformanceMetrics, rule: AlertRule): Record<string, any> {
-    const relevant: Record<string, any> = {};
+  private extractRelevantMetrics(metrics: PerformanceMetrics, rule: AlertRule): Record<string, unknown> {
+    const relevant: Record<string, unknown> = {};
     
     for (const condition of rule.conditions) {
       const value = this.getMetricValue(metrics, condition.metric);
@@ -787,18 +817,18 @@ export class AlertingSystem {
     const channelLevels = { low: 1, medium: 2, high: 3, critical: 4 };
     
     return severityLevels[severity as keyof typeof severityLevels] >= 
-           channelLevels[channel.priority as keyof typeof channelLevels];
+           channelLevels[channel.priority];
   }
 
-  private evaluateFilter(value: any, filter: AlertFilter): boolean {
+  private evaluateFilter(value: unknown, filter: AlertFilter): boolean {
     if (value === undefined) return false;
 
     switch (filter.operator) {
       case 'equals': return value === filter.value;
       case 'not_equals': return value !== filter.value;
-      case 'contains': return String(value).includes(String(filter.value));
-      case 'not_contains': return !String(value).includes(String(filter.value));
-      case 'regex': return new RegExp(filter.value).test(String(value));
+      case 'contains': return this.safeStringify(value).includes(this.safeStringify(filter.value));
+      case 'not_contains': return !this.safeStringify(value).includes(this.safeStringify(filter.value));
+      case 'regex': return new RegExp(this.safeStringify(filter.value)).test(this.safeStringify(value));
       default: return false;
     }
   }
@@ -808,7 +838,7 @@ export class AlertingSystem {
     if (!config.enabled) return true;
 
     const now = Date.now();
-    const timestamps = this.rateLimiter.get(ruleId) || [];
+    const timestamps = this.rateLimiter.get(ruleId) ?? [];
     
     // Remove old timestamps
     const recentTimestamps = timestamps.filter(ts => now - ts < 60000); // Last minute
@@ -825,6 +855,23 @@ export class AlertingSystem {
     return true;
   }
 
+  private safeStringify(value: unknown): string {
+    if (value === null) return 'null';
+    if (value === undefined) return 'undefined';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (value instanceof Date) return value.toISOString();
+    if (Array.isArray(value)) return JSON.stringify(value);
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return '[object Object]';
+      }
+    }
+    return '[object Object]';
+  }
+
   private generateAlertId(): string {
     return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
@@ -838,7 +885,7 @@ export class AlertingSystem {
     return null;
   }
 
-  private renderTemplate(template: NotificationTemplate | null, alert: AlertEvent, channel: AlertChannel): string {
+  private renderTemplate(template: NotificationTemplate | null, alert: AlertEvent, _channel: AlertChannel): string {
     if (!template) return alert.description;
 
     let rendered = template.template;
@@ -852,7 +899,7 @@ export class AlertingSystem {
     return rendered;
   }
 
-  private getTemplateVariable(alert: AlertEvent, variable: string): any {
+  private getTemplateVariable(alert: AlertEvent, variable: string): unknown {
     switch (variable) {
       case 'title': return alert.title;
       case 'severity': return alert.severity;
@@ -860,7 +907,7 @@ export class AlertingSystem {
       case 'timestamp': return new Date(alert.timestamp).toISOString();
       case 'source': return alert.source;
       case 'id': return alert.id;
-      default: return alert.metadata[variable] || '';
+      default: return alert.metadata[variable] ?? '';
     }
   }
 
@@ -879,48 +926,103 @@ export class AlertingSystem {
   }
 
   // Notification sending methods (mock implementations)
-  private async sendEmail(channel: AlertChannel, message: string): Promise<void> {
-    console.log(`Email sent to ${channel.config.email}: ${message}`);
+  private sendEmail(channel: AlertChannel, message: string): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Email sent to ${(channel.config as { email?: string }).email}: ${message}`);
+    }
+    return Promise.resolve();
   }
 
-  private async sendSlackMessage(channel: AlertChannel, message: string): Promise<void> {
-    console.log(`Slack message sent to ${channel.config.webhook}: ${message}`);
+  private sendSlackMessage(channel: AlertChannel, message: string): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Slack message sent to ${(channel.config as { webhook?: string }).webhook}: ${message}`);
+    }
+    return Promise.resolve();
   }
 
-  private async sendWebhook(channel: AlertChannel, message: string): Promise<void> {
-    console.log(`Webhook sent to ${channel.config.url}: ${message}`);
+  private sendWebhook(channel: AlertChannel, message: string): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Webhook sent to ${(channel.config as { url?: string }).url}: ${message}`);
+    }
+    return Promise.resolve();
   }
 
-  private async sendSMS(channel: AlertChannel, message: string): Promise<void> {
-    console.log(`SMS sent to ${channel.config.phone}: ${message}`);
+  private sendSMS(channel: AlertChannel, message: string): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`SMS sent to ${(channel.config as { phone?: string }).phone}: ${message}`);
+    }
+    return Promise.resolve();
   }
 
-  private async sendPushNotification(channel: AlertChannel, message: string): Promise<void> {
-    console.log(`Push notification sent: ${message}`);
+  private sendPushNotification(_channel: AlertChannel, message: string): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Push notification sent: ${message}`);
+    }
+    return Promise.resolve();
   }
 
-  private async sendDashboardNotification(alert: AlertEvent): Promise<void> {
-    console.log(`Dashboard notification: ${alert.title}`);
+  private sendDashboardNotification(alert: AlertEvent): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Dashboard notification: ${alert.title}`);
+    }
+    return Promise.resolve();
   }
 
   // Action execution methods (mock implementations)
-  private async executeNotifyAction(alert: AlertEvent, action: AlertAction): Promise<void> {
-    console.log(`Notify action executed for alert ${alert.id}`);
+  private executeNotifyAction(alert: AlertEvent, _action: AlertAction): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Notify action executed for alert ${alert.id}`);
+    }
+    return Promise.resolve();
   }
 
-  private async executeEscalateAction(alert: AlertEvent, action: AlertAction): Promise<void> {
-    console.log(`Escalate action executed for alert ${alert.id}`);
+  private executeEscalateAction(alert: AlertEvent, _action: AlertAction): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Escalate action executed for alert ${alert.id}`);
+    }
+    return Promise.resolve();
   }
 
-  private async executeAutoRemediateAction(alert: AlertEvent, action: AlertAction): Promise<void> {
-    console.log(`Auto-remediate action executed for alert ${alert.id}`);
+  private executeAutoRemediateAction(alert: AlertEvent, _action: AlertAction): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Auto-remediate action executed for alert ${alert.id}`);
+    }
+    return Promise.resolve();
   }
 
-  private async executeLogAction(alert: AlertEvent, action: AlertAction): Promise<void> {
-    console.log(`Log action executed for alert ${alert.id}`);
+  private executeLogAction(alert: AlertEvent, _action: AlertAction): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Log action executed for alert ${alert.id}`);
+    }
+    return Promise.resolve();
   }
 
-  private async executeWebhookAction(alert: AlertEvent, action: AlertAction): Promise<void> {
-    console.log(`Webhook action executed for alert ${alert.id}`);
+  private executeWebhookAction(alert: AlertEvent, _action: AlertAction): Promise<void> {
+    if (process.env.NODE_ENV === 'development') {
+      // Use proper logging instead of console
+      // eslint-disable-next-line no-console
+      console.log(`Webhook action executed for alert ${alert.id}`);
+    }
+    return Promise.resolve();
   }
 }

@@ -10,9 +10,7 @@
 
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { createHash, createHmac, randomBytes, createCipher, createDecipher, pbkdf2Sync } from 'crypto';
-import { readFile, writeFile, access } from 'fs-extra';
-import { join, resolve } from 'path';
+import { randomBytes, createCipher, createDecipher } from 'crypto';
 
 // Security Types
 export interface SecurityConfig {
@@ -670,7 +668,7 @@ export class SecurityService extends EventEmitter {
   /**
    * Authenticate user with OAuth provider
    */
-  async authenticateWithOAuth(providerId: string, code: string, state: string): Promise<any> {
+  async authenticateWithOAuth(providerId: string, code: string, _state: string): Promise<any> {
     try {
       const provider = this.config.authentication.providers.find(p => p.id === providerId);
       if (!provider || provider.type !== 'oauth') {
@@ -830,7 +828,7 @@ export class SecurityService extends EventEmitter {
     try {
       // Get user roles and permissions
       const userRoles = await this.getUserRoles(userId);
-      const userPermissions = await this.getUserPermissions(userId);
+      const _userPermissions = await this.getUserPermissions(userId);
       
       // Check RBAC
       if (this.config.authorization.rbac.enabled) {
@@ -853,7 +851,7 @@ export class SecurityService extends EventEmitter {
         severity: 'medium',
         source: userId,
         target: resource,
-        action: action,
+        action,
         result: policyResult ? 'success' : 'failure',
         details: { userId, resource, action, context }
       });
@@ -865,7 +863,7 @@ export class SecurityService extends EventEmitter {
         severity: 'high',
         source: userId,
         target: resource,
-        action: action,
+        action,
         result: 'failure',
         details: { userId, resource, action, error: error instanceof Error ? error.message : String(error) }
       });
@@ -1045,7 +1043,7 @@ export class SecurityService extends EventEmitter {
   /**
    * Helper methods
    */
-  private async exchangeCodeForToken(config: OAuthConfig, code: string): Promise<any> {
+  private async exchangeCodeForToken(_config: OAuthConfig, _code: string): Promise<any> {
     // Mock implementation - in real implementation, make HTTP request
     return {
       access_token: 'mock-access-token',
@@ -1055,7 +1053,7 @@ export class SecurityService extends EventEmitter {
     };
   }
 
-  private async getUserInfo(config: OAuthConfig, accessToken: string): Promise<any> {
+  private async getUserInfo(_config: OAuthConfig, _accessToken: string): Promise<any> {
     // Mock implementation - in real implementation, make HTTP request
     return {
       id: 'mock-user-id',
@@ -1068,13 +1066,13 @@ export class SecurityService extends EventEmitter {
 
   private mapClaims(userInfo: any, mapping: ClaimMapping): any {
     return {
-      id: userInfo[mapping.userId] || userInfo.id,
-      email: userInfo[mapping.email] || userInfo.email,
-      name: userInfo[mapping.name] || userInfo.name,
-      firstName: userInfo[mapping.firstName] || userInfo.given_name,
-      lastName: userInfo[mapping.lastName] || userInfo.family_name,
-      groups: userInfo[mapping.groups] || [],
-      roles: userInfo[mapping.roles] || []
+      id: userInfo[mapping.userId] ?? userInfo.id,
+      email: userInfo[mapping.email] ?? userInfo.email,
+      name: userInfo[mapping.name] ?? userInfo.name,
+      firstName: userInfo[mapping.firstName] ?? userInfo.given_name,
+      lastName: userInfo[mapping.lastName] ?? userInfo.family_name,
+      groups: userInfo[mapping.groups] ?? [],
+      roles: userInfo[mapping.roles] ?? []
     };
   }
 
@@ -1083,7 +1081,7 @@ export class SecurityService extends EventEmitter {
     const session = {
       id: sessionId,
       userId: user.id,
-      provider: provider?.id || 'local',
+      provider: provider?.id ?? 'local',
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + this.config.authentication.session.timeout * 60 * 1000),
       metadata: {
@@ -1096,7 +1094,7 @@ export class SecurityService extends EventEmitter {
     return session;
   }
 
-  private async validateSAMLResponse(samlResponse: string, config: SAMLConfig): Promise<any> {
+  private async validateSAMLResponse(_samlResponse: string, _config: SAMLConfig): Promise<any> {
     // Mock implementation - in real implementation, validate SAML assertion
     return {
       attributes: {
@@ -1112,7 +1110,7 @@ export class SecurityService extends EventEmitter {
     return assertion.attributes;
   }
 
-  private async validateLocalCredentials(email: string, password: string): Promise<any> {
+  private async validateLocalCredentials(email: string, _password: string): Promise<any> {
     // Mock implementation - in real implementation, validate against database
     return {
       id: 'mock-user-id',
@@ -1122,32 +1120,32 @@ export class SecurityService extends EventEmitter {
     };
   }
 
-  private async isUserLockedOut(email: string): Promise<boolean> {
+  private async isUserLockedOut(_email: string): Promise<boolean> {
     // Mock implementation - in real implementation, check lockout status
     return false;
   }
 
-  private async getUserRoles(userId: string): Promise<string[]> {
+  private async getUserRoles(_userId: string): Promise<string[]> {
     // Mock implementation - in real implementation, get from database
     return ['user'];
   }
 
-  private async getUserPermissions(userId: string): Promise<string[]> {
+  private async getUserPermissions(_userId: string): Promise<string[]> {
     // Mock implementation - in real implementation, get from database
     return ['read', 'write'];
   }
 
-  private async checkRBAC(roles: string[], resource: string, action: string): Promise<boolean> {
+  private async checkRBAC(_roles: string[], _resource: string, _action: string): Promise<boolean> {
     // Mock implementation - in real implementation, check role-based access
     return true;
   }
 
-  private async checkABAC(userId: string, resource: string, action: string, context: Record<string, any>): Promise<boolean> {
+  private async checkABAC(_userId: string, _resource: string, _action: string, _context: Record<string, any>): Promise<boolean> {
     // Mock implementation - in real implementation, check attribute-based access
     return true;
   }
 
-  private async checkPolicies(userId: string, resource: string, action: string, context: Record<string, any>): Promise<boolean> {
+  private async checkPolicies(_userId: string, _resource: string, _action: string, _context: Record<string, any>): Promise<boolean> {
     // Mock implementation - in real implementation, check policies
     return true;
   }
@@ -1197,7 +1195,7 @@ export class SecurityService extends EventEmitter {
       target: eventData.target!,
       action: eventData.action!,
       result: eventData.result!,
-      details: eventData.details || {},
+      details: eventData.details ?? {},
       metadata: {
         ipAddress: '127.0.0.1',
         userAgent: 'CLI/2.0.0',
@@ -1209,7 +1207,7 @@ export class SecurityService extends EventEmitter {
     };
 
     const eventKey = event.timestamp.toISOString().split('T')[0];
-    const events = this.events.get(eventKey!) || [];
+    const events = this.events.get(eventKey!) ?? [];
     events.push(event);
     this.events.set(eventKey!, events);
 
@@ -1236,7 +1234,7 @@ export class SecurityService extends EventEmitter {
    */
   getEvents(date?: string): SecurityEvent[] {
     if (date) {
-      return this.events.get(date) || [];
+      return this.events.get(date) ?? [];
     }
     return Array.from(this.events.values()).flat();
   }
@@ -1245,7 +1243,7 @@ export class SecurityService extends EventEmitter {
    * Get security analytics
    */
   getAnalytics(period: SecurityAnalytics['period']): SecurityAnalytics | null {
-    return this.analytics.get(period) || null;
+    return this.analytics.get(period) ?? null;
   }
 
   /**

@@ -49,7 +49,7 @@ export class PerformanceMonitor {
   private maxHistoricalReports: number = 100;
 
   constructor(tester?: AdaptivePerformanceTester) {
-    this.tester = tester || new AdaptivePerformanceTester();
+    this.tester = tester ?? new AdaptivePerformanceTester();
   }
 
   /**
@@ -62,8 +62,8 @@ export class PerformanceMonitor {
     
     // Find slowest and fastest tests
     const sortedResults = results.sort((a, b) => b.executionTime - a.executionTime);
-    const slowestTest = sortedResults[0]?.testName || 'N/A';
-    const fastestTest = sortedResults[sortedResults.length - 1]?.testName || 'N/A';
+    const slowestTest = sortedResults[0]?.testName ?? 'N/A';
+    const fastestTest = sortedResults[sortedResults.length - 1]?.testName ?? 'N/A';
     
     // Calculate trends
     const trends = this.calculateTrends(baselines);
@@ -204,7 +204,7 @@ export class PerformanceMonitor {
           testName: result.testName,
           message: result.message,
           timestamp: new Date(),
-          recommendations: result.recommendations || []
+          recommendations: result.recommendations ?? []
         });
       }
       
@@ -216,7 +216,7 @@ export class PerformanceMonitor {
           testName: result.testName,
           message: result.message,
           timestamp: new Date(),
-          recommendations: result.recommendations || []
+          recommendations: result.recommendations ?? []
         });
       }
       
@@ -285,7 +285,7 @@ export class PerformanceMonitor {
       result.executionTime.toFixed(2),
       result.status,
       result.threshold.toFixed(2),
-      result.baseline?.averageTime.toFixed(2) || 'N/A',
+      result.baseline?.averageTime.toFixed(2) ?? 'N/A',
       report.timestamp.toISOString()
     ]);
     

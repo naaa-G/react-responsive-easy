@@ -16,10 +16,10 @@ import boxen from 'boxen';
 import figlet from 'figlet';
 // @ts-ignore
 import gradient from 'gradient-string';
-import { SecurityService, SecurityConfig, SecurityEvent } from '../services/SecurityService';
+import { SecurityService, SecurityConfig } from '../services/SecurityService';
 import { OAuthService } from '../integrations/oauth/OAuthService';
-import { readFile, writeFile, access } from 'fs-extra';
-import { join, resolve } from 'path';
+import { writeFile } from 'fs-extra';
+import { join } from 'path';
 import inquirer from 'inquirer';
 
 interface SecuritySetupOptions {
@@ -208,9 +208,10 @@ async function setupSecurity(options: SecuritySetupOptions): Promise<void> {
   const spinner = ora('Setting up security provider...').start();
 
   try {
-    const securityService = new SecurityService({} as SecurityConfig);
+    const _securityService = new SecurityService({} as SecurityConfig);
     const oauthService = new OAuthService();
     
+    let updatedOptions = options;
     if (options.interactive) {
       const answers = await inquirer.prompt([
         {
@@ -244,22 +245,22 @@ async function setupSecurity(options: SecuritySetupOptions): Promise<void> {
           type: 'input',
           name: 'redirectUri',
           message: 'Redirect URI:',
-          default: options.redirectUri || 'http://localhost:3000/auth/callback',
+          default: options.redirectUri ?? 'http://localhost:3000/auth/callback',
           when: !options.redirectUri
         }
       ]);
 
-      options = { ...options, ...answers };
+      updatedOptions = { ...options, ...answers };
     }
 
-    spinner.text = `Configuring ${options.provider} provider...`;
+    spinner.text = `Configuring ${updatedOptions.provider} provider...`;
     
     // Configure OAuth provider
-    const provider = oauthService.getProvider(options.provider);
+    const provider = oauthService.getProvider(updatedOptions.provider);
     if (provider) {
-      provider.config.clientId = options.clientId || '';
-      provider.config.clientSecret = options.clientSecret || '';
-      provider.config.redirectUri = options.redirectUri || 'http://localhost:3000/auth/callback';
+      provider.config.clientId = updatedOptions.clientId ?? '';
+      provider.config.clientSecret = updatedOptions.clientSecret ?? '';
+      provider.config.redirectUri = updatedOptions.redirectUri ?? 'http://localhost:3000/auth/callback';
     }
 
     // Save configuration

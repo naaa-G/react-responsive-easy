@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 export interface VirtualScrollingOptions {
   itemHeight: number;
@@ -13,7 +13,7 @@ export interface VirtualScrollingOptions {
 export interface VirtualScrollingState {
   startIndex: number;
   endIndex: number;
-  visibleItems: any[];
+  visibleItems: unknown[];
   totalHeight: number;
   totalWidth: number;
   scrollTop: number;
@@ -44,7 +44,7 @@ export interface VirtualScrollingRef {
  * Enterprise-grade virtual scrolling hook for handling large datasets
  * with dynamic item heights, horizontal scrolling, and performance optimizations
  */
-export function useVirtualScrolling<T = any>(
+export function useVirtualScrolling<T = unknown>(
   items: T[],
   options: VirtualScrollingOptions
 ): [VirtualScrollingState, VirtualScrollingActions, VirtualScrollingRef] {
@@ -61,7 +61,7 @@ export function useVirtualScrolling<T = any>(
   // Refs
   const containerRef = useRef<HTMLElement>(null);
   const scrollElementRef = useRef<HTMLElement>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const itemHeightsRef = useRef<Map<number, number>>(new Map());
   const itemWidthsRef = useRef<Map<number, number>>(new Map());
   const lastScrollTopRef = useRef(0);
@@ -83,7 +83,7 @@ export function useVirtualScrolling<T = any>(
 
     // Find start index
     for (let i = 0; i < items.length; i++) {
-      const height = itemHeightsRef.current.get(i) || itemHeight;
+      const height = itemHeightsRef.current.get(i) ?? itemHeight;
       if (currentOffset + height > scrollTop) {
         startIndex = Math.max(0, i - overscan);
         break;
@@ -94,7 +94,7 @@ export function useVirtualScrolling<T = any>(
     // Find end index
     currentOffset = 0;
     for (let i = 0; i < items.length; i++) {
-      const height = itemHeightsRef.current.get(i) || itemHeight;
+      const height = itemHeightsRef.current.get(i) ?? itemHeight;
       currentOffset += height;
       if (currentOffset > scrollTop + containerHeight) {
         endIndex = Math.min(items.length - 1, i + overscan);
@@ -109,7 +109,7 @@ export function useVirtualScrolling<T = any>(
   const totalHeight = useMemo(() => {
     let height = 0;
     for (let i = 0; i < items.length; i++) {
-      height += itemHeightsRef.current.get(i) || itemHeight;
+      height += itemHeightsRef.current.get(i) ?? itemHeight;
     }
     return height;
   }, [items.length, itemHeight]);
@@ -118,7 +118,7 @@ export function useVirtualScrolling<T = any>(
     if (!enableHorizontal) return containerWidth;
     let width = 0;
     for (let i = 0; i < items.length; i++) {
-      width += itemWidthsRef.current.get(i) || itemWidth;
+      width += itemWidthsRef.current.get(i) ?? itemWidth;
     }
     return width;
   }, [items.length, itemWidth, enableHorizontal, containerWidth]);
@@ -140,7 +140,7 @@ export function useVirtualScrolling<T = any>(
 
     // Determine scroll direction
     const verticalDirection = newScrollTop > lastScrollTopRef.current ? 'down' : 'up';
-    const horizontalDirection = newScrollLeft > lastScrollLeftRef.current ? 'right' : 'left';
+    const _horizontalDirection = newScrollLeft > lastScrollLeftRef.current ? 'right' : 'left';
     
     setScrollDirection(verticalDirection);
     setScrollTop(newScrollTop);
@@ -164,7 +164,7 @@ export function useVirtualScrolling<T = any>(
 
   // Attach scroll listener
   useEffect(() => {
-    const scrollElement = scrollElementRef.current || containerRef.current;
+    const scrollElement = scrollElementRef.current ?? containerRef.current;
     if (!scrollElement) return;
 
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
@@ -178,12 +178,12 @@ export function useVirtualScrolling<T = any>(
 
   // Actions
   const scrollToIndex = useCallback((index: number, align: 'start' | 'center' | 'end' = 'start') => {
-    const scrollElement = scrollElementRef.current || containerRef.current;
+    const scrollElement = scrollElementRef.current ?? containerRef.current;
     if (!scrollElement || index < 0 || index >= items.length) return;
 
     let offset = 0;
     for (let i = 0; i < index; i++) {
-      offset += itemHeightsRef.current.get(i) || itemHeight;
+      offset += itemHeightsRef.current.get(i) ?? itemHeight;
     }
 
     let targetScrollTop = offset;
@@ -197,7 +197,7 @@ export function useVirtualScrolling<T = any>(
   }, [items.length, itemHeight, containerHeight]);
 
   const scrollToOffset = useCallback((offset: number, direction: 'vertical' | 'horizontal' = 'vertical') => {
-    const scrollElement = scrollElementRef.current || containerRef.current;
+    const scrollElement = scrollElementRef.current ?? containerRef.current;
     if (!scrollElement) return;
 
     if (direction === 'vertical') {
@@ -226,7 +226,7 @@ export function useVirtualScrolling<T = any>(
   const getItemOffset = useCallback((index: number): number => {
     let offset = 0;
     for (let i = 0; i < index; i++) {
-      offset += itemHeightsRef.current.get(i) || itemHeight;
+      offset += itemHeightsRef.current.get(i) ?? itemHeight;
     }
     return offset;
   }, [itemHeight]);
@@ -282,7 +282,7 @@ export function useVirtualScrolling<T = any>(
 /**
  * Hook for dynamic item heights in virtual scrolling
  */
-export function useDynamicItemHeights<T = any>(
+export function useDynamicItemHeights<T = unknown>(
   items: T[],
   getItemHeight: (item: T, index: number) => number
 ) {
@@ -290,13 +290,13 @@ export function useDynamicItemHeights<T = any>(
   const totalHeightRef = useRef(0);
 
   const updateHeight = useCallback((index: number, height: number) => {
-    const oldHeight = itemHeightsRef.current.get(index) || 0;
+    const oldHeight = itemHeightsRef.current.get(index) ?? 0;
     itemHeightsRef.current.set(index, height);
     totalHeightRef.current += height - oldHeight;
   }, []);
 
   const getHeight = useCallback((index: number) => {
-    return itemHeightsRef.current.get(index) || getItemHeight(items[index], index);
+    return itemHeightsRef.current.get(index) ?? getItemHeight(items[index], index);
   }, [items, getItemHeight]);
 
   const getTotalHeight = useCallback(() => {
@@ -325,10 +325,10 @@ export function useDynamicItemHeights<T = any>(
 /**
  * Hook for virtual scrolling with windowing
  */
-export function useWindowing<T = any>(
+export function useWindowing<T = unknown>(
   items: T[],
   windowSize: number = 50,
-  itemHeight: number = 50
+  _itemHeight: number = 50
 ) {
   const [windowStart, setWindowStart] = useState(0);
   const [windowEnd, setWindowEnd] = useState(Math.min(windowSize, items.length));

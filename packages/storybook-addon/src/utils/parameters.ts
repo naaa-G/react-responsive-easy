@@ -3,6 +3,7 @@
  */
 
 import type { ResponsiveStoryParameters, BreakpointConfig } from '../types';
+import type { ResponsiveConfig } from '@react-responsive-easy/core';
 import { DEFAULT_BREAKPOINTS } from '../constants';
 
 /**
@@ -10,7 +11,7 @@ import { DEFAULT_BREAKPOINTS } from '../constants';
  */
 export function responsiveParameters(
   options: {
-    config?: any;
+    config?: ResponsiveConfig;
     breakpoints?: BreakpointConfig[];
     performance?: {
       enabled?: boolean;
@@ -27,8 +28,8 @@ export function responsiveParameters(
   return {
     responsiveEasy: {
       config: options.config,
-      breakpoints: options.breakpoints || [...DEFAULT_BREAKPOINTS],
-      disable: options.disable || false,
+      breakpoints: options.breakpoints ?? [...DEFAULT_BREAKPOINTS],
+      disable: options.disable ?? false,
       performance: {
         enabled: options.performance?.enabled ?? true,
         thresholds: {
@@ -52,7 +53,7 @@ export function responsiveParameters(
  * Create parameters for mobile-first responsive design
  */
 export function mobileFirstParameters(
-  config?: any
+  config?: ResponsiveConfig
 ): ResponsiveStoryParameters {
   const mobileBreakpoints: BreakpointConfig[] = [
     { name: 'Mobile', width: 375, height: 667, alias: 'mobile' },
@@ -93,7 +94,7 @@ export function mobileFirstParameters(
  * Create parameters for desktop-first responsive design
  */
 export function desktopFirstParameters(
-  config?: any
+  config?: ResponsiveConfig
 ): ResponsiveStoryParameters {
   const desktopBreakpoints: BreakpointConfig[] = [
     { name: 'Desktop', width: 1920, height: 1080, alias: 'desktop' },
@@ -171,7 +172,7 @@ export function debugParameters(): ResponsiveStoryParameters {
  * Create parameters for accessibility testing
  */
 export function accessibilityParameters(
-  config?: any
+  config?: ResponsiveConfig
 ): ResponsiveStoryParameters {
   return responsiveParameters({
     config: {

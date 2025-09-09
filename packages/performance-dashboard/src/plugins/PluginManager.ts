@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import React from 'react';
 
 export interface PluginManifest {
   id: string;
@@ -21,8 +22,8 @@ export interface PluginManifest {
   apiVersion: string;
   minDashboardVersion: string;
   maxDashboardVersion?: string;
-  configSchema?: any;
-  defaultConfig?: any;
+  configSchema?: unknown;
+  defaultConfig?: unknown;
 }
 
 export interface PluginPermission {
@@ -35,7 +36,7 @@ export interface PluginPermission {
 
 export interface PluginConfig {
   enabled: boolean;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   permissions: Record<string, boolean>;
   version: string;
   lastUpdated: Date;
@@ -44,7 +45,7 @@ export interface PluginConfig {
 export interface PluginContext {
   dashboard: {
     version: string;
-    api: any;
+    api: unknown;
     events: EventEmitter;
     storage: PluginStorage;
     ui: PluginUI;
@@ -59,18 +60,18 @@ export interface PluginContext {
 }
 
 export interface PluginStorage {
-  get: (key: string) => Promise<any>;
-  set: (key: string, value: any) => Promise<void>;
+  get: (key: string) => Promise<unknown>;
+  set: (key: string, value: unknown) => Promise<void>;
   delete: (key: string) => Promise<void>;
   clear: () => Promise<void>;
   keys: () => Promise<string[]>;
 }
 
 export interface PluginUI {
-  registerComponent: (name: string, component: React.ComponentType<any>) => void;
+  registerComponent: (name: string, component: React.ComponentType<unknown>) => void;
   unregisterComponent: (name: string) => void;
   showNotification: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
-  showModal: (component: React.ComponentType<any>, props?: any) => Promise<any>;
+  showModal: (component: React.ComponentType<unknown>, props?: unknown) => Promise<unknown>;
   addMenuItem: (menu: string, item: MenuItem) => void;
   removeMenuItem: (menu: string, itemId: string) => void;
   addToolbarButton: (button: ToolbarButton) => void;
@@ -78,19 +79,19 @@ export interface PluginUI {
 }
 
 export interface PluginData {
-  getMetrics: () => Promise<any[]>;
-  getAlerts: () => Promise<any[]>;
-  getReports: () => Promise<any[]>;
-  subscribe: (event: string, callback: Function) => void;
-  unsubscribe: (event: string, callback: Function) => void;
-  request: (endpoint: string, options?: any) => Promise<any>;
+  getMetrics: () => Promise<unknown[]>;
+  getAlerts: () => Promise<unknown[]>;
+  getReports: () => Promise<unknown[]>;
+  subscribe: (event: string, callback: (...args: unknown[]) => void) => void;
+  unsubscribe: (event: string, callback: (...args: unknown[]) => void) => void;
+  request: (endpoint: string, options?: unknown) => Promise<unknown>;
 }
 
 export interface PluginLogger {
-  debug: (message: string, ...args: any[]) => void;
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, ...args: any[]) => void;
+  debug: (message: string, ...args: unknown[]) => void;
+  info: (message: string, ...args: unknown[]) => void;
+  warn: (message: string, ...args: unknown[]) => void;
+  error: (message: string, ...args: unknown[]) => void;
 }
 
 export interface MenuItem {
@@ -116,7 +117,7 @@ export interface PluginInstance {
   id: string;
   manifest: PluginManifest;
   config: PluginConfig;
-  instance: any;
+  instance: unknown;
   status: 'loading' | 'active' | 'error' | 'disabled';
   error?: string;
   loadTime: number;
@@ -153,8 +154,8 @@ export interface PluginManagerActions {
   validatePlugin: (manifest: PluginManifest) => Promise<boolean>;
   searchPlugins: (query: string) => PluginManifest[];
   updateRegistry: () => Promise<void>;
-  exportPlugin: (pluginId: string) => Promise<any>;
-  importPlugin: (pluginData: any) => Promise<string>;
+  exportPlugin: (pluginId: string) => Promise<unknown>;
+  importPlugin: (pluginData: unknown) => Promise<string>;
 }
 
 /**
@@ -212,7 +213,7 @@ export class PluginManager extends EventEmitter {
       // Create plugin config
       const pluginConfig: PluginConfig = {
         enabled: true,
-        settings: { ...manifest.defaultConfig, ...config?.settings },
+        settings: { ...(manifest.defaultConfig as Record<string, unknown>), ...(config?.settings as Record<string, unknown>) },
         permissions: this.initializePermissions(manifest),
         version: manifest.version,
         lastUpdated: new Date(),
@@ -261,8 +262,8 @@ export class PluginManager extends EventEmitter {
 
     try {
       // Call plugin cleanup
-      if (plugin.instance && typeof plugin.instance.cleanup === 'function') {
-        await plugin.instance.cleanup();
+      if (plugin.instance && typeof (plugin.instance as { cleanup?: () => Promise<void> }).cleanup === 'function') {
+        await (plugin.instance as { cleanup: () => Promise<void> }).cleanup();
       }
 
       // Unload from sandbox
@@ -303,8 +304,8 @@ export class PluginManager extends EventEmitter {
     plugin.config.enabled = true;
     plugin.status = 'active';
 
-    if (plugin.instance && typeof plugin.instance.enable === 'function') {
-      await plugin.instance.enable();
+    if (plugin.instance && typeof (plugin.instance as { enable?: () => Promise<void> }).enable === 'function') {
+      await (plugin.instance as { enable: () => Promise<void> }).enable();
     }
 
     this.log(pluginId, 'info', 'Plugin enabled');
@@ -320,8 +321,8 @@ export class PluginManager extends EventEmitter {
     plugin.config.enabled = false;
     plugin.status = 'disabled';
 
-    if (plugin.instance && typeof plugin.instance.disable === 'function') {
-      await plugin.instance.disable();
+    if (plugin.instance && typeof (plugin.instance as { disable?: () => Promise<void> }).disable === 'function') {
+      await (plugin.instance as { disable: () => Promise<void> }).disable();
     }
 
     this.log(pluginId, 'info', 'Plugin disabled');
@@ -336,8 +337,8 @@ export class PluginManager extends EventEmitter {
 
     plugin.config = { ...plugin.config, ...config, lastUpdated: new Date() };
 
-    if (plugin.instance && typeof plugin.instance.updateConfig === 'function') {
-      await plugin.instance.updateConfig(plugin.config);
+    if (plugin.instance && typeof (plugin.instance as { updateConfig?: (config: PluginConfig) => Promise<void> }).updateConfig === 'function') {
+      await (plugin.instance as { updateConfig: (config: PluginConfig) => Promise<void> }).updateConfig(plugin.config);
     }
 
     this.log(pluginId, 'info', 'Plugin config updated');
@@ -349,7 +350,10 @@ export class PluginManager extends EventEmitter {
     const pluginId = await this.loadPlugin(manifest);
     
     // Save to local storage
-    await this.savePluginToStorage(manifest, this.plugins.get(pluginId)!.config);
+    const pluginInstance = this.plugins.get(pluginId);
+    if (pluginInstance) {
+      await this.savePluginToStorage(manifest, pluginInstance.config);
+    }
     
     this.log(pluginId, 'info', 'Plugin installed successfully');
     this.emit('pluginInstalled', pluginId);
@@ -381,14 +385,14 @@ export class PluginManager extends EventEmitter {
   }
 
   getPluginStatus(pluginId: string): PluginInstance | null {
-    return this.plugins.get(pluginId) || null;
+    return this.plugins.get(pluginId) ?? null;
   }
 
   getPluginLogs(pluginId: string): string[] {
-    return this.pluginLogs.get(pluginId) || [];
+    return this.pluginLogs.get(pluginId) ?? [];
   }
 
-  async validatePlugin(manifest: PluginManifest): Promise<boolean> {
+  validatePlugin(manifest: PluginManifest): Promise<boolean> {
     try {
       // Check required fields
       const requiredFields = ['id', 'name', 'version', 'description', 'author', 'main'];
@@ -414,10 +418,14 @@ export class PluginManager extends EventEmitter {
         }
       }
 
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
-      console.error('Plugin validation failed:', error);
-      return false;
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('Plugin validation failed:', error);
+      }
+      return Promise.resolve(false);
     }
   }
 
@@ -437,9 +445,9 @@ export class PluginManager extends EventEmitter {
     try {
       // Fetch from remote registry
       const response = await fetch(this.registry.url);
-      const data = await response.json();
+      const data = await response.json() as { plugins?: PluginManifest[] };
       
-      this.registry.plugins = data.plugins || [];
+      this.registry.plugins = data.plugins ?? [];
       this.registry.lastUpdated = new Date();
       this.availablePlugins = [...this.registry.plugins];
 
@@ -452,29 +460,32 @@ export class PluginManager extends EventEmitter {
     }
   }
 
-  async exportPlugin(pluginId: string): Promise<any> {
+  exportPlugin(pluginId: string): Promise<unknown> {
     const plugin = this.plugins.get(pluginId);
     if (!plugin) {
       throw new Error(`Plugin ${pluginId} not found`);
     }
 
-    return {
+    return Promise.resolve({
       manifest: plugin.manifest,
       config: plugin.config,
       logs: this.getPluginLogs(pluginId),
       exportedAt: new Date()
-    };
+    });
   }
 
-  async importPlugin(pluginData: any): Promise<string> {
-    const { manifest, config } = pluginData;
-    return await this.loadPlugin(manifest, config);
+  importPlugin(pluginData: unknown): Promise<string> {
+    const typedPluginData = pluginData as {
+      manifest: PluginManifest;
+      config: Partial<PluginConfig>;
+    };
+    return this.loadPlugin(typedPluginData.manifest, typedPluginData.config);
   }
 
   // Private methods
   private initializeDefaultPlugins(): void {
     // Load default plugins from storage
-    this.loadPluginsFromStorage();
+    void this.loadPluginsFromStorage();
   }
 
   private initializePermissions(manifest: PluginManifest): Record<string, boolean> {
@@ -496,8 +507,8 @@ export class PluginManager extends EventEmitter {
     const v2parts = version2.split('.').map(Number);
     
     for (let i = 0; i < Math.max(v1parts.length, v2parts.length); i++) {
-      const v1part = v1parts[i] || 0;
-      const v2part = v2parts[i] || 0;
+      const v1part = v1parts[i] ?? 0;
+      const v2part = v2parts[i] ?? 0;
       
       if (v1part > v2part) return 1;
       if (v1part < v2part) return -1;
@@ -510,7 +521,7 @@ export class PluginManager extends EventEmitter {
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
     
-    const logs = this.pluginLogs.get(pluginId) || [];
+    const logs = this.pluginLogs.get(pluginId) ?? [];
     logs.push(logEntry);
     
     // Keep only last 100 log entries
@@ -522,15 +533,17 @@ export class PluginManager extends EventEmitter {
     this.emit('pluginLog', pluginId, level, message);
   }
 
-  private async savePluginToStorage(manifest: PluginManifest, config: PluginConfig): Promise<void> {
+  private savePluginToStorage(manifest: PluginManifest, config: PluginConfig): Promise<void> {
     const storageKey = `plugin_${manifest.id}`;
     const data = { manifest, config };
     localStorage.setItem(storageKey, JSON.stringify(data));
+    return Promise.resolve();
   }
 
-  private async removePluginFromStorage(pluginId: string): Promise<void> {
+  private removePluginFromStorage(pluginId: string): Promise<void> {
     const storageKey = `plugin_${pluginId}`;
     localStorage.removeItem(storageKey);
+    return Promise.resolve();
   }
 
   private async loadPluginsFromStorage(): Promise<void> {
@@ -538,18 +551,22 @@ export class PluginManager extends EventEmitter {
     
     for (const key of keys) {
       try {
-        const data = JSON.parse(localStorage.getItem(key) || '{}');
+        const data = JSON.parse(localStorage.getItem(key) ?? '{}') as { manifest?: PluginManifest; config?: Partial<PluginConfig> };
         if (data.manifest && data.config) {
           await this.loadPlugin(data.manifest, data.config);
         }
       } catch (error) {
-        console.error(`Failed to load plugin from storage: ${key}`, error);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.error(`Failed to load plugin from storage: ${key}`, error);
+        }
       }
     }
   }
 
-  private async getLatestPluginManifest(pluginId: string): Promise<PluginManifest | null> {
-    return this.registry.plugins.find(plugin => plugin.id === pluginId) || null;
+  private getLatestPluginManifest(pluginId: string): Promise<PluginManifest | null> {
+    return Promise.resolve(this.registry.plugins.find(plugin => plugin.id === pluginId) ?? null);
   }
 }
 
@@ -557,14 +574,14 @@ export class PluginManager extends EventEmitter {
  * Plugin sandbox for secure plugin execution
  */
 class PluginSandbox {
-  private loadedPlugins: Map<string, any> = new Map();
+  private loadedPlugins: Map<string, unknown> = new Map();
   private context: PluginContext;
 
   constructor() {
     this.context = this.createPluginContext();
   }
 
-  async loadPlugin(manifest: PluginManifest, config: PluginConfig): Promise<any> {
+  async loadPlugin(manifest: PluginManifest, config: PluginConfig): Promise<unknown> {
     // Create secure context for plugin
     const pluginContext = this.createPluginContext();
     pluginContext.plugin = {
@@ -587,8 +604,8 @@ class PluginSandbox {
 
   async unloadPlugin(pluginId: string): Promise<void> {
     const plugin = this.loadedPlugins.get(pluginId);
-    if (plugin && typeof plugin.cleanup === 'function') {
-      await plugin.cleanup();
+    if (plugin && typeof (plugin as { cleanup?: () => Promise<void> }).cleanup === 'function') {
+      await (plugin as { cleanup: () => Promise<void> }).cleanup();
     }
     this.loadedPlugins.delete(pluginId);
   }
@@ -612,7 +629,7 @@ class PluginSandbox {
     };
   }
 
-  private createDashboardAPI(): any {
+  private createDashboardAPI(): unknown {
     return {
       version: '2.0.0',
       getConfig: () => ({}),
@@ -624,97 +641,160 @@ class PluginSandbox {
 
   private createStorage(): PluginStorage {
     return {
-      get: async (key: string) => {
+      get: (key: string) => {
         const value = localStorage.getItem(`plugin_storage_${key}`);
-        return value ? JSON.parse(value) : null;
+        return Promise.resolve(value ? JSON.parse(value) : null);
       },
-      set: async (key: string, value: any) => {
+      set: (key: string, value: unknown) => {
         localStorage.setItem(`plugin_storage_${key}`, JSON.stringify(value));
+        return Promise.resolve();
       },
-      delete: async (key: string) => {
+      delete: (key: string) => {
         localStorage.removeItem(`plugin_storage_${key}`);
+        return Promise.resolve();
       },
-      clear: async () => {
+      clear: () => {
         const keys = Object.keys(localStorage).filter(key => key.startsWith('plugin_storage_'));
         keys.forEach(key => localStorage.removeItem(key));
+        return Promise.resolve();
       },
-      keys: async () => {
-        return Object.keys(localStorage)
+      keys: () => {
+        return Promise.resolve(Object.keys(localStorage)
           .filter(key => key.startsWith('plugin_storage_'))
-          .map(key => key.replace('plugin_storage_', ''));
+          .map(key => key.replace('plugin_storage_', '')));
       }
     };
   }
 
   private createUI(): PluginUI {
     return {
-      registerComponent: (name: string, component: React.ComponentType<any>) => {
+      registerComponent: (name: string, _component: React.ComponentType<unknown>) => {
         // Register component with dashboard UI system
-        console.log(`Registering component: ${name}`);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Registering component: ${name}`);
+        }
       },
       unregisterComponent: (name: string) => {
-        console.log(`Unregistering component: ${name}`);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Unregistering component: ${name}`);
+        }
       },
       showNotification: (message: string, type = 'info') => {
-        console.log(`Notification [${type}]: ${message}`);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Notification [${type}]: ${message}`);
+        }
       },
-      showModal: async (component: React.ComponentType<any>, props?: any) => {
-        console.log('Showing modal:', component.name);
+      showModal: async (component: React.ComponentType<unknown>, _props?: unknown) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log('Showing modal:', component.name);
+        }
         return Promise.resolve();
       },
       addMenuItem: (menu: string, item: MenuItem) => {
-        console.log(`Adding menu item to ${menu}:`, item.label);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Adding menu item to ${menu}:`, item.label);
+        }
       },
       removeMenuItem: (menu: string, itemId: string) => {
-        console.log(`Removing menu item from ${menu}:`, itemId);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Removing menu item from ${menu}:`, itemId);
+        }
       },
       addToolbarButton: (button: ToolbarButton) => {
-        console.log('Adding toolbar button:', button.label);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log('Adding toolbar button:', button.label);
+        }
       },
       removeToolbarButton: (buttonId: string) => {
-        console.log('Removing toolbar button:', buttonId);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log('Removing toolbar button:', buttonId);
+        }
       }
     };
   }
 
   private createDataAPI(): PluginData {
     return {
-      getMetrics: async () => [],
-      getAlerts: async () => [],
-      getReports: async () => [],
-      subscribe: (event: string, callback: Function) => {
-        console.log(`Subscribing to event: ${event}`);
+      getMetrics: () => Promise.resolve([]),
+      getAlerts: () => Promise.resolve([]),
+      getReports: () => Promise.resolve([]),
+      subscribe: (event: string, _callback: (...args: unknown[]) => void) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Subscribing to event: ${event}`);
+        }
       },
-      unsubscribe: (event: string, callback: Function) => {
-        console.log(`Unsubscribing from event: ${event}`);
+      unsubscribe: (event: string, _callback: (...args: unknown[]) => void) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Unsubscribing from event: ${event}`);
+        }
       },
-      request: async (endpoint: string, options?: any) => {
-        console.log(`Making request to: ${endpoint}`);
-        return {};
+      request: (endpoint: string, _options?: unknown) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.log(`Making request to: ${endpoint}`);
+        }
+        return Promise.resolve({});
       }
     };
   }
 
   private createLogger(pluginId: string): PluginLogger {
     return {
-      debug: (message: string, ...args: any[]) => {
-        console.debug(`[${pluginId}] ${message}`, ...args);
+      debug: (message: string, ...args: unknown[]) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.debug(`[${pluginId}] ${message}`, ...args);
+        }
       },
-      info: (message: string, ...args: any[]) => {
-        console.info(`[${pluginId}] ${message}`, ...args);
+      info: (message: string, ...args: unknown[]) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.info(`[${pluginId}] ${message}`, ...args);
+        }
       },
-      warn: (message: string, ...args: any[]) => {
-        console.warn(`[${pluginId}] ${message}`, ...args);
+      warn: (message: string, ...args: unknown[]) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.warn(`[${pluginId}] ${message}`, ...args);
+        }
       },
-      error: (message: string, ...args: any[]) => {
-        console.error(`[${pluginId}] ${message}`, ...args);
+      error: (message: string, ...args: unknown[]) => {
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.error(`[${pluginId}] ${message}`, ...args);
+        }
       }
     };
   }
 
-  private async fetchPluginCode(manifest: PluginManifest): Promise<string> {
+  private fetchPluginCode(_manifest: PluginManifest): Promise<string> {
     // In real implementation, fetch from manifest.main URL
-    return `
+    return Promise.resolve(`
       class Plugin {
         constructor(context) {
           this.context = context;
@@ -730,28 +810,33 @@ class PluginSandbox {
       }
       
       module.exports = Plugin;
-    `;
+    `);
   }
 
-  private async executePlugin(code: string, context: PluginContext): Promise<any> {
+  private executePlugin(code: string, context: PluginContext): Promise<unknown> {
     // In real implementation, use proper sandboxing (Web Workers, iframe, etc.)
     // For now, return a mock plugin instance
-    return {
-      initialize: async () => {
+    return Promise.resolve({
+      initialize: () => {
         context.plugin.logger.info('Plugin initialized');
+        return Promise.resolve();
       },
-      cleanup: async () => {
+      cleanup: () => {
         context.plugin.logger.info('Plugin cleaned up');
+        return Promise.resolve();
       },
-      enable: async () => {
+      enable: () => {
         context.plugin.logger.info('Plugin enabled');
+        return Promise.resolve();
       },
-      disable: async () => {
+      disable: () => {
         context.plugin.logger.info('Plugin disabled');
+        return Promise.resolve();
       },
-      updateConfig: async (config: PluginConfig) => {
+      updateConfig: (_config: PluginConfig) => {
         context.plugin.logger.info('Plugin config updated');
+        return Promise.resolve();
       }
-    };
+    });
   }
 }

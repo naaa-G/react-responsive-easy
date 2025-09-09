@@ -7,11 +7,11 @@ export interface MetricsOverviewProps {
   theme: DashboardTheme;
 }
 
-export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ metrics, theme }) => {
+export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ metrics, theme: _theme }) => {
   // Calculate derived metrics
   const overallScore = calculateOverallScore(metrics);
   const memoryUsagePercent = metrics.memory ? (metrics.memory.usage * 100) : 0;
-  const avgRenderTime = metrics.responsiveElements.averageRenderTime || 0;
+  const avgRenderTime = metrics.responsiveElements.averageRenderTime ?? 0;
   const cacheHitRate = metrics.custom?.cacheHitRate ? (metrics.custom.cacheHitRate * 100) : 0;
 
   // Get status colors
@@ -33,11 +33,6 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ metrics, theme
     return 'danger';
   };
 
-  const getLCPColor = (lcp: number) => {
-    if (lcp <= 2500) return 'success';
-    if (lcp <= 4000) return 'warning';
-    return 'danger';
-  };
 
   return (
     <div className="metrics-overview">
@@ -163,7 +158,7 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ metrics, theme
           <div className="metric-item">
             <div className="metric-label">Scaling Operations</div>
             <div className="metric-value">
-              {metrics.custom?.scalingOperations || 0}
+              {metrics.custom?.scalingOperations ?? 0}
             </div>
           </div>
         </div>
@@ -196,7 +191,7 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ metrics, theme
           <div className="metric-item">
             <div className="metric-label">Config Complexity</div>
             <div className="metric-value">
-              {metrics.custom?.configComplexity?.toFixed(1) || '0.0'}
+              {metrics.custom?.configComplexity?.toFixed(1) ?? '0.0'}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import chalk from 'chalk';
+import _chalk from 'chalk';
 
 // Analytics Types
 export interface AnalyticsConfig {
@@ -283,7 +283,7 @@ export class AnalyticsService extends EventEmitter {
    */
   private startBatchProcessing(): void {
     this.processingInterval = setInterval(() => {
-      this.processBatchData();
+      this.processBatchData().catch(() => {});
     }, this.config.processing.processingInterval * 60 * 1000);
   }
 
@@ -337,7 +337,7 @@ export class AnalyticsService extends EventEmitter {
    * Process analytics data
    */
   private async processData(data: AnalyticsData[]): Promise<void> {
-    for (const item of data) {
+    const processingPromises = data.map(async (item) => {
       try {
         // Generate insights
         const insights = await this.generateInsights(item);
@@ -376,7 +376,9 @@ export class AnalyticsService extends EventEmitter {
       } catch (error) {
         this.emit('data-processing-error', { data: item, error });
       }
-    }
+    });
+    
+    await Promise.all(processingPromises);
   }
 
   /**
@@ -678,9 +680,9 @@ export class AnalyticsService extends EventEmitter {
       .filter(d => d.type === 'performance')
       .map(d => ({
         timestamp: d.timestamp,
-        cpu: d.metrics.cpu || 0,
-        memory: d.metrics.memory || 0,
-        requests: d.metrics.requests || 0
+        cpu: d.metrics.cpu ?? 0,
+        memory: d.metrics.memory ?? 0,
+        requests: d.metrics.requests ?? 0
       }))
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
@@ -703,8 +705,8 @@ export class AnalyticsService extends EventEmitter {
     const usageData = data
       .filter(d => d.type === 'usage')
       .reduce((acc, d) => {
-        const category = d.category || 'other';
-        acc[category] = (acc[category] || 0) + 1;
+        const category = d.category ?? 'other';
+        acc[category] = (acc[category] ?? 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
@@ -736,8 +738,8 @@ export class AnalyticsService extends EventEmitter {
     // Performance metrics
     const performanceData = data.filter(d => d.type === 'performance');
     if (performanceData.length > 0) {
-      const cpuValues = performanceData.map(d => d.metrics.cpu || 0).filter(v => v > 0);
-      const memoryValues = performanceData.map(d => d.metrics.memory || 0).filter(v => v > 0);
+      const cpuValues = performanceData.map(d => d.metrics.cpu ?? 0).filter(v => v > 0);
+      const memoryValues = performanceData.map(d => d.metrics.memory ?? 0).filter(v => v > 0);
       
       if (cpuValues.length > 0) {
         metrics.avgCpu = cpuValues.reduce((sum, v) => sum + v, 0) / cpuValues.length;
@@ -753,7 +755,7 @@ export class AnalyticsService extends EventEmitter {
     // Usage metrics
     const usageData = data.filter(d => d.type === 'usage');
     if (usageData.length > 0) {
-      const requestValues = usageData.map(d => d.metrics.requests || 0);
+      const requestValues = usageData.map(d => d.metrics.requests ?? 0);
       metrics.totalRequests = requestValues.reduce((sum, v) => sum + v, 0);
       metrics.avgRequests = metrics.totalRequests / usageData.length;
     }
@@ -766,7 +768,7 @@ export class AnalyticsService extends EventEmitter {
    */
   private calculateMean(metric: string): number {
     const values = this.getHistoricalData(metric, 30)
-      .map(d => d.metrics[metric] || 0)
+      .map(d => d.metrics[metric] ?? 0)
       .filter(v => typeof v === 'number');
     
     return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
@@ -774,7 +776,7 @@ export class AnalyticsService extends EventEmitter {
 
   private calculateStandardDeviation(metric: string): number {
     const values = this.getHistoricalData(metric, 30)
-      .map(d => d.metrics[metric] || 0)
+      .map(d => d.metrics[metric] ?? 0)
       .filter(v => typeof v === 'number');
     
     if (values.length === 0) return 0;

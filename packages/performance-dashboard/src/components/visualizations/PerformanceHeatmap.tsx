@@ -1,4 +1,3 @@
-// @ts-nocheck - React type conflicts with Recharts components
 import React, { useMemo, useState, useCallback } from 'react';
 import { PerformanceMetrics, PerformanceSnapshot } from '../../core/PerformanceMonitor';
 import { DashboardTheme } from '../PerformanceDashboard';
@@ -22,11 +21,16 @@ export interface HeatmapCellData {
   timestamp: number;
   metric: string;
   status: 'good' | 'warning' | 'poor';
-  details: any;
+  details: {
+    avgValue: number;
+    maxValue: number;
+    minValue: number;
+    sampleCount: number;
+  };
 }
 
 export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
-  metrics,
+  metrics: _metrics,
   history,
   theme,
   timeRange = '24h',
@@ -76,36 +80,36 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
       day: 24 * 60 * 60 * 1000
     };
 
-    const timeRangeMs = ranges[timeRange];
-    const granularityStep = granularityMs[granularity];
+    const timeRangeMs = ranges[timeRange ?? '24h'] ?? 0;
+    const granularityStep = granularityMs[granularity ?? 'hour'] ?? 0;
     const startTime = now - timeRangeMs;
     
     // Create time buckets
     const buckets: { [key: string]: PerformanceSnapshot[] } = {};
-    const bucketCount = Math.ceil(timeRangeMs / granularityStep);
+    const bucketCount = granularityStep > 0 ? Math.ceil(timeRangeMs / granularityStep) : 0;
     
     for (let i = 0; i < bucketCount; i++) {
       const bucketStart = startTime + (i * granularityStep);
-      const bucketEnd = bucketStart + granularityStep;
+      const _bucketEnd = bucketStart + granularityStep;
       const bucketKey = new Date(bucketStart).toISOString();
       buckets[bucketKey] = [];
     }
 
     // Distribute snapshots into buckets
-    history.forEach(snapshot => {
+    history.forEach((snapshot: PerformanceSnapshot) => {
       const bucketIndex = Math.floor((snapshot.timestamp - startTime) / granularityStep);
       const bucketStart = startTime + (bucketIndex * granularityStep);
       const bucketKey = new Date(bucketStart).toISOString();
       
       if (buckets[bucketKey]) {
-        buckets[bucketKey].push(snapshot);
+        buckets[bucketKey]?.push(snapshot);
       }
     });
 
     // Generate heatmap cells
     const cells: HeatmapCellData[] = [];
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const _days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const _hours = Array.from({ length: 24 }, (_, i) => i);
 
     Object.entries(buckets).forEach(([bucketKey, snapshots], index) => {
       if (snapshots.length === 0) return;
@@ -115,18 +119,18 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
       const hourOfDay = bucketTime.getHours();
       
       // Calculate aggregated metric value
-      const metricValues = snapshots.map(s => {
+      const metricValues = snapshots.map((s: PerformanceSnapshot) => {
         switch (selectedMetric) {
           case 'layoutShift':
             return s.metrics.layoutShift.current;
           case 'lcp':
-            return s.metrics.paintTiming.lcp || 0;
+            return s.metrics.paintTiming.lcp ?? 0;
           case 'fcp':
-            return s.metrics.paintTiming.fcp || 0;
+            return s.metrics.paintTiming.fcp ?? 0;
           case 'memoryUsage':
             return s.metrics.memory ? (s.metrics.memory.usage * 100) : 0;
           case 'renderTime':
-            return s.metrics.responsiveElements.averageRenderTime || 0;
+            return s.metrics.responsiveElements.averageRenderTime ?? 0;
           case 'cacheHitRate':
             return s.metrics.custom?.cacheHitRate ? (s.metrics.custom.cacheHitRate * 100) : 0;
           default:
@@ -158,8 +162,7 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
           avgValue,
           maxValue,
           minValue,
-          sampleCount: snapshots.length,
-          snapshots: snapshots.slice(0, 5) // Keep first 5 for details
+          sampleCount: snapshots.length
         }
       });
     });
@@ -184,8 +187,8 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
 
   // Get cell color based on value and status
   const getCellColor = (cell: HeatmapCellData) => {
-    const { status, value } = cell;
-    const threshold = thresholds[selectedMetric as keyof typeof thresholds];
+    const { status } = cell;
+    const _threshold = thresholds[selectedMetric as keyof typeof thresholds];
     
     if (status === 'good') {
       return colors.good;
@@ -244,7 +247,7 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
           <label>Granularity:</label>
           <select 
             value={granularity} 
-            onChange={(e) => {/* Handle granularity change */}}
+            onChange={(_e) => {/* Handle granularity change */}}
           >
             <option value="minute">Minute</option>
             <option value="hour">Hour</option>
@@ -256,7 +259,7 @@ export const PerformanceHeatmap: React.FC<PerformanceHeatmapProps> = ({
           <label>Time Range:</label>
           <select 
             value={timeRange} 
-            onChange={(e) => {/* Handle time range change */}}
+            onChange={(_e) => {/* Handle time range change */}}
           >
             <option value="1h">Last Hour</option>
             <option value="6h">Last 6 Hours</option>

@@ -12,10 +12,7 @@ import {
   AlertingSystem,
   AnalyticsEngine,
   PerformanceMetrics,
-  PerformanceAlert,
-  PerformanceReport,
-  AlertingConfig,
-  AnalyticsConfig
+  PerformanceAlert
 } from '@yaseratiar/react-responsive-easy-performance-dashboard';
 import { EventEmitter } from 'events';
 import fs from 'fs-extra';
@@ -224,7 +221,7 @@ export class PerformanceIntegrationService extends EventEmitter {
 
     try {
       if (this.performanceMonitor) {
-        await this.performanceMonitor.stop();
+        this.performanceMonitor.stop();
       }
 
       if (this.alertingSystem) {
@@ -254,8 +251,8 @@ export class PerformanceIntegrationService extends EventEmitter {
     }
 
     try {
-      const metrics = await this.performanceMonitor.collectMetrics();
-      const alerts = await this.performanceMonitor.getActiveAlerts();
+      const metrics = this.performanceMonitor.collectMetrics();
+      const alerts = this.performanceMonitor.getActiveAlerts();
       
       if (metrics === null || metrics === undefined || typeof metrics !== 'object') {
         throw new Error('No metrics returned from performance monitor');
@@ -267,8 +264,8 @@ export class PerformanceIntegrationService extends EventEmitter {
       const snapshot: PerformanceSnapshot = {
         id: uuidv4(),
         timestamp: new Date(),
-        metrics: metrics,
-        alerts: alerts || [],
+        metrics,
+        alerts: alerts ?? [],
         score,
         trends
       };
@@ -303,7 +300,7 @@ export class PerformanceIntegrationService extends EventEmitter {
     this.logger.info(`Generating performance report for project: ${projectId}`);
 
     try {
-      const period = options.period || {
+      const period = options.period ?? {
         start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
         end: new Date()
       };
@@ -380,7 +377,7 @@ export class PerformanceIntegrationService extends EventEmitter {
     return {
       performance: periodSnapshots.map(s => s.score),
       memory: periodSnapshots.map(s => (s.metrics as any).memoryUsage * 100 || 0),
-      responsiveness: periodSnapshots.map(s => (s.metrics as any).renderTime || 0),
+      responsiveness: periodSnapshots.map(s => (s.metrics as any).renderTime ?? 0),
       timestamps: periodSnapshots.map(s => s.timestamp)
     };
   }
@@ -397,7 +394,7 @@ export class PerformanceIntegrationService extends EventEmitter {
     }
 
     try {
-      const alerts = await this.performanceMonitor.getActiveAlerts();
+      const alerts = this.performanceMonitor.getActiveAlerts();
       
       let filteredAlerts = alerts;
       
@@ -452,7 +449,7 @@ export class PerformanceIntegrationService extends EventEmitter {
     this.logger.info(`Exporting performance data in ${format} format...`);
 
     try {
-      const period = options.period || {
+      const period = options.period ?? {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
         end: new Date()
       };
@@ -506,9 +503,10 @@ export class PerformanceIntegrationService extends EventEmitter {
     if (!this.performanceMonitor) return;
 
     // Set up real-time data collection
-    const collectionInterval = setInterval(async () => {
-      try {
-        const snapshot = await this.getCurrentSnapshot();
+    const collectionInterval = setInterval(() => {
+      (async () => {
+        try {
+          const snapshot = await this.getCurrentSnapshot();
         
         // Check for alerts
         if (snapshot.alerts.length > 0) {
@@ -520,9 +518,10 @@ export class PerformanceIntegrationService extends EventEmitter {
           this.emit('performance:degraded', { score: snapshot.score, snapshot });
         }
 
-      } catch (error) {
-        this.logger.error('Real-time collection error:', error);
-      }
+        } catch (error) {
+          this.logger.error('Real-time collection error:', error);
+        }
+      })().catch(() => undefined);
     }, 5000); // Collect every 5 seconds
 
     // Store interval ID for cleanup
@@ -560,7 +559,7 @@ export class PerformanceIntegrationService extends EventEmitter {
 
   private calculatePerformanceScore(metrics: any): number {
     // Simple scoring algorithm - in production this would be more sophisticated
-    const weights = {
+    const _weights = {
       lcp: 0.3,
       fcp: 0.2,
       layoutShift: 0.2,
@@ -571,27 +570,27 @@ export class PerformanceIntegrationService extends EventEmitter {
     let score = 100;
     
     // LCP scoring (lower is better)
-    const lcp = (metrics as any).lcp || 0;
+    const lcp = (metrics as any).lcp ?? 0;
     if (lcp > 2500) score -= 20;
     else if (lcp > 2000) score -= 10;
     
     // FCP scoring (lower is better)
-    const fcp = (metrics as any).fcp || 0;
+    const fcp = (metrics as any).fcp ?? 0;
     if (fcp > 1800) score -= 15;
     else if (fcp > 1500) score -= 8;
     
     // Layout Shift scoring (lower is better)
-    const layoutShift = (metrics as any).layoutShift || 0;
+    const layoutShift = (metrics as any).layoutShift ?? 0;
     if (layoutShift > 0.1) score -= 15;
     else if (layoutShift > 0.05) score -= 8;
     
     // Memory usage scoring (lower is better)
-    const memoryUsage = (metrics as any).memoryUsage || 0;
+    const memoryUsage = (metrics as any).memoryUsage ?? 0;
     if (memoryUsage > 0.8) score -= 20;
     else if (memoryUsage > 0.7) score -= 10;
     
     // Render time scoring (lower is better)
-    const renderTime = (metrics as any).renderTime || 0;
+    const renderTime = (metrics as any).renderTime ?? 0;
     if (renderTime > 33) score -= 10;
     else if (renderTime > 16.67) score -= 5;
 
@@ -623,25 +622,25 @@ export class PerformanceIntegrationService extends EventEmitter {
     
     const recentAvgMemory = recent.reduce((sum, s) => {
       const metrics = s.metrics as any;
-      const memoryValue = metrics?.memoryUsage || metrics?.memory?.used || metrics?.memory || 0;
+      const memoryValue = metrics?.memoryUsage ?? metrics?.memory?.used ?? metrics?.memory ?? 0;
       return sum + (typeof memoryValue === 'number' ? memoryValue : 0);
     }, 0) / recent.length;
     
     const olderAvgMemory = older.reduce((sum, s) => {
       const metrics = s.metrics as any;
-      const memoryValue = metrics?.memoryUsage || metrics?.memory?.used || metrics?.memory || 0;
+      const memoryValue = metrics?.memoryUsage ?? metrics?.memory?.used ?? metrics?.memory ?? 0;
       return sum + (typeof memoryValue === 'number' ? memoryValue : 0);
     }, 0) / older.length;
     
     const recentAvgRender = recent.reduce((sum, s) => {
       const metrics = s.metrics as any;
-      const renderValue = metrics?.renderTime || metrics?.paintTiming?.renderTime || metrics?.paintTiming || 0;
+      const renderValue = metrics?.renderTime ?? metrics?.paintTiming?.renderTime ?? metrics?.paintTiming ?? 0;
       return sum + (typeof renderValue === 'number' ? renderValue : 0);
     }, 0) / recent.length;
     
     const olderAvgRender = older.reduce((sum, s) => {
       const metrics = s.metrics as any;
-      const renderValue = metrics?.renderTime || metrics?.paintTiming?.renderTime || metrics?.paintTiming || 0;
+      const renderValue = metrics?.renderTime ?? metrics?.paintTiming?.renderTime ?? metrics?.paintTiming ?? 0;
       return sum + (typeof renderValue === 'number' ? renderValue : 0);
     }, 0) / older.length;
 
@@ -667,19 +666,19 @@ export class PerformanceIntegrationService extends EventEmitter {
         percentage: first?.score ? (((last?.score ?? 0) - (first?.score ?? 0)) / first.score) * 100 : 0
       },
       memory: {
-        change: ((last?.metrics as any).memoryUsage || 0) - ((first?.metrics as any).memoryUsage || 0),
-        percentage: ((first?.metrics as any).memoryUsage || 1) ? ((((last?.metrics as any).memoryUsage || 0) - ((first?.metrics as any).memoryUsage || 0)) / ((first?.metrics as any).memoryUsage || 1)) * 100 : 0
+        change: ((last?.metrics as any).memoryUsage ?? 0) - ((first?.metrics as any).memoryUsage ?? 0),
+        percentage: ((first?.metrics as any).memoryUsage ?? 1) ? ((((last?.metrics as any).memoryUsage ?? 0) - ((first?.metrics as any).memoryUsage ?? 0)) / ((first?.metrics as any).memoryUsage ?? 1)) * 100 : 0
       },
       responsiveness: {
-        change: ((last?.metrics as any).renderTime || 0) - ((first?.metrics as any).renderTime || 0),
-        percentage: ((first?.metrics as any).renderTime || 1) ? ((((last?.metrics as any).renderTime || 0) - ((first?.metrics as any).renderTime || 0)) / ((first?.metrics as any).renderTime || 1)) * 100 : 0
+        change: ((last?.metrics as any).renderTime ?? 0) - ((first?.metrics as any).renderTime ?? 0),
+        percentage: ((first?.metrics as any).renderTime ?? 1) ? ((((last?.metrics as any).renderTime ?? 0) - ((first?.metrics as any).renderTime ?? 0)) / ((first?.metrics as any).renderTime ?? 1)) * 100 : 0
       }
     };
   }
 
   private async generateInsights(
     snapshots: PerformanceSnapshot[],
-    options: any
+    _options: any
   ): Promise<{
     topIssues: string[];
     improvements: string[];
@@ -694,7 +693,7 @@ export class PerformanceIntegrationService extends EventEmitter {
     // Analyze top issues
           const allAlerts = snapshots.flatMap(s => s.alerts);
       const alertCounts = allAlerts.reduce((counts: Record<string, number>, alert: any) => {
-        counts[alert.type] = (counts[alert.type] || 0) + 1;
+        counts[alert.type] = (counts[alert.type] ?? 0) + 1;
         return counts;
       }, {} as Record<string, number>);
 

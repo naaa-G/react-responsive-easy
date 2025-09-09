@@ -485,9 +485,9 @@ export class CollaborationService extends EventEmitter {
         throw new Error('Session is not active');
       }
 
-      const sessionChanges = this.changes.get(sessionId) || [];
+      const sessionChanges = this.changes.get(sessionId) ?? [];
       
-      for (const change of changes) {
+      const changePromises = changes.map(async (change) => {
         // Check for conflicts
         const conflicts = this.detectConflicts(sessionId, change);
         if (conflicts.length > 0) {
@@ -500,20 +500,25 @@ export class CollaborationService extends EventEmitter {
         change.timestamp = new Date();
         change.hash = this.calculateChangeHash(change);
         
-        sessionChanges.push(change);
-      }
+        return change;
+      });
+      
+      const processedChanges = await Promise.all(changePromises);
+      sessionChanges.push(...processedChanges);
 
       this.changes.set(sessionId, sessionChanges);
       session.lastActivityAt = new Date();
 
       // Emit edit events
-      for (const change of changes) {
-        await this.emitEvent(sessionId, {
+      const eventPromises = changes.map(change => 
+        this.emitEvent(sessionId, {
           type: 'edit',
           participantId: change.participantId,
           data: { change }
-        });
-      }
+        })
+      );
+      
+      await Promise.all(eventPromises);
 
       this.emit('changes-applied', { session, changes });
     } catch (error) {
@@ -556,11 +561,11 @@ export class CollaborationService extends EventEmitter {
         createdAt: new Date(),
         updatedAt: new Date(),
         replies: [],
-        mentions: data.mentions || [],
-        tags: data.tags || []
+        mentions: data.mentions ?? [],
+        tags: data.tags ?? []
       };
 
-      const sessionComments = this.comments.get(sessionId) || [];
+      const sessionComments = this.comments.get(sessionId) ?? [];
       sessionComments.push(comment);
       this.comments.set(sessionId, sessionComments);
 
@@ -616,7 +621,7 @@ export class CollaborationService extends EventEmitter {
         updatedAt: new Date()
       };
 
-      const sessionSuggestions = this.suggestions.get(sessionId) || [];
+      const sessionSuggestions = this.suggestions.get(sessionId) ?? [];
       sessionSuggestions.push(suggestion);
       this.suggestions.set(sessionId, sessionSuggestions);
 
@@ -713,10 +718,10 @@ export class CollaborationService extends EventEmitter {
         throw new Error('Session not found');
       }
 
-      const events = this.events.get(sessionId) || [];
-      const changes = this.changes.get(sessionId) || [];
-      const comments = this.comments.get(sessionId) || [];
-      const suggestions = this.suggestions.get(sessionId) || [];
+      const events = this.events.get(sessionId) ?? [];
+      const changes = this.changes.get(sessionId) ?? [];
+      const comments = this.comments.get(sessionId) ?? [];
+      const suggestions = this.suggestions.get(sessionId) ?? [];
 
       const analytics: CollaborationAnalytics = {
         sessionId,
@@ -733,8 +738,8 @@ export class CollaborationService extends EventEmitter {
             edits: changes.length,
             comments: comments.length,
             suggestions: suggestions.length,
-            conflicts: this.conflicts.get(sessionId)?.length || 0,
-            resolutions: this.conflicts.get(sessionId)?.length || 0
+            conflicts: this.conflicts.get(sessionId)?.length ?? 0,
+            resolutions: this.conflicts.get(sessionId)?.length ?? 0
           },
           productivity: {
             linesAdded: changes.filter(c => c.type === 'insert').length,
@@ -744,7 +749,7 @@ export class CollaborationService extends EventEmitter {
             timeSpent: Math.floor((Date.now() - session.startedAt.getTime()) / 60000)
           },
           quality: {
-            conflictsResolved: this.conflicts.get(sessionId)?.length || 0,
+            conflictsResolved: this.conflicts.get(sessionId)?.length ?? 0,
             suggestionsAccepted: suggestions.filter(s => s.status === 'accepted').length,
             commentsResolved: comments.filter(c => c.status === 'resolved').length,
             reviewTime: 0
@@ -773,20 +778,20 @@ export class CollaborationService extends EventEmitter {
       type: eventData.type!,
       participantId: eventData.participantId!,
       timestamp: new Date(),
-      data: eventData.data || {},
+      data: eventData.data ?? {},
       metadata: {
         source: 'user',
         version: '2.0.0'
       }
     };
 
-    const sessionEvents = this.events.get(sessionId) || [];
+    const sessionEvents = this.events.get(sessionId) ?? [];
     sessionEvents.push(event);
     this.events.set(sessionId, sessionEvents);
   }
 
   private detectConflicts(sessionId: string, change: ConfigurationChange): ConfigurationChange[] {
-    const sessionChanges = this.changes.get(sessionId) || [];
+    const sessionChanges = this.changes.get(sessionId) ?? [];
     return sessionChanges.filter(existingChange => 
       existingChange.file === change.file &&
       this.isOverlapping(existingChange.position, change.position) &&
@@ -795,12 +800,12 @@ export class CollaborationService extends EventEmitter {
   }
 
   private isOverlapping(pos1: ChangePosition, pos2: ChangePosition): boolean {
-    return !(pos1.endLine < pos2.startLine || pos2.endLine < pos1.startLine ||
+    return !(pos1.endLine < pos2.startLine || pos2.endLine < pos1.startLine || 
              (pos1.endLine === pos2.startLine && pos1.endColumn < pos2.startColumn) ||
              (pos2.endLine === pos1.startLine && pos2.endColumn < pos1.startColumn));
   }
 
-  private async resolveConflicts(sessionId: string, change: ConfigurationChange, conflicts: ConfigurationChange[]): Promise<void> {
+  private async resolveConflicts(sessionId: string, change: ConfigurationChange, _conflicts: ConfigurationChange[]): Promise<void> {
     const session = this.sessions.get(sessionId);
     if (!session) return;
 
@@ -816,7 +821,7 @@ export class CollaborationService extends EventEmitter {
       changes: [change]
     };
 
-    const sessionConflicts = this.conflicts.get(sessionId) || [];
+    const sessionConflicts = this.conflicts.get(sessionId) ?? [];
     sessionConflicts.push(resolution);
     this.conflicts.set(sessionId, sessionConflicts);
 
@@ -873,7 +878,7 @@ export class CollaborationService extends EventEmitter {
    * Get session by ID
    */
   getSession(sessionId: string): CollaborationSession | null {
-    return this.sessions.get(sessionId) || null;
+    return this.sessions.get(sessionId) ?? null;
   }
 
   /**

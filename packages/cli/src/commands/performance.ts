@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import boxen from 'boxen';
+import _boxen from 'boxen';
 // @ts-ignore - figlet doesn't have type declarations
 import figlet from 'figlet';
 // @ts-ignore - gradient-string doesn't have type declarations
@@ -28,7 +28,7 @@ export const performanceCommand = new Command('performance')
   .option('--export <format>', 'Export performance data (json, csv, xlsx)', 'json')
   .option('--period <days>', 'Report period in days', '7')
   .option('--preset <preset>', 'Performance preset (development, production, strict)', 'development')
-  .action(async (options) => {
+  .action(async (_options) => {
     const spinner = ora('Initializing performance monitoring...').start();
     
     try {
@@ -47,25 +47,25 @@ export const performanceCommand = new Command('performance')
         },
         performance: {
           enabled: true,
-          preset: options.preset as any,
+          preset: _options.preset as any,
           realTimeMonitoring: true,
           alerting: true
         },
         analytics: {
           enabled: true,
-          dataRetention: parseInt(options.period, 10),
+          dataRetention: parseInt(_options.period, 10),
           anonymizeData: false,
-          exportFormat: options.export as any
+          exportFormat: _options.export as any
         }
       });
 
       // Initialize Performance Integration Service
       const performanceService = new PerformanceIntegrationService({
-        preset: options.preset as any,
+        preset: _options.preset as any,
         realTimeMonitoring: true,
         alerting: true,
         analytics: true,
-        dataRetention: parseInt(options.period, 10)
+        dataRetention: parseInt(_options.period, 10)
       }, enterpriseCLI['logger']);
 
       await performanceService.initialize();
@@ -73,45 +73,45 @@ export const performanceCommand = new Command('performance')
       spinner.succeed('Performance services initialized successfully');
 
       // Validate project path
-      const projectPath = path.resolve(options.project);
+      const projectPath = path.resolve(_options.project);
       if (!fs.existsSync(projectPath)) {
         console.error(chalk.red(`❌ Project path does not exist: ${projectPath}`));
         process.exit(1);
       }
 
       // Start monitoring if requested
-      if (options.monitor) {
-        await startMonitoring(performanceService, projectPath, options);
+      if (_options.monitor) {
+        await startMonitoring(performanceService, projectPath, _options);
       }
 
       // Get snapshot if requested
-      if (options.snapshot) {
-        await getPerformanceSnapshot(performanceService, options);
+      if (_options.snapshot) {
+        await getPerformanceSnapshot(performanceService, _options);
       }
 
       // Generate report if requested
-      if (options.report) {
-        await generatePerformanceReport(performanceService, projectPath, options);
+      if (_options.report) {
+        await generatePerformanceReport(performanceService, projectPath, _options);
       }
 
       // Show trends if requested
-      if (options.trends) {
-        await showPerformanceTrends(performanceService, options);
+      if (_options.trends) {
+        await showPerformanceTrends(performanceService, _options);
       }
 
       // Show alerts if requested
-      if (options.alerts) {
-        await showPerformanceAlerts(performanceService, options);
+      if (_options.alerts) {
+        await showPerformanceAlerts(performanceService, _options);
       }
 
       // Set thresholds if requested
-      if (options.thresholds) {
-        await setPerformanceThresholds(performanceService, options);
+      if (_options.thresholds) {
+        await setPerformanceThresholds(performanceService, _options);
       }
 
       // If no specific action requested, show dashboard
-      if (!options.monitor && !options.snapshot && !options.report && !options.trends && !options.alerts && !options.thresholds) {
-        await showPerformanceDashboard(performanceService, projectPath, options);
+      if (!_options.monitor && !_options.snapshot && !_options.report && !_options.trends && !_options.alerts && !_options.thresholds) {
+        await showPerformanceDashboard(performanceService, projectPath, _options);
       }
 
       // Cleanup
@@ -128,7 +128,7 @@ export const performanceCommand = new Command('performance')
 async function startMonitoring(
   performanceService: PerformanceIntegrationService,
   projectPath: string,
-  options: any
+  _options: any
 ): Promise<void> {
   const spinner = ora('Starting real-time performance monitoring...').start();
 
@@ -159,11 +159,12 @@ async function startMonitoring(
     });
 
     // Keep the process running
-    process.on('SIGINT', async () => {
+    process.on('SIGINT', () => {
       console.log(chalk.yellow('\n🛑 Stopping performance monitoring...'));
-      await performanceService.stopMonitoring();
-      console.log(chalk.green('✅ Performance monitoring stopped'));
-      process.exit(0);
+      performanceService.stopMonitoring().then(() => {
+        console.log(chalk.green('✅ Performance monitoring stopped'));
+        process.exit(0);
+      }).catch(() => undefined);
     });
 
     // Keep alive
@@ -177,7 +178,7 @@ async function startMonitoring(
 
 async function getPerformanceSnapshot(
   performanceService: PerformanceIntegrationService,
-  options: any
+  _options: any
 ): Promise<void> {
   const spinner = ora('Getting performance snapshot...').start();
 
@@ -186,7 +187,7 @@ async function getPerformanceSnapshot(
     spinner.succeed('Performance snapshot captured');
 
     // Display snapshot
-    displayPerformanceSnapshot(snapshot, options);
+    displayPerformanceSnapshot(snapshot, _options);
 
   } catch (error) {
     spinner.fail('Failed to get performance snapshot');
@@ -197,14 +198,14 @@ async function getPerformanceSnapshot(
 async function generatePerformanceReport(
   performanceService: PerformanceIntegrationService,
   projectPath: string,
-  options: any
+  _options: any
 ): Promise<void> {
   const spinner = ora('Generating performance report...').start();
 
   try {
     const projectId = path.basename(projectPath);
     const period = {
-      start: new Date(Date.now() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000),
+      start: new Date(Date.now() - parseInt(_options.period, 10) * 24 * 60 * 60 * 1000),
       end: new Date()
     };
 
@@ -218,11 +219,11 @@ async function generatePerformanceReport(
     spinner.succeed('Performance report generated');
 
     // Display report
-    displayPerformanceReport(report, options);
+    displayPerformanceReport(report, _options);
 
     // Export if requested
-    if (options.export) {
-      const exportPath = await performanceService.exportData(options.export, {
+    if (_options.export) {
+      const exportPath = await performanceService.exportData(_options.export, {
         period,
         includeSnapshots: true,
         includeReports: true
@@ -238,13 +239,13 @@ async function generatePerformanceReport(
 
 async function showPerformanceTrends(
   performanceService: PerformanceIntegrationService,
-  options: any
+  _options: any
 ): Promise<void> {
   const spinner = ora('Analyzing performance trends...').start();
 
   try {
     const period = {
-      start: new Date(Date.now() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000),
+      start: new Date(Date.now() - parseInt(_options.period, 10) * 24 * 60 * 60 * 1000),
       end: new Date()
     };
 
@@ -252,7 +253,7 @@ async function showPerformanceTrends(
     spinner.succeed('Performance trends analyzed');
 
     // Display trends
-    displayPerformanceTrends(trends, options);
+    displayPerformanceTrends(trends, _options);
 
   } catch (error) {
     spinner.fail('Failed to analyze performance trends');
@@ -262,7 +263,7 @@ async function showPerformanceTrends(
 
 async function showPerformanceAlerts(
   performanceService: PerformanceIntegrationService,
-  options: any
+  _options: any
 ): Promise<void> {
   const spinner = ora('Checking performance alerts...').start();
 
@@ -273,7 +274,7 @@ async function showPerformanceAlerts(
     spinner.succeed('Performance alerts checked');
 
     // Display alerts
-    displayPerformanceAlerts(alerts, options);
+    displayPerformanceAlerts(alerts, _options);
 
   } catch (error) {
     spinner.fail('Failed to get performance alerts');
@@ -283,7 +284,7 @@ async function showPerformanceAlerts(
 
 async function setPerformanceThresholds(
   performanceService: PerformanceIntegrationService,
-  options: any
+  _options: any
 ): Promise<void> {
   console.log(chalk.blue('\n⚙️  Performance Thresholds Configuration'));
   console.log(chalk.gray('='.repeat(50)));
@@ -316,8 +317,8 @@ async function setPerformanceThresholds(
 
 async function showPerformanceDashboard(
   performanceService: PerformanceIntegrationService,
-  projectPath: string,
-  options: any
+  _projectPath: string,
+  _options: any
 ): Promise<void> {
   console.log(chalk.blue('\n📊 Performance Dashboard'));
   console.log(chalk.gray('='.repeat(50)));
@@ -337,14 +338,14 @@ async function showPerformanceDashboard(
     const alerts = await performanceService.getAlerts({ limit: 5 });
 
     // Display dashboard
-    displayPerformanceDashboard(snapshot, trends, alerts, options);
+    displayPerformanceDashboard(snapshot, trends, alerts, _options);
 
   } catch (error) {
     console.error(chalk.red('Failed to load performance dashboard:'), error);
   }
 }
 
-function displayPerformanceSnapshot(snapshot: any, options: any): void {
+function displayPerformanceSnapshot(snapshot: any, _options: any): void {
   console.log(chalk.blue('\n📊 Performance Snapshot'));
   console.log(chalk.gray('='.repeat(50)));
 
@@ -400,7 +401,7 @@ function displayPerformanceSnapshot(snapshot: any, options: any): void {
   }
 }
 
-function displayPerformanceReport(report: any, options: any): void {
+function displayPerformanceReport(report: any, _options: any): void {
   console.log(chalk.blue('\n📊 Performance Report'));
   console.log(chalk.gray('='.repeat(50)));
 
@@ -439,7 +440,7 @@ function displayPerformanceReport(report: any, options: any): void {
   }
 }
 
-function displayPerformanceTrends(trends: any, options: any): void {
+function displayPerformanceTrends(trends: any, _options: any): void {
   console.log(chalk.blue('\n📈 Performance Trends'));
   console.log(chalk.gray('='.repeat(50)));
 
@@ -479,7 +480,7 @@ function displayPerformanceTrends(trends: any, options: any): void {
   console.log(chalk.gray(`   • Trend: ${getTrendIcon(renderChange < -2 ? 'improving' : renderChange > 2 ? 'degrading' : 'stable')}`));
 }
 
-function displayPerformanceAlerts(alerts: any[], options: any): void {
+function displayPerformanceAlerts(alerts: any[], _options: any): void {
   console.log(chalk.blue('\n⚠️  Performance Alerts'));
   console.log(chalk.gray('='.repeat(50)));
 
@@ -497,7 +498,7 @@ function displayPerformanceAlerts(alerts: any[], options: any): void {
   });
 }
 
-function displayPerformanceDashboard(snapshot: any, trends: any, alerts: any[], options: any): void {
+function displayPerformanceDashboard(snapshot: any, trends: any, alerts: any[], _options: any): void {
   console.log(chalk.blue('\n📊 Performance Dashboard'));
   console.log(chalk.gray('='.repeat(50)));
 

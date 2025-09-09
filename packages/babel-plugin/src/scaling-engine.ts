@@ -22,7 +22,7 @@ export class ScalingEngine {
     token?: string
   ): number {
     // Create cache key
-    const cacheKey = `${baseValue}-${fromBreakpoint.width}-${toBreakpoint.width}-${token || 'default'}`;
+    const cacheKey = `${baseValue}-${fromBreakpoint.width}-${toBreakpoint.width}-${token ?? 'default'}`;
     
     // Check cache first
     if (this.cache.has(cacheKey)) {
@@ -151,7 +151,7 @@ export class ScalingEngine {
     const result: Record<string, string> = {};
     
     for (const [breakpoint, value] of Object.entries(scaledValues)) {
-      const unit = token && this.config.strategy.tokens[token]?.unit || 'px';
+      const unit = (token && this.config.strategy.tokens[token]?.unit) ?? 'px';
       result[`--${propertyName}-${breakpoint}`] = `${value}${unit}`;
     }
     

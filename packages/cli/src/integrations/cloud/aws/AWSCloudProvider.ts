@@ -570,7 +570,7 @@ export class AWSCloudProvider extends EventEmitter {
         subnetId: config.subnetId,
         availabilityZone: `${this.config.region}a`,
         launchTime: new Date(),
-        tags: config.tags || {},
+        tags: config.tags ?? {},
         metadata: {
           architecture: 'x86_64',
           virtualization: 'hvm',
@@ -621,12 +621,12 @@ export class AWSCloudProvider extends EventEmitter {
         name: config.name,
         region: config.region,
         creationDate: new Date(),
-        versioning: config.versioning || false,
-        encryption: config.encryption || false,
-        publicAccessBlock: config.publicAccessBlock || true,
-        cors: config.cors || [],
-        lifecycle: config.lifecycle || [],
-        tags: config.tags || {}
+        versioning: config.versioning ?? false,
+        encryption: config.encryption ?? false,
+        publicAccessBlock: config.publicAccessBlock ?? true,
+        cors: config.cors ?? [],
+        lifecycle: config.lifecycle ?? [],
+        tags: config.tags ?? {}
       };
 
       this.s3.buckets.push(bucket);
@@ -661,13 +661,13 @@ export class AWSCloudProvider extends EventEmitter {
         handler: config.handler,
         codeSize: config.code.length,
         description: config.description ?? 'AWS Lambda function',
-        timeout: config.timeout || 3,
-        memorySize: config.memorySize || 128,
+        timeout: config.timeout ?? 3,
+        memorySize: config.memorySize ?? 128,
         lastModified: new Date(),
         codeSha256: 'sha256-hash',
         version: '$LATEST',
         environment: config.environment ?? {},
-        tags: config.tags || {}
+        tags: config.tags ?? {}
       };
 
       this.lambda.functions.push(function_);
@@ -695,10 +695,10 @@ export class AWSCloudProvider extends EventEmitter {
         id: `arn:aws:cloudformation:${this.config.region}:123456789012:stack/${config.name}/uuid`,
         name: config.name,
         status: 'CREATE_IN_PROGRESS',
-        parameters: config.parameters || {},
+        parameters: config.parameters ?? {},
         outputs: {},
-        capabilities: config.capabilities || [],
-        tags: config.tags || {},
+        capabilities: config.capabilities ?? [],
+        tags: config.tags ?? {},
         creationTime: new Date(),
         notificationARNs: []
       };
@@ -751,7 +751,7 @@ export class AWSCloudProvider extends EventEmitter {
   /**
    * Get pricing information
    */
-  async getPricing(region: string): Promise<AWSPricing> {
+  async getPricing(_region: string): Promise<AWSPricing> {
     // Mock pricing data
     return {
       currency: 'USD',

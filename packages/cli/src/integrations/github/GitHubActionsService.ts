@@ -9,7 +9,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as _uuidv4 } from 'uuid';
 
 export interface GitHubWorkflow {
   id: string;
@@ -155,7 +155,7 @@ export class GitHubActionsService extends EventEmitter {
       if (options.per_page) params.append('per_page', options.per_page.toString());
 
       const response = await this.request('GET', `/repos/${this.owner}/${this.repo}/actions/workflows/${workflowId}/runs?${params}`);
-      return response.workflow_runs || [];
+      return response.workflow_runs ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get workflow runs: ${error}`));
       throw error;
@@ -181,7 +181,7 @@ export class GitHubActionsService extends EventEmitter {
   async getWorkflowRunJobs(runId: number): Promise<GitHubJob[]> {
     try {
       const response = await this.request('GET', `/repos/${this.owner}/${this.repo}/actions/runs/${runId}/jobs`);
-      return response.jobs || [];
+      return response.jobs ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get workflow run jobs: ${error}`));
       throw error;
@@ -235,7 +235,7 @@ export class GitHubActionsService extends EventEmitter {
   async getSecrets(): Promise<GitHubSecret[]> {
     try {
       const response = await this.request('GET', `/repos/${this.owner}/${this.repo}/actions/secrets`);
-      return response.secrets || [];
+      return response.secrets ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get secrets: ${error}`));
       throw error;
@@ -265,7 +265,7 @@ export class GitHubActionsService extends EventEmitter {
   async getVariables(): Promise<GitHubVariable[]> {
     try {
       const response = await this.request('GET', `/repos/${this.owner}/${this.repo}/actions/variables`);
-      return response.variables || [];
+      return response.variables ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get variables: ${error}`));
       throw error;
@@ -294,7 +294,7 @@ export class GitHubActionsService extends EventEmitter {
   async getEnvironments(): Promise<GitHubEnvironment[]> {
     try {
       const response = await this.request('GET', `/repos/${this.owner}/${this.repo}/environments`);
-      return response.environments || [];
+      return response.environments ?? [];
     } catch (error) {
       this.emit('error', new Error(`Failed to get environments: ${error}`));
       throw error;
@@ -346,7 +346,7 @@ export class GitHubActionsService extends EventEmitter {
       }
 
       const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      if (contentType?.includes('application/json')) {
         return await response.json();
       } else {
         return await response.text();

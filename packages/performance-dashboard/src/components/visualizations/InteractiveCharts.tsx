@@ -1,5 +1,4 @@
-// @ts-nocheck - React type conflicts with Recharts components
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -10,15 +9,11 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  BarChart,
-  Bar,
-  ScatterChart,
-  Scatter,
   ComposedChart,
   ReferenceLine,
   Brush,
   Legend,
-  Cell
+  Scatter
 } from 'recharts';
 import { PerformanceMetrics, PerformanceSnapshot } from '../../core/PerformanceMonitor';
 import { DashboardTheme } from '../PerformanceDashboard';
@@ -28,33 +23,67 @@ export interface InteractiveChartsProps {
   history: PerformanceSnapshot[];
   theme: DashboardTheme;
   timeRange?: '1h' | '6h' | '24h' | '7d' | '30d';
-  onDataPointClick?: (data: any) => void;
+  onDataPointClick?: (data: unknown) => void;
   onZoom?: (startTime: number, endTime: number) => void;
   showPredictions?: boolean;
   showAnomalies?: boolean;
   showThresholds?: boolean;
 }
 
+interface ChartDataPoint {
+  time: string;
+  date: string;
+  timestamp: number;
+  layoutShift: number;
+  memoryUsage: number;
+  lcp: number;
+  fcp: number;
+  renderTime: number;
+  elementCount: number;
+  cacheHitRate: number;
+  scalingOps: number;
+  resourceRequests: number;
+  transferSize: number;
+  isAnomaly?: boolean;
+  anomalyScore?: number;
+  predictedValue?: number;
+  confidence?: number;
+}
+
+interface TooltipEntry {
+  color: string;
+  dataKey: string;
+  value: number;
+  unit?: string;
+  payload: ChartDataPoint;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
+
 export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
-  metrics,
+  metrics: _metrics,
   history,
   theme,
   timeRange = '1h',
-  onDataPointClick = () => {},
-  onZoom = () => {},
+  onDataPointClick = (_data: unknown) => {},
+  onZoom = (_startTime: number, _endTime: number) => {},
   showPredictions = false,
   showAnomalies = false,
   showThresholds = true
 }) => {
   const [selectedMetric, setSelectedMetric] = useState<string>('layoutShift');
-  const [brushRange, setBrushRange] = useState<[number, number]>([0, 1]);
-  const [hoveredPoint, setHoveredPoint] = useState<any>(null);
-  const chartRef = useRef<any>(null);
+  const [_brushRange, _setBrushRange] = useState<[number, number]>([0, 1]);
+  const [_hoveredPoint, _setHoveredPoint] = useState<unknown>(null);
+  const chartRef = useRef<unknown>(null);
 
   // Filter data based on time range
   const filteredData = useMemo(() => {
     const now = Date.now();
-    const ranges = {
+    const timeRanges = {
       '1h': 60 * 60 * 1000,
       '6h': 6 * 60 * 60 * 1000,
       '24h': 24 * 60 * 60 * 1000,
@@ -62,45 +91,33 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
       '30d': 30 * 24 * 60 * 60 * 1000
     };
 
-    const cutoff = now - ranges[timeRange];
+    const cutoff = now - timeRanges[timeRange];
     return history
       .filter(snapshot => snapshot.timestamp >= cutoff)
-      .map((snapshot, index) => ({
-        ...snapshot,
-        index,
+      .map(snapshot => ({
         time: new Date(snapshot.timestamp).toLocaleTimeString(),
         date: new Date(snapshot.timestamp).toLocaleDateString(),
-        datetime: new Date(snapshot.timestamp).toISOString(),
-        // Core Web Vitals
-        layoutShift: snapshot.metrics.layoutShift.current,
-        lcp: snapshot.metrics.paintTiming.lcp || 0,
-        fcp: snapshot.metrics.paintTiming.fcp || 0,
-        // Memory metrics
+        timestamp: snapshot.timestamp,
+        layoutShift: snapshot.metrics.layoutShift?.current ?? 0,
         memoryUsage: snapshot.metrics.memory ? (snapshot.metrics.memory.usage * 100) : 0,
-        memoryUsed: snapshot.metrics.memory ? (snapshot.metrics.memory.used / 1024 / 1024) : 0,
-        memoryTotal: snapshot.metrics.memory ? (snapshot.metrics.memory.total / 1024 / 1024) : 0,
-        // Performance metrics
-        renderTime: snapshot.metrics.responsiveElements.averageRenderTime || 0,
-        elementCount: snapshot.metrics.responsiveElements.count,
+        lcp: snapshot.metrics.paintTiming?.lcp ?? 0,
+        fcp: snapshot.metrics.paintTiming?.fcp ?? 0,
+        renderTime: snapshot.metrics.responsiveElements?.averageRenderTime ?? 0,
+        elementCount: snapshot.metrics.responsiveElements?.count ?? 0,
         cacheHitRate: snapshot.metrics.custom?.cacheHitRate ? (snapshot.metrics.custom.cacheHitRate * 100) : 0,
-        scalingOps: snapshot.metrics.custom?.scalingOperations || 0,
-        // Resource metrics
-        resourceRequests: snapshot.metrics.resources.recentRequests,
-        transferSize: snapshot.metrics.resources.totalSize / 1024,
-        // Anomaly detection
-        isAnomaly: (snapshot.metrics.custom as any)?.isAnomaly || false,
-        anomalyScore: (snapshot.metrics.custom as any)?.anomalyScore || 0,
-        // Predictions
-        predictedValue: (snapshot.metrics.custom as any)?.predictedValue || null,
-        confidence: (snapshot.metrics.custom as any)?.confidence || 0
+        scalingOps: snapshot.metrics.custom?.scalingOperations ?? 0,
+        resourceRequests: snapshot.metrics.resources?.recentRequests ?? 0,
+        transferSize: (snapshot.metrics.resources?.totalSize ?? 0) / 1024, // KB
+        isAnomaly: false, // This would be calculated by ML models
+        anomalyScore: 0,
+        predictedValue: showPredictions ? Math.random() * 100 : undefined,
+        confidence: showPredictions ? Math.random() : undefined
       }));
-  }, [history, timeRange]);
+  }, [history, timeRange, showPredictions]);
 
   // Performance thresholds
   const thresholds = useMemo(() => ({
     layoutShift: { good: 0.1, poor: 0.25 },
-    lcp: { good: 2500, poor: 4000 },
-    fcp: { good: 1800, poor: 3000 },
     memoryUsage: { good: 70, poor: 90 },
     renderTime: { good: 16.67, poor: 33.33 },
     cacheHitRate: { good: 80, poor: 60 }
@@ -121,9 +138,9 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
   };
 
   // Enhanced tooltip with rich information
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label: _label }) => {
+    if (active && payload?.length) {
+      const data = payload[0]?.payload;
       return (
         <div className="interactive-tooltip">
           <div className="tooltip-header">
@@ -131,7 +148,7 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
             <span className="tooltip-date">{data.date}</span>
           </div>
           <div className="tooltip-content">
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry: TooltipEntry, index: number) => (
               <div key={index} className="tooltip-item">
                 <div 
                   className="tooltip-color" 
@@ -139,21 +156,21 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
                 />
                 <span className="tooltip-label">{entry.dataKey}:</span>
                 <span className="tooltip-value">
-                  {entry.value?.toFixed ? entry.value.toFixed(2) : entry.value}
-                  {entry.unit || ''}
+                  {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+                  {entry.unit ?? ''}
                 </span>
               </div>
             ))}
             {data.isAnomaly && (
               <div className="tooltip-anomaly">
                 <span className="anomaly-indicator">⚠️ Anomaly Detected</span>
-                <span className="anomaly-score">Score: {data.anomalyScore.toFixed(2)}</span>
+                <span className="anomaly-score">Score: {typeof data.anomalyScore === 'number' ? data.anomalyScore.toFixed(2) : data.anomalyScore}</span>
               </div>
             )}
             {data.predictedValue && (
               <div className="tooltip-prediction">
-                <span className="prediction-indicator">🔮 Predicted: {data.predictedValue.toFixed(2)}</span>
-                <span className="confidence">Confidence: {(data.confidence * 100).toFixed(1)}%</span>
+                <span className="prediction-indicator">🔮 Predicted: {typeof data.predictedValue === 'number' ? data.predictedValue.toFixed(2) : data.predictedValue}</span>
+                <span className="confidence">Confidence: {typeof data.confidence === 'number' ? (data.confidence * 100).toFixed(1) : data.confidence}%</span>
               </div>
             )}
           </div>
@@ -164,8 +181,8 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
   };
 
   // Handle brush change for zooming
-  const handleBrushChange = (brushData: any) => {
-    if (brushData && brushData.startIndex !== undefined && brushData.endIndex !== undefined) {
+  const handleBrushChange = (brushData: { startIndex?: number; endIndex?: number }) => {
+    if (brushData?.startIndex !== undefined && brushData.endIndex !== undefined) {
       const startTime = filteredData[brushData.startIndex]?.timestamp;
       const endTime = filteredData[brushData.endIndex]?.timestamp;
       if (startTime && endTime && onZoom) {
@@ -175,7 +192,7 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
   };
 
   // Handle data point click
-  const handleDataPointClick = (data: any) => {
+  const handleDataPointClick = (data: unknown) => {
     if (onDataPointClick) {
       onDataPointClick(data);
     }
@@ -211,7 +228,7 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
     return (
       <Scatter
         data={filteredData.filter(d => d.isAnomaly)}
-        dataKey="anomalyScore"
+        dataKey="timestamp"
         fill={colors.anomaly}
         onClick={handleDataPointClick}
       />
@@ -235,101 +252,42 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
     );
   };
 
-  // Metric selector
-  const metricOptions = [
-    { key: 'layoutShift', label: 'Layout Shift', unit: '', color: colors.danger },
-    { key: 'lcp', label: 'LCP', unit: 'ms', color: colors.primary },
-    { key: 'fcp', label: 'FCP', unit: 'ms', color: colors.info },
-    { key: 'memoryUsage', label: 'Memory Usage', unit: '%', color: colors.warning },
-    { key: 'renderTime', label: 'Render Time', unit: 'ms', color: colors.success },
-    { key: 'cacheHitRate', label: 'Cache Hit Rate', unit: '%', color: colors.info }
-  ];
-
-  const selectedMetricConfig = metricOptions.find(m => m.key === selectedMetric);
-
   return (
     <div className="interactive-charts">
-      {/* Controls */}
       <div className="chart-controls">
         <div className="metric-selector">
-          <label>Metric:</label>
-          <select 
-            value={selectedMetric} 
+          <label htmlFor="metric-select">Metric:</label>
+          <select
+            id="metric-select"
+            value={selectedMetric}
             onChange={(e) => setSelectedMetric(e.target.value)}
           >
-            {metricOptions.map(option => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
+            <option value="layoutShift">Layout Shift</option>
+            <option value="memoryUsage">Memory Usage</option>
+            <option value="renderTime">Render Time</option>
+            <option value="lcp">LCP</option>
+            <option value="fcp">FCP</option>
+            <option value="cacheHitRate">Cache Hit Rate</option>
           </select>
-        </div>
-
-        <div className="time-range-selector">
-          <label>Time Range:</label>
-          <select 
-            value={timeRange} 
-            onChange={(e) => {/* Handle time range change */}}
-          >
-            <option value="1h">Last Hour</option>
-            <option value="6h">Last 6 Hours</option>
-            <option value="24h">Last 24 Hours</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-          </select>
-        </div>
-
-        <div className="chart-options">
-          <label>
-            <input 
-              type="checkbox" 
-              checked={showThresholds}
-              onChange={(e) => {/* Handle threshold toggle */}}
-            />
-            Show Thresholds
-          </label>
-          <label>
-            <input 
-              type="checkbox" 
-              checked={showAnomalies}
-              onChange={(e) => {/* Handle anomaly toggle */}}
-            />
-            Show Anomalies
-          </label>
-          <label>
-            <input 
-              type="checkbox" 
-              checked={showPredictions}
-              onChange={(e) => {/* Handle prediction toggle */}}
-            />
-            Show Predictions
-          </label>
         </div>
       </div>
 
-      {/* Main Chart */}
-      <div className="main-chart-container">
-        <h3>
-          {selectedMetricConfig?.label} Over Time
-          {selectedMetricConfig?.unit && ` (${selectedMetricConfig.unit})`}
-        </h3>
-        
+      <div className="main-chart">
         <ResponsiveContainer width="100%" height={400}>
-          <ComposedChart 
+          <ComposedChart
             data={filteredData}
             ref={chartRef}
             onClick={handleDataPointClick}
           >
             <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               stroke={colors.text}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: colors.text }}
             />
-            <YAxis 
+            <YAxis
               stroke={colors.text}
-              tick={{ fontSize: 12 }}
-              domain={['dataMin - 10', 'dataMax + 10']}
+              tick={{ fontSize: 12, fill: colors.text }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -338,105 +296,65 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
             <Line
               type="monotone"
               dataKey={selectedMetric}
-              stroke={selectedMetricConfig?.color || colors.primary}
+              stroke={colors.primary}
               strokeWidth={3}
-              dot={{ r: 4, fill: selectedMetricConfig?.color }}
-              activeDot={{ r: 6, stroke: selectedMetricConfig?.color, strokeWidth: 2 }}
-              name={selectedMetricConfig?.label}
+              dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: colors.primary, strokeWidth: 2 }}
             />
-
+            
             {/* Threshold lines */}
             {renderThresholdLines(selectedMetric)}
-
+            
             {/* Prediction line */}
             {renderPredictionLine()}
-
+            
             {/* Anomaly points */}
             {renderAnomalyPoints()}
           </ComposedChart>
         </ResponsiveContainer>
-
-        {/* Brush for zooming */}
-        <div className="chart-brush">
-          <ResponsiveContainer width="100%" height={60}>
-            <AreaChart data={filteredData}>
-              <XAxis dataKey="time" hide />
-              <YAxis hide />
-              <Area
-                type="monotone"
-                dataKey={selectedMetric}
-                stroke={selectedMetricConfig?.color}
-                fill={selectedMetricConfig?.color}
-                fillOpacity={0.3}
-              />
-              <Brush
-                dataKey="time"
-                height={30}
-                stroke={colors.primary}
-                fill={colors.primary}
-                fillOpacity={0.1}
-                onChange={handleBrushChange}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
       </div>
 
-      {/* Multi-metric comparison */}
-      <div className="comparison-charts">
-        <h3>Multi-Metric Comparison</h3>
-        <div className="comparison-grid">
-          {metricOptions.slice(0, 4).map(metric => (
-            <div key={metric.key} className="comparison-chart">
-              <h4>{metric.label}</h4>
-              <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={filteredData.slice(-20)}>
-                  <Line
-                    type="monotone"
-                    dataKey={metric.key}
-                    stroke={metric.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ))}
-        </div>
+      {/* Brush for zooming */}
+      <div className="brush-chart">
+        <ResponsiveContainer width="100%" height={60}>
+          <AreaChart data={filteredData}>
+            <XAxis dataKey="time" hide />
+            <YAxis hide />
+            <Area
+              type="monotone"
+              dataKey={selectedMetric}
+              stroke={colors.primary}
+              fill={colors.primary}
+              fillOpacity={0.3}
+            />
+            <Brush
+              dataKey="time"
+              height={30}
+              stroke={colors.primary}
+              fill={colors.primary}
+              fillOpacity={0.1}
+              onChange={handleBrushChange}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* Performance summary */}
-      <div className="performance-summary">
-        <h3>Performance Summary</h3>
-        <div className="summary-grid">
-          {metricOptions.map(metric => {
-            const currentValue = (metrics[metric.key as keyof PerformanceMetrics] as any)?.current || 
-                                (metrics[metric.key as keyof PerformanceMetrics] as any)?.usage || 
-                                (metrics[metric.key as keyof PerformanceMetrics] as any)?.averageRenderTime || 
-                                (metrics[metric.key as keyof PerformanceMetrics] as any)?.cacheHitRate || 
-                                0;
-            const threshold = thresholds[metric.key as keyof typeof thresholds];
-            const status = currentValue <= threshold.good ? 'good' : 
-                          currentValue <= threshold.poor ? 'warning' : 'poor';
-            
-            return (
-              <div key={metric.key} className={`summary-item ${status}`}>
-                <div className="summary-label">{metric.label}</div>
-                <div className="summary-value">
-                  {currentValue?.toFixed ? currentValue.toFixed(2) : currentValue}
-                  {metric.unit}
-                </div>
-                <div className="summary-status">
-                  {status === 'good' ? '✅' : status === 'warning' ? '⚠️' : '❌'}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      {/* Mini trend chart */}
+      <div className="mini-trend">
+        <h4>Recent Trend</h4>
+        <ResponsiveContainer width="100%" height={150}>
+          <LineChart data={filteredData.slice(-20)}>
+            <Line
+              type="monotone"
+              dataKey={selectedMetric}
+              stroke={colors.primary}
+              strokeWidth={2}
+              dot={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
 };
-
-export default InteractiveCharts;

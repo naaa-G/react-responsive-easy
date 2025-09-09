@@ -9,10 +9,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AddonPanel } from '@storybook/components';
 import { EVENTS } from '../constants';
 import { ResponsiveControls } from './ResponsiveControls';
-import { PerformanceMetrics } from './PerformanceMetrics';
+import { PerformanceMetrics as PerformanceMetricsComponent } from './PerformanceMetrics';
 import { BreakpointPreview } from './BreakpointPreview';
 import { ResponsiveDocumentation } from './ResponsiveDocumentation';
-import type { AddonPanelProps, ResponsiveState } from '../types';
+import type { AddonPanelProps, ResponsiveState, BreakpointConfig, PerformanceMetrics } from '../types';
+import type { ResponsiveConfig } from '@react-responsive-easy/core';
 
 export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
   const [state, setState] = useState<ResponsiveState>({
@@ -35,9 +36,9 @@ export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
       if (parameters) {
         setState(prevState => ({
           ...prevState,
-          config: parameters.config || null,
-          availableBreakpoints: parameters.breakpoints || [],
-          currentBreakpoint: parameters.breakpoints?.[0] || null
+        config: parameters.config ?? null,
+        availableBreakpoints: parameters.breakpoints ?? [],
+        currentBreakpoint: parameters.breakpoints?.[0] ?? null
         }));
       }
     };
@@ -52,7 +53,7 @@ export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
   }, [api]);
 
   // Handle breakpoint changes
-  const handleBreakpointChange = useCallback((breakpoint: any) => {
+  const handleBreakpointChange = useCallback((breakpoint: BreakpointConfig) => {
     setState(prevState => ({
       ...prevState,
       currentBreakpoint: breakpoint
@@ -78,7 +79,7 @@ export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
   }, [api]);
 
   // Handle config updates
-  const handleConfigUpdate = useCallback((config: any) => {
+  const handleConfigUpdate = useCallback((config: ResponsiveConfig) => {
     setState(prevState => ({
       ...prevState,
       config
@@ -95,7 +96,7 @@ export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
 
   // Listen for performance data updates
   useEffect(() => {
-    const handlePerformanceData = (data: any) => {
+    const handlePerformanceData = (data: PerformanceMetrics) => {
       setState(prevState => ({
         ...prevState,
         performanceData: data
@@ -188,7 +189,7 @@ export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
           )}
           
           {activeTab === 'performance' && (
-            <PerformanceMetrics
+            <PerformanceMetricsComponent
               data={state.performanceData}
               isVisible={state.isPerformanceVisible}
             />

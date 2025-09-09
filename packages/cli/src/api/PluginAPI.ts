@@ -9,7 +9,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as _uuidv4 } from 'uuid';
 
 // Plugin API Types
 export interface PluginAPI {
@@ -672,7 +672,7 @@ class CommandAPIImplementation implements CommandAPI {
     if (!command) {
       throw new Error(`Command not found: ${commandId}`);
     }
-    return await command.handler(args, options, {} as CommandContext);
+    return command.handler(args, options, {} as CommandContext);
   }
 
   list(): PluginCommandDefinition[] {
@@ -680,7 +680,7 @@ class CommandAPIImplementation implements CommandAPI {
   }
 
   get(commandId: string): PluginCommandDefinition | null {
-    return this.commands.get(commandId) || null;
+    return this.commands.get(commandId) ?? null;
   }
 }
 
@@ -718,7 +718,7 @@ class HookAPIImplementation implements HookAPI {
   }
 
   get(hookId: string): PluginHookDefinition | null {
-    return this.hooks.get(hookId) || null;
+    return this.hooks.get(hookId) ?? null;
   }
 }
 
@@ -749,7 +749,7 @@ class ConfigAPIImplementation implements ConfigAPI {
     return Object.fromEntries(this.config);
   }
 
-  validate(schema: ConfigSchema): boolean {
+  validate(_schema: ConfigSchema): boolean {
     // Mock implementation
     return true;
   }
@@ -811,124 +811,124 @@ class LoggerAPIImplementation implements LoggerAPI {
     return this.level;
   }
 
-  addTransport(transport: LogTransport): void {
+  addTransport(_transport: LogTransport): void {
     // Mock implementation
   }
 
-  removeTransport(transport: LogTransport): void {
+  removeTransport(_transport: LogTransport): void {
     // Mock implementation
   }
 }
 
 class FileSystemAPIImplementation implements FileSystemAPI {
-  async readFile(path: string, encoding?: string): Promise<string> {
+  async readFile(_path: string, _encoding?: string): Promise<string> {
     // Mock implementation
     return '';
   }
 
-  async writeFile(path: string, data: string, encoding?: string): Promise<void> {
+  async writeFile(_path: string, _data: string, _encoding?: string): Promise<void> {
     // Mock implementation
   }
 
-  async appendFile(path: string, data: string, encoding?: string): Promise<void> {
+  async appendFile(_path: string, _data: string, _encoding?: string): Promise<void> {
     // Mock implementation
   }
 
-  async readDir(path: string): Promise<string[]> {
+  async readDir(_path: string): Promise<string[]> {
     // Mock implementation
     return [];
   }
 
-  async mkdir(path: string, recursive?: boolean): Promise<void> {
+  async mkdir(_path: string, _recursive?: boolean): Promise<void> {
     // Mock implementation
   }
 
-  async rmdir(path: string, recursive?: boolean): Promise<void> {
+  async rmdir(_path: string, _recursive?: boolean): Promise<void> {
     // Mock implementation
   }
 
-  async unlink(path: string): Promise<void> {
+  async unlink(_path: string): Promise<void> {
     // Mock implementation
   }
 
-  async stat(path: string): Promise<FileStats> {
+  async stat(_path: string): Promise<FileStats> {
     // Mock implementation
     return {} as FileStats;
   }
 
-  async exists(path: string): Promise<boolean> {
+  async exists(_path: string): Promise<boolean> {
     // Mock implementation
     return false;
   }
 
-  async copy(src: string, dest: string): Promise<void> {
+  async copy(_src: string, _dest: string): Promise<void> {
     // Mock implementation
   }
 
-  async move(src: string, dest: string): Promise<void> {
+  async move(_src: string, _dest: string): Promise<void> {
     // Mock implementation
   }
 
-  async chmod(path: string, mode: string | number): Promise<void> {
+  async chmod(_path: string, _mode: string | number): Promise<void> {
     // Mock implementation
   }
 
-  async chown(path: string, uid: number, gid: number): Promise<void> {
+  async chown(_path: string, _uid: number, _gid: number): Promise<void> {
     // Mock implementation
   }
 
-  watch(path: string, callback: (event: string, filename: string) => void): FileWatcher {
+  watch(_path: string, _callback: (event: string, filename: string) => void): FileWatcher {
     // Mock implementation
     return {} as FileWatcher;
   }
 
-  async glob(pattern: string, options?: GlobOptions): Promise<string[]> {
+  async glob(_pattern: string, _options?: GlobOptions): Promise<string[]> {
     // Mock implementation
     return [];
   }
 }
 
 class NetworkAPIImplementation implements NetworkAPI {
-  async get(url: string, options?: RequestOptions): Promise<Response> {
+  async get(_url: string, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async post(url: string, data?: any, options?: RequestOptions): Promise<Response> {
+  async post(_url: string, _data?: any, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async put(url: string, data?: any, options?: RequestOptions): Promise<Response> {
+  async put(_url: string, _data?: any, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async delete(url: string, options?: RequestOptions): Promise<Response> {
+  async delete(_url: string, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async patch(url: string, data?: any, options?: RequestOptions): Promise<Response> {
+  async patch(_url: string, _data?: any, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async head(url: string, options?: RequestOptions): Promise<Response> {
+  async head(_url: string, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async options(url: string, options?: RequestOptions): Promise<Response> {
+  async options(_url: string, _options?: RequestOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
 
-  async download(url: string, dest: string, options?: DownloadOptions): Promise<void> {
+  async download(_url: string, _dest: string, _options?: DownloadOptions): Promise<void> {
     // Mock implementation
   }
 
-  async upload(url: string, file: string, options?: UploadOptions): Promise<Response> {
+  async upload(_url: string, _file: string, _options?: UploadOptions): Promise<Response> {
     // Mock implementation
     return {} as Response;
   }
@@ -942,23 +942,23 @@ class SecurityAPIImplementation implements SecurityAPI {
 }
 
 class AnalyticsAPIImplementation implements AnalyticsAPI {
-  track(event: string, properties?: Record<string, any>): void {
+  track(_event: string, _properties?: Record<string, any>): void {
     // Mock implementation
   }
 
-  identify(userId: string, traits?: Record<string, any>): void {
+  identify(_userId: string, _traits?: Record<string, any>): void {
     // Mock implementation
   }
 
-  page(name: string, properties?: Record<string, any>): void {
+  page(_name: string, _properties?: Record<string, any>): void {
     // Mock implementation
   }
 
-  group(groupId: string, traits?: Record<string, any>): void {
+  group(_groupId: string, _traits?: Record<string, any>): void {
     // Mock implementation
   }
 
-  alias(previousId: string, userId: string): void {
+  alias(_previousId: string, _userId: string): void {
     // Mock implementation
   }
 
@@ -971,10 +971,22 @@ class EventAPIImplementation implements EventAPI {
   private eventEmitter = new EventEmitter();
 
   on(event: string, handler: EventHandler): void {
-    this.eventEmitter.on(event, handler);
+    this.eventEmitter.on(event, (data) => {
+      // Handle async event handlers properly
+      try {
+        const result = handler(data);
+        if (result && typeof result.catch === 'function') {
+          result.catch(() => undefined);
+        }
+      } catch (error) {
+        // Handle sync errors
+        console.error('Event handler error:', error);
+      }
+    });
   }
 
   off(event: string, handler: EventHandler): void {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.eventEmitter.off(event, handler);
   }
 
@@ -983,7 +995,12 @@ class EventAPIImplementation implements EventAPI {
   }
 
   once(event: string, handler: EventHandler): void {
-    this.eventEmitter.once(event, handler);
+    this.eventEmitter.once(event, (data) => {
+      const result = handler(data);
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => {});
+      }
+    });
   }
 
   removeAllListeners(event?: string): void {

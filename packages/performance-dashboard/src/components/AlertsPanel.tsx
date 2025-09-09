@@ -12,7 +12,7 @@ export interface AlertsPanelProps {
 export const AlertsPanel: React.FC<AlertsPanelProps> = ({
   alerts,
   onAlertClick,
-  theme,
+  theme: _theme,
   expanded = false
 }) => {
   const [filter, setFilter] = useState<'all' | 'critical' | 'warning' | 'info'>('all');
@@ -20,14 +20,15 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
   // Filter and sort alerts
   const filteredAlerts = alerts
-    .filter(alert => filter === 'all' || alert.severity === filter)
-    .sort((a, b) => {
+    .filter((alert: PerformanceAlert) => filter === 'all' || alert.severity === filter)
+    .sort((a: PerformanceAlert, b: PerformanceAlert) => {
       switch (sortBy) {
         case 'timestamp':
           return b.timestamp - a.timestamp;
-        case 'severity':
-          const severityOrder = { critical: 3, warning: 2, info: 1 };
-          return severityOrder[b.severity] - severityOrder[a.severity];
+        case 'severity': {
+          const severityOrder: Record<string, number> = { critical: 3, warning: 2, info: 1 };
+          return (severityOrder[b.severity] ?? 0) - (severityOrder[a.severity] ?? 0);
+        }
         case 'type':
           return a.type.localeCompare(b.type);
         default:
@@ -36,8 +37,8 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
     });
 
   // Get severity counts
-  const severityCounts = alerts.reduce((counts, alert) => {
-    counts[alert.severity] = (counts[alert.severity] || 0) + 1;
+  const severityCounts = alerts.reduce((counts: Record<string, number>, alert: PerformanceAlert) => {
+    counts[alert.severity] = (counts[alert.severity] ?? 0) + 1;
     return counts;
   }, {} as Record<string, number>);
 
@@ -86,15 +87,15 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
           
           <div className="alerts-summary">
             <div className={`alert-count critical ${severityCounts.critical ? 'active' : ''}`}>
-              <span className="count">{severityCounts.critical || 0}</span>
+              <span className="count">{severityCounts.critical ?? 0}</span>
               <span className="label">Critical</span>
             </div>
             <div className={`alert-count warning ${severityCounts.warning ? 'active' : ''}`}>
-              <span className="count">{severityCounts.warning || 0}</span>
+              <span className="count">{severityCounts.warning ?? 0}</span>
               <span className="label">Warning</span>
             </div>
             <div className={`alert-count info ${severityCounts.info ? 'active' : ''}`}>
-              <span className="count">{severityCounts.info || 0}</span>
+              <span className="count">{severityCounts.info ?? 0}</span>
               <span className="label">Info</span>
             </div>
           </div>
@@ -103,7 +104,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
         <div className="alerts-controls">
           <div className="filter-controls">
             <label>Filter:</label>
-            <select value={filter} onChange={(e) => setFilter(e.target.value as any)}>
+            <select value={filter} onChange={(e) => setFilter(e.target.value as 'all' | 'critical' | 'warning' | 'info')}>
               <option value="all">All Alerts</option>
               <option value="critical">Critical</option>
               <option value="warning">Warning</option>
@@ -113,7 +114,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
           <div className="sort-controls">
             <label>Sort by:</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'timestamp' | 'severity' | 'type')}>
               <option value="timestamp">Time</option>
               <option value="severity">Severity</option>
               <option value="type">Type</option>

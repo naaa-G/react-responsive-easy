@@ -10,10 +10,8 @@
 
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { AWSCloudProvider } from '../integrations/cloud/aws/AWSCloudProvider';
-import { AzureCloudProvider } from '../integrations/cloud/azure/AzureCloudProvider';
-import { GCPCloudProvider } from '../integrations/cloud/gcp/GCPCloudProvider';
-import chalk from 'chalk';
+// Cloud providers are imported dynamically as needed
+import _chalk from 'chalk';
 
 // Cloud Types
 export interface CloudProvider {
@@ -23,7 +21,7 @@ export interface CloudProvider {
   status: CloudProviderStatus;
   config: CloudProviderServiceConfig;
   regions: CloudRegion[];
-  services: CloudService[];
+  services: CloudServiceInstance[];
   credentials: CloudCredentials;
   metadata: CloudProviderMetadata;
 }
@@ -134,7 +132,7 @@ export interface CloudDatabasePricing {
   monitoring: number;
 }
 
-export interface CloudService {
+export interface CloudServiceInstance {
   id: string;
   name: string;
   type: CloudServiceType;
@@ -1116,7 +1114,7 @@ export class CloudService extends EventEmitter {
    * Get cloud provider
    */
   getProvider(providerId: string): CloudProvider | null {
-    return this.providers.get(providerId) || null;
+    return this.providers.get(providerId) ?? null;
   }
 
   /**
@@ -1130,7 +1128,7 @@ export class CloudService extends EventEmitter {
    * Get deployment
    */
   getDeployment(deploymentId: string): CloudDeployment | null {
-    return this.deployments.get(deploymentId) || null;
+    return this.deployments.get(deploymentId) ?? null;
   }
 
   /**

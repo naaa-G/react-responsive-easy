@@ -1,4 +1,3 @@
-// @ts-nocheck - React type conflicts with Recharts components
 import React from 'react';
 
 interface SkeletonProps {
@@ -12,13 +11,13 @@ interface SkeletonProps {
 /**
  * Generic skeleton loading component
  */
-export const Skeleton: React.FC<SkeletonProps> = ({
+export const Skeleton = ({
   width = '100%',
   height = '1rem',
   borderRadius = '4px',
   className = '',
   animation = 'pulse'
-}) => {
+}: SkeletonProps) => {
   const style: React.CSSProperties = {
     width,
     height,
@@ -39,11 +38,11 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 /**
  * Chart skeleton for loading states
  */
-export const ChartSkeleton: React.FC<{
+export const ChartSkeleton = ({ height = 300, showHeader = true, showLegend = true }: {
   height?: number;
   showHeader?: boolean;
   showLegend?: boolean;
-}> = ({ height = 300, showHeader = true, showLegend = true }) => (
+}) => (
   <div className="chart-skeleton">
     {showHeader && (
       <div className="chart-skeleton-header">
@@ -69,10 +68,10 @@ export const ChartSkeleton: React.FC<{
 /**
  * Metrics skeleton for loading states
  */
-export const MetricsSkeleton: React.FC<{
+export const MetricsSkeleton = ({ count = 4, layout = 'grid' }: {
   count?: number;
   layout?: 'grid' | 'list';
-}> = ({ count = 4, layout = 'grid' }) => (
+}) => (
   <div className={`metrics-skeleton ${layout}`}>
     {Array.from({ length: count }, (_, index) => (
       <div key={index} className="metric-skeleton-item">
@@ -85,10 +84,10 @@ export const MetricsSkeleton: React.FC<{
 /**
  * Heatmap skeleton for loading states
  */
-export const HeatmapSkeleton: React.FC<{
+export const HeatmapSkeleton = ({ rows = 7, columns = 24 }: {
   rows?: number;
   columns?: number;
-}> = ({ rows = 7, columns = 24 }) => (
+}) => (
   <div className="heatmap-skeleton">
     <div className="heatmap-skeleton-header">
       <Skeleton width="200px" height="24px" />
@@ -119,11 +118,11 @@ export const HeatmapSkeleton: React.FC<{
 /**
  * Dashboard skeleton for loading states
  */
-export const DashboardSkeleton: React.FC<{
+export const DashboardSkeleton = ({ showHeader = true, showNavigation = true, showFooter = true }: {
   showHeader?: boolean;
   showNavigation?: boolean;
   showFooter?: boolean;
-}> = ({ showHeader = true, showNavigation = true, showFooter = true }) => (
+}) => (
   <div className="dashboard-skeleton">
     {showHeader && (
       <div className="dashboard-skeleton-header">
@@ -166,11 +165,11 @@ export const DashboardSkeleton: React.FC<{
 /**
  * Table skeleton for loading states
  */
-export const TableSkeleton: React.FC<{
+export const TableSkeleton = ({ rows = 5, columns = 4, showHeader = true }: {
   rows?: number;
   columns?: number;
   showHeader?: boolean;
-}> = ({ rows = 5, columns = 4, showHeader = true }) => (
+}) => (
   <div className="table-skeleton">
     {showHeader && (
       <div className="table-skeleton-header">
@@ -195,11 +194,11 @@ export const TableSkeleton: React.FC<{
 /**
  * Loading spinner component
  */
-export const LoadingSpinner: React.FC<{
+export const LoadingSpinner = ({ size = 'medium', color = 'var(--primary-color, #1c7ed6)', className = '' }: {
   size?: 'small' | 'medium' | 'large';
   color?: string;
   className?: string;
-}> = ({ size = 'medium', color = 'var(--primary-color, #1c7ed6)', className = '' }) => {
+}) => {
   const sizeMap = {
     small: '16px',
     medium: '24px',
@@ -225,11 +224,11 @@ export const LoadingSpinner: React.FC<{
 /**
  * Loading overlay component
  */
-export const LoadingOverlay: React.FC<{
+export const LoadingOverlay = ({ isLoading, message = 'Loading...', children }: {
   isLoading: boolean;
   message?: string;
   children: React.ReactNode;
-}> = ({ isLoading, message = 'Loading...', children }) => (
+}) => (
   <div className="loading-overlay-container">
     {children}
     {isLoading && (

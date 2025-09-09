@@ -7,7 +7,7 @@ export interface ResponsiveElementsViewProps {
   theme: DashboardTheme;
 }
 
-export const ResponsiveElementsView: React.FC<ResponsiveElementsViewProps> = ({ metrics, theme }) => {
+export const ResponsiveElementsView = ({ metrics, theme: _theme }: ResponsiveElementsViewProps) => {
   return (
     <div className="responsive-elements-view">
       <div className="panel-header">
@@ -17,8 +17,8 @@ export const ResponsiveElementsView: React.FC<ResponsiveElementsViewProps> = ({ 
       
       <div className="elements-content">
         <p>Responsive elements view implementation coming soon...</p>
-        <p>Elements count: {metrics.responsiveElements.count}</p>
-        <p>Average render time: {metrics.responsiveElements.averageRenderTime?.toFixed(2)}ms</p>
+        <p>Elements count: {(metrics.responsiveElements as Record<string, unknown>).count as number}</p>
+        <p>Average render time: {((metrics.responsiveElements as Record<string, unknown>).averageRenderTime as number)?.toFixed(2)}ms</p>
       </div>
     </div>
   );

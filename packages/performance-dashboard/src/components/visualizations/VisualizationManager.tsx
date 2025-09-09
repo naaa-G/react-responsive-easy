@@ -1,16 +1,16 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { PerformanceMetrics, PerformanceSnapshot } from '../../core/PerformanceMonitor';
 import { DashboardTheme } from '../PerformanceDashboard';
 import { InteractiveCharts } from './InteractiveCharts';
 import { PerformanceHeatmap } from './PerformanceHeatmap';
-import { CustomLayouts, DashboardLayout, WidgetConfig } from './CustomLayouts';
+import { CustomLayouts, DashboardLayout } from './CustomLayouts';
 
 export interface VisualizationManagerProps {
   metrics: PerformanceMetrics;
   history: PerformanceSnapshot[];
   theme: DashboardTheme;
   onVisualizationChange?: (type: VisualizationType) => void;
-  onDataExport?: (format: ExportFormat, data: any) => void;
+  onDataExport?: (format: ExportFormat, data: unknown) => void;
   onLayoutSave?: (layout: DashboardLayout) => void;
   onLayoutLoad?: (layoutId: string) => void;
 }
@@ -26,7 +26,7 @@ export type ExportFormat = 'json' | 'csv' | 'pdf' | 'png' | 'svg';
 
 export interface VisualizationConfig {
   type: VisualizationType;
-  config: any;
+  config: Record<string, unknown>;
   enabled: boolean;
 }
 
@@ -36,11 +36,11 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
   theme,
   onVisualizationChange,
   onDataExport,
-  onLayoutSave,
-  onLayoutLoad
+  onLayoutSave: _onLayoutSave,
+  onLayoutLoad: _onLayoutLoad
 }) => {
   const [activeVisualization, setActiveVisualization] = useState<VisualizationType>('interactive-charts');
-  const [visualizationConfigs, setVisualizationConfigs] = useState<VisualizationConfig[]>([
+  const [visualizationConfigs] = useState<VisualizationConfig[]>([
     { type: 'interactive-charts', config: {}, enabled: true },
     { type: 'heatmap', config: {}, enabled: true },
     { type: 'custom-layouts', config: {}, enabled: true },
@@ -64,15 +64,6 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
     cacheHitRate: { good: 80, poor: 60 }
   }), []);
 
-  // Colors based on theme
-  const colors = {
-    primary: theme === 'dark' ? '#4dabf7' : '#1c7ed6',
-    success: theme === 'dark' ? '#51cf66' : '#37b24d',
-    warning: theme === 'dark' ? '#ffd43b' : '#f59f00',
-    danger: theme === 'dark' ? '#ff6b6b' : '#e03131',
-    background: theme === 'dark' ? '#212529' : '#ffffff',
-    text: theme === 'dark' ? '#ced4da' : '#495057'
-  };
 
   // Available visualizations
   const visualizations = useMemo(() => [
@@ -140,19 +131,7 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
     }
   }, [activeVisualization, selectedTimeRange, selectedMetrics, metrics, history, visualizationConfigs, onDataExport]);
 
-  // Handle layout save
-  const handleLayoutSave = useCallback((layout: DashboardLayout) => {
-    if (onLayoutSave) {
-      onLayoutSave(layout);
-    }
-  }, [onLayoutSave]);
 
-  // Handle layout load
-  const handleLayoutLoad = useCallback((layoutId: string) => {
-    if (onLayoutLoad) {
-      onLayoutLoad(layoutId);
-    }
-  }, [onLayoutLoad]);
 
   // Toggle fullscreen
   const toggleFullscreen = useCallback(() => {
@@ -176,11 +155,15 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
             showPredictions={showPredictions}
             showAnomalies={showAnomalies}
             showThresholds={showThresholds}
-            onDataPointClick={(data) => {
-              console.log('Data point clicked:', data);
+            onDataPointClick={(_data) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Data point clicked - could be logged to analytics
+              }
             }}
-            onZoom={(startTime, endTime) => {
-              console.log('Zoom:', { startTime, endTime });
+            onZoom={(_startTime, _endTime) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Zoom event - could be logged to analytics
+              }
             }}
           />
         );
@@ -190,11 +173,15 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
           <PerformanceHeatmap
             {...commonProps}
             granularity="hour"
-            onCellClick={(data) => {
-              console.log('Cell clicked:', data);
+            onCellClick={(_data) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Cell clicked - could be logged to analytics
+              }
             }}
-            onCellHover={(data) => {
-              console.log('Cell hovered:', data);
+            onCellHover={(_data) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Cell hovered - could be logged to analytics
+              }
             }}
           />
         );
@@ -203,20 +190,30 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
         return (
           <CustomLayouts
             {...commonProps}
-            onLayoutChange={(layout) => {
-              console.log('Layout changed:', layout);
+            onLayoutChange={(_layout) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Layout changed - could be logged to analytics
+              }
             }}
-            onWidgetResize={(widgetId, size) => {
-              console.log('Widget resized:', { widgetId, size });
+            onWidgetResize={(_widgetId, _size) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Widget resized - could be logged to analytics
+              }
             }}
-            onWidgetMove={(widgetId, position) => {
-              console.log('Widget moved:', { widgetId, position });
+            onWidgetMove={(_widgetId, _position) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Widget moved - could be logged to analytics
+              }
             }}
-            onWidgetRemove={(widgetId) => {
-              console.log('Widget removed:', widgetId);
+            onWidgetRemove={(_widgetId) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Widget removed - could be logged to analytics
+              }
             }}
-            onWidgetAdd={(widget) => {
-              console.log('Widget added:', widget);
+            onWidgetAdd={(_widget) => {
+              if (process.env.NODE_ENV === 'development') {
+                // Widget added - could be logged to analytics
+              }
             }}
           />
         );
@@ -310,7 +307,7 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
             <label>Time Range:</label>
             <select
               value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value as any)}
+              onChange={(e) => setSelectedTimeRange(e.target.value as '1h' | '6h' | '24h' | '7d' | '30d')}
             >
               <option value="1h">Last Hour</option>
               <option value="6h">Last 6 Hours</option>
@@ -430,10 +427,11 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
         <h3>Performance Summary</h3>
         <div className="summary-grid">
           {Object.entries(thresholds).map(([metric, threshold]) => {
-            const currentValue = (metrics[metric as keyof PerformanceMetrics] as any)?.current || 
-                                (metrics[metric as keyof PerformanceMetrics] as any)?.usage || 
-                                (metrics[metric as keyof PerformanceMetrics] as any)?.averageRenderTime || 
-                                (metrics[metric as keyof PerformanceMetrics] as any)?.cacheHitRate || 
+            const metricValue = metrics[metric as keyof PerformanceMetrics] as Record<string, unknown>;
+            const currentValue = (metricValue?.current as number) ?? 
+                                (metricValue?.usage as number) ?? 
+                                (metricValue?.averageRenderTime as number) ?? 
+                                (metricValue?.cacheHitRate as number) ?? 
                                 0;
             const status = currentValue <= threshold.good ? 'good' : 
                           currentValue <= threshold.poor ? 'warning' : 'poor';
@@ -442,7 +440,7 @@ export const VisualizationManager: React.FC<VisualizationManagerProps> = ({
               <div key={metric} className={`summary-item ${status}`}>
                 <div className="summary-label">{metric}</div>
                 <div className="summary-value">
-                  {currentValue?.toFixed ? currentValue.toFixed(2) : currentValue}
+                  {typeof currentValue === 'number' ? currentValue.toFixed(2) : currentValue}
                 </div>
                 <div className="summary-status">
                   {status === 'good' ? '✅' : status === 'warning' ? '⚠️' : '❌'}

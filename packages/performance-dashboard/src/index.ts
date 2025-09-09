@@ -22,6 +22,9 @@ export type {
   EnterpriseConfig
 } from './core/PerformanceMonitor';
 
+// Import for utility function
+import type { PerformanceMonitorConfig } from './core/PerformanceMonitor';
+
 // Component exports
 export { PerformanceDashboard } from './components/PerformanceDashboard';
 export { MetricsOverview } from './components/MetricsOverview';
@@ -209,8 +212,9 @@ export type {
 } from './utils/AnalyticsEngine';
 
 // Utility functions
-export const createPerformanceMonitor = (config?: any) => {
-  const { PerformanceMonitor } = require('./core/PerformanceMonitor');
+export const createPerformanceMonitor = (config?: PerformanceMonitorConfig) => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { PerformanceMonitor } = require('./core/PerformanceMonitor') as { PerformanceMonitor: new (config?: PerformanceMonitorConfig) => import('./core/PerformanceMonitor').PerformanceMonitor };
   return new PerformanceMonitor(config);
 };
 

@@ -21,7 +21,7 @@ export interface WidgetConfig {
   title: string;
   size: WidgetSize;
   position: WidgetPosition;
-  config: any;
+  config: Record<string, unknown>;
   visible: boolean;
   resizable: boolean;
   draggable: boolean;
@@ -46,7 +46,7 @@ export interface DashboardLayout {
   theme: DashboardTheme;
 }
 
-export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
+export const CustomLayouts = ({
   metrics,
   history,
   theme,
@@ -55,12 +55,12 @@ export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
   onWidgetMove,
   onWidgetRemove,
   onWidgetAdd
-}) => {
+}: CustomLayoutsProps) => {
   const [currentLayout, setCurrentLayout] = useState<DashboardLayout | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null);
-  const [resizingWidget, setResizingWidget] = useState<string | null>(null);
+  const [_resizingWidget, _setResizingWidget] = useState<string | null>(null);
 
   // Predefined layouts
   const predefinedLayouts = useMemo(() => [
@@ -328,7 +328,7 @@ export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
   }, [draggedWidget, currentLayout, onWidgetMove]);
 
   // Handle widget resize
-  const handleWidgetResize = useCallback((widgetId: string, newSize: WidgetSize) => {
+  const _handleWidgetResize = useCallback((widgetId: string, newSize: WidgetSize) => {
     if (!currentLayout) return;
 
     const updatedLayout = {
@@ -379,10 +379,10 @@ export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
               metrics={metrics}
               history={history}
               theme={theme}
-              timeRange={widget.config.timeRange || '24h'}
-              showPredictions={widget.config.showPredictions || false}
-              showAnomalies={widget.config.showAnomalies || false}
-              showThresholds={widget.config.showThresholds || true}
+              timeRange={(widget.config.timeRange as '1h' | '6h' | '24h' | '7d' | '30d') || '24h'}
+              showPredictions={(widget.config.showPredictions as boolean) || false}
+              showAnomalies={(widget.config.showAnomalies as boolean) || false}
+              showThresholds={(widget.config.showThresholds as boolean) || true}
             />
           );
         
@@ -392,10 +392,12 @@ export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
               metrics={metrics}
               history={history}
               theme={theme}
-              timeRange={widget.config.timeRange || '24h'}
-              granularity={widget.config.granularity || 'hour'}
-              showTooltip={widget.config.showTooltip || true}
-              showLegend={widget.config.showLegend || true}
+              timeRange={(widget.config.timeRange as '1h' | '6h' | '24h' | '7d' | '30d') || '24h'}
+              granularity={(widget.config.granularity as 'minute' | 'hour' | 'day') || 'hour'}
+              onCellClick={() => {}}
+              onCellHover={() => {}}
+              showTooltip={(widget.config.showTooltip as boolean) || true}
+              showLegend={(widget.config.showLegend as boolean) || true}
             />
           );
         
@@ -403,11 +405,12 @@ export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
           return (
             <div className="metric-widget">
               <div className="metric-grid">
-                {widget.config.metrics.map((metric: string) => {
-                  const value = (metrics[metric as keyof PerformanceMetrics] as any)?.current || 
-                               (metrics[metric as keyof PerformanceMetrics] as any)?.usage || 
-                               (metrics[metric as keyof PerformanceMetrics] as any)?.averageRenderTime || 
-                               (metrics[metric as keyof PerformanceMetrics] as any)?.cacheHitRate || 
+                {(widget.config.metrics as string[]).map((metric: string) => {
+                  const metricValue = metrics[metric as keyof PerformanceMetrics] as Record<string, unknown>;
+                  const value = (metricValue?.current as number) ?? 
+                               (metricValue?.usage as number) ?? 
+                               (metricValue?.averageRenderTime as number) ?? 
+                               (metricValue?.cacheHitRate as number) ?? 
                                0;
                   return (
                     <div key={metric} className="metric-item">
@@ -545,7 +548,7 @@ export const CustomLayouts: React.FC<CustomLayoutsProps> = ({
                       // Handle widget addition
                       const newWidget: WidgetConfig = {
                         id: `widget-${Date.now()}`,
-                        type: type.type as any,
+                        type: type.type as 'chart' | 'heatmap' | 'metric' | 'alert' | 'custom',
                         title: `New ${type.label}`,
                         size: { width: 4, height: 3 },
                         position: { x: 0, y: 0 },

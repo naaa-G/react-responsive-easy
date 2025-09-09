@@ -16,9 +16,9 @@ import boxen from 'boxen';
 import figlet from 'figlet';
 // @ts-ignore
 import gradient from 'gradient-string';
-import { PluginManager, Plugin, PluginRegistry, PluginAnalytics } from '../services/PluginManager';
-import { readFile, writeFile, access } from 'fs-extra';
-import { join, resolve } from 'path';
+import { PluginManager } from '../services/PluginManager';
+import { writeFile } from 'fs-extra';
+import { join } from 'path';
 import inquirer from 'inquirer';
 
 interface PluginInstallOptions {
@@ -288,7 +288,7 @@ async function installPlugin(options: PluginInstallOptions): Promise<void> {
           type: 'input',
           name: 'version',
           message: 'Plugin version:',
-          default: options.version || 'latest'
+          default: options.version ?? 'latest'
         },
         {
           type: 'list',
@@ -299,17 +299,18 @@ async function installPlugin(options: PluginInstallOptions): Promise<void> {
             { name: 'GitHub Repository', value: 'github' },
             { name: 'Local Directory', value: 'local' }
           ],
-          default: options.source || 'npm'
+          default: options.source ?? 'npm'
         },
         {
           type: 'confirm',
           name: 'force',
           message: 'Force installation (ignore conflicts)?',
-          default: options.force || false
+          default: options.force ?? false
         }
       ]);
 
-      options = { ...options, ...answers };
+      const updatedOptions = { ...options, ...answers };
+      Object.assign(options, updatedOptions);
     }
 
     spinner.text = `Installing ${options.plugin}...`;
@@ -455,8 +456,8 @@ async function showPluginInfo(options: PluginInfoOptions): Promise<void> {
         chalk.cyan(`Category: ${plugin.category}\n`) +
         chalk.cyan(`Type: ${plugin.type}\n`) +
         chalk.cyan(`Status: ${plugin.status}\n`) +
-        chalk.cyan(`Homepage: ${plugin.homepage || 'N/A'}\n`) +
-        chalk.cyan(`Repository: ${plugin.repository || 'N/A'}\n`) +
+        chalk.cyan(`Homepage: ${plugin.homepage ?? 'N/A'}\n`) +
+        chalk.cyan(`Repository: ${plugin.repository ?? 'N/A'}\n`) +
         chalk.cyan(`Keywords: ${plugin.keywords.join(', ')}\n`) +
         chalk.cyan(`Commands: ${plugin.commands.length}\n`) +
         chalk.cyan(`Hooks: ${plugin.hooks.length}\n`) +
@@ -517,8 +518,8 @@ async function showPluginInfo(options: PluginInfoOptions): Promise<void> {
       console.log(`category: ${plugin.category}`);
       console.log(`type: ${plugin.type}`);
       console.log(`status: ${plugin.status}`);
-      console.log(`homepage: ${plugin.homepage || 'N/A'}`);
-      console.log(`repository: ${plugin.repository || 'N/A'}`);
+      console.log(`homepage: ${plugin.homepage ?? 'N/A'}`);
+      console.log(`repository: ${plugin.repository ?? 'N/A'}`);
       console.log(`keywords: [${plugin.keywords.join(', ')}]`);
       console.log(`commands: ${plugin.commands.length}`);
       console.log(`hooks: ${plugin.hooks.length}`);
@@ -657,7 +658,7 @@ async function updatePlugins(options: { plugin?: string; all: boolean; check: bo
   const spinner = ora('Updating plugins...').start();
 
   try {
-    const pluginManager = new PluginManager({} as any);
+    const _pluginManager = new PluginManager({} as any);
     
     if (options.check) {
       spinner.text = 'Checking for plugin updates...';

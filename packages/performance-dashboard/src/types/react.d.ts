@@ -1,4 +1,14 @@
 // Type declaration to resolve React type conflicts between React 18 and 19
+import {
+  ReactElement,
+  ReactNodeArray,
+  WeakValidationMap,
+  ValidationMap,
+  ReactInstance,
+  Ref,
+  ForwardRefRenderFunction
+} from 'react';
+
 declare global {
   namespace React {
     // Override ReactNode to exclude bigint for React 18 compatibility
@@ -12,20 +22,20 @@ declare global {
       | ReactNodeArray;
 
     // Override FunctionComponent to be compatible with Recharts
-    interface FunctionComponent<P = {}> {
-      (props: P, context?: any): ReactElement | null;
+    interface FunctionComponent<P = object> {
+      (props: P, context?: unknown): ReactElement | null;
       propTypes?: WeakValidationMap<P> | undefined;
-      contextTypes?: ValidationMap<any> | undefined;
+      contextTypes?: ValidationMap<unknown> | undefined;
       defaultProps?: Partial<P> | undefined;
       displayName?: string | undefined;
     }
 
     // Override Component type to be compatible with Recharts
-    class Component<P = {}, S = {}, SS = any> {
+    class Component<P = object, S = object, SS = unknown> {
       refs: { [key: string]: ReactInstance };
       state: Readonly<S>;
       props: Readonly<P>;
-      context: any;
+      context: unknown;
       setState<K extends keyof S>(
         state: ((prevState: Readonly<S>, props: Readonly<P>) => (Pick<S, K> | S | null)) | (Pick<S, K> | S | null),
         callback?: () => void
@@ -36,21 +46,21 @@ declare global {
       componentWillUnmount?(): void;
       componentDidUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: SS): void;
       componentWillMount?(): void;
-      componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
-      componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
-      shouldComponentUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): boolean;
+      componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: unknown): void;
+      componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: unknown): void;
+      shouldComponentUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: unknown): boolean;
       UNSAFE_componentWillMount?(): void;
-      UNSAFE_componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
-      UNSAFE_componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
+      UNSAFE_componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: unknown): void;
+      UNSAFE_componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: unknown): void;
     }
 
     // Override ForwardRefExoticComponent to be compatible with Recharts
     interface ForwardRefExoticComponent<P> {
-      (props: P & { ref?: Ref<any> }): ReactElement | null;
+      (props: P & { ref?: Ref<unknown> }): ReactElement | null;
       $$typeof: symbol;
-      render: ForwardRefRenderFunction<any, P>;
+      render: ForwardRefRenderFunction<unknown, P>;
       propTypes?: WeakValidationMap<P> | undefined;
-      contextTypes?: ValidationMap<any> | undefined;
+      contextTypes?: ValidationMap<unknown> | undefined;
       defaultProps?: Partial<P> | undefined;
       displayName?: string | undefined;
     }

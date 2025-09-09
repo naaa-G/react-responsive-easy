@@ -13,7 +13,16 @@ import { PerformanceMonitor } from '@react-responsive-easy/performance-dashboard
 
 interface ResponsiveDecoratorProps {
   children: React.ReactNode;
-  context: any;
+  context: {
+    parameters?: {
+      responsiveEasy?: {
+        performance?: {
+          enabled?: boolean;
+          thresholds?: Record<string, number>;
+        };
+      };
+    };
+  };
 }
 
 const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({ 
@@ -21,7 +30,7 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
   context 
 }) => {
   const emit = useChannel({});
-  const parameters = context.parameters?.responsiveEasy || {};
+  const parameters = context.parameters?.responsiveEasy ?? {};
   
   // Initialize performance monitoring
   useEffect(() => {
@@ -32,16 +41,16 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
         thresholds: parameters.performance?.thresholds
       });
 
-      monitor.start();
+      monitor.start(); // eslint-disable-line @typescript-eslint/no-floating-promises
 
       // Send performance data to addon panel
       const unsubscribe = monitor.on('metrics-updated', (metrics) => {
         const performanceData = {
-          renderTime: metrics.responsiveElements.averageRenderTime || 0,
-          memoryUsage: metrics.memory?.used || 0,
+          renderTime: metrics.responsiveElements.averageRenderTime ?? 0,
+          memoryUsage: metrics.memory?.used ?? 0,
           layoutShifts: metrics.layoutShift.current,
-          scalingOperations: metrics.custom?.scalingOperations || 0,
-          cacheHitRate: metrics.custom?.cacheHitRate || 0
+          scalingOperations: metrics.custom?.scalingOperations ?? 0,
+          cacheHitRate: metrics.custom?.cacheHitRate ?? 0
         };
 
         emit(EVENTS.PERFORMANCE_DATA, performanceData);
@@ -56,7 +65,7 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
 
   // Handle breakpoint changes from addon panel
   useEffect(() => {
-    const handleBreakpointChange = ({ breakpoint }: any) => {
+    const handleBreakpointChange = ({ breakpoint }: { breakpoint: { width: number; height: number } }) => {
       // Update viewport size
       const iframe = document.querySelector('iframe[data-is-storybook="true"]') as HTMLIFrameElement;
       if (iframe) {
@@ -65,14 +74,17 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
       }
     };
 
-    const handleOverlayToggle = ({ visible }: any) => {
+    const handleOverlayToggle = ({ visible }: { visible: boolean }) => {
       // Toggle responsive overlay
       toggleResponsiveOverlay(visible);
     };
 
-    const handleConfigUpdate = ({ config }: any) => {
+    const handleConfigUpdate = ({ config }: { config: unknown }) => {
       // Update responsive configuration
-      console.log('Config updated:', config);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Config updated:', config);
+      }
       emit(EVENTS.CONFIG_UPDATED, { config });
     };
 

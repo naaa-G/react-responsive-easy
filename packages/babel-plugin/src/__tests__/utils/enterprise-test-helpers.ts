@@ -70,7 +70,7 @@ export function transformCode(
     const endMemory = process.memoryUsage().heapUsed;
 
     return {
-      code: result?.code || '',
+      code: result?.code ?? '',
       metrics: {
         executionTime: endTime - startTime,
         memoryUsage: endMemory - startMemory,
@@ -104,18 +104,18 @@ export function transformCode(
 export function createEnterpriseTestCase(testCase: EnterpriseTestCase): EnterpriseTestCase {
   return {
     name: testCase.name,
-    description: testCase.description || `Test case: ${testCase.name}`,
+    description: testCase.description ?? `Test case: ${testCase.name}`,
     input: testCase.input,
-    options: testCase.options || {},
-    shouldThrow: testCase.shouldThrow || false,
-    shouldContain: testCase.shouldContain || [],
-    shouldNotContain: testCase.shouldNotContain || [],
+    options: testCase.options ?? {},
+    shouldThrow: testCase.shouldThrow ?? false,
+    shouldContain: testCase.shouldContain ?? [],
+    shouldNotContain: testCase.shouldNotContain ?? [],
     expected: testCase.expected,
-    performanceThreshold: testCase.performanceThreshold || 100, // 100ms default
-    memoryThreshold: testCase.memoryThreshold || 10 * 1024 * 1024, // 10MB default
-    tags: testCase.tags || [],
-    category: testCase.category || 'unit',
-    priority: testCase.priority || 'medium'
+    performanceThreshold: testCase.performanceThreshold ?? 100, // 100ms default
+    memoryThreshold: testCase.memoryThreshold ?? 10 * 1024 * 1024, // 10MB default
+    tags: testCase.tags ?? [],
+    category: testCase.category ?? 'unit',
+    priority: testCase.priority ?? 'medium'
   };
 }
 
@@ -429,7 +429,7 @@ export function createEnterpriseTestSuite(suite: TestSuite) {
           try {
             const { code, metrics, errors } = transformCode(
               testCase.input, 
-              testCase.options || {}
+              testCase.options ?? {}
             );
             
             if (testCase.shouldThrow) {
@@ -484,7 +484,7 @@ export class CoverageAnalyzer {
 
   recordCoverage(file: string, line: number): void {
     const key = `${file}:${line}`;
-    this.coverage.set(key, (this.coverage.get(key) || 0) + 1);
+    this.coverage.set(key, (this.coverage.get(key) ?? 0) + 1);
   }
 
   getCoverage(): Map<string, number> {

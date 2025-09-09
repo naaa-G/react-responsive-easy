@@ -248,7 +248,7 @@ program
         console.log(chalk.cyan(`   Predictions: ${report.summary.predictionsMade}`));
 
       } else if (options.list) {
-        const reports = analyticsService.getReports(parseInt(options.limit || '10', 10));
+        const reports = analyticsService.getReports(parseInt(options.limit ?? '10', 10));
         console.log(chalk.green(`📋 Analytics Reports (${reports.length} items):`));
         
         reports.forEach((report, index) => {

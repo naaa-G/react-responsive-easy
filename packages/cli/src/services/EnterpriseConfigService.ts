@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import chalk from 'chalk';
+import _chalk from 'chalk';
 import * as fs from 'fs';
-import * as path from 'path';
+import * as _path from 'path';
 
 // Enterprise Configuration Types
 export interface EnterpriseConfig {
@@ -857,7 +857,7 @@ export class EnterpriseConfigService extends EventEmitter {
 
     // Phone validation
     this.validationRules.set('phone', {
-      pattern: /^\+?[\d\s\-\(\)]+$/,
+      pattern: /^\+?[\d\s\-()]+$/,
       message: 'Invalid phone format'
     });
 

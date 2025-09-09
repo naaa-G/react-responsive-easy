@@ -260,7 +260,7 @@ export class AdaptivePerformanceTester {
    * Get performance baseline for a test
    */
   getBaseline(testName: string, environment?: string): PerformanceBaseline | undefined {
-    const env = environment || this.detectEnvironment();
+    const env = environment ?? this.detectEnvironment();
     return this.baselines.get(`${testName}-${env}`);
   }
 

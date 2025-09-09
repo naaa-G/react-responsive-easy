@@ -40,7 +40,7 @@ export function transformCode(code: string, options: TransformOptions = {}) {
       ]
     });
     
-    return result?.code || '';
+    return result?.code ?? '';
   } catch (error) {
     // Return original code if transformation fails due to syntax errors
     if (error instanceof SyntaxError) {
@@ -67,7 +67,7 @@ export function transformCodeForSnapshots(code: string, options: TransformOption
       ]
     });
     
-    return result?.code || '';
+    return result?.code ?? '';
   } catch (error) {
     // Return original code if transformation fails due to syntax errors
     if (error instanceof SyntaxError) {
@@ -84,10 +84,10 @@ export function createTestCase(testCase: TestCase) {
   return {
     name: testCase.name,
     input: testCase.input,
-    options: testCase.options || {},
-    shouldThrow: testCase.shouldThrow || false,
-    shouldContain: testCase.shouldContain || [],
-    shouldNotContain: testCase.shouldNotContain || [],
+    options: testCase.options ?? {},
+    shouldThrow: testCase.shouldThrow ?? false,
+    shouldContain: testCase.shouldContain ?? [],
+    shouldNotContain: testCase.shouldNotContain ?? [],
     expected: testCase.expected
   };
 }
@@ -129,7 +129,7 @@ export function extractSwitchStatement(code: string) {
 
 export function extractImports(code: string) {
   const importMatches = code.match(/import\s+.*?from\s+['"][^'"]+['"]/g);
-  return importMatches || [];
+  return importMatches ?? [];
 }
 
 /**
@@ -319,7 +319,7 @@ export function createTestSuite(name: string, testCases: TestCase[]) {
     testCases: testCases.map(createTestCase),
     run: () => {
       testCases.forEach(testCase => {
-        const transformed = transformCode(testCase.input, testCase.options || {});
+        const transformed = transformCode(testCase.input, testCase.options ?? {});
         
         if (testCase.shouldThrow) {
           // Test should throw - this would be handled by the test framework

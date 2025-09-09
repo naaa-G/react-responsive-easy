@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import chalk from 'chalk';
+import _chalk from 'chalk';
 
 // ML Types
 export interface MLModel {
@@ -316,7 +316,7 @@ export class MLIntegrationService extends EventEmitter {
       model.recall = 0.82;
       model.f1Score = 0.83;
       model.lastTrained = new Date();
-      model.performance.trainingTime = job.duration || 0;
+      model.performance.trainingTime = job.duration ?? 0;
 
       this.models.set(model.id, model);
       this.trainingJobs.set(job.id, job);
@@ -340,12 +340,13 @@ export class MLIntegrationService extends EventEmitter {
   /**
    * Simulate training process
    */
-  private async simulateTraining(job: MLTrainingJob, model: MLModel, dataset: MLDataset): Promise<void> {
+  private async simulateTraining(job: MLTrainingJob, _model: MLModel, _dataset: MLDataset): Promise<void> {
     const epochs = job.config.epochs;
-    const batchSize = job.config.batchSize;
+    const _batchSize = job.config.batchSize;
 
     for (let epoch = 1; epoch <= epochs; epoch++) {
       // Simulate training time
+      // eslint-disable-next-line no-await-in-loop
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Update metrics
@@ -397,7 +398,7 @@ export class MLIntegrationService extends EventEmitter {
       modelId,
       input,
       output,
-      confidence: output.confidence || 0.85,
+      confidence: output.confidence ?? 0.85,
       probability: output.probability,
       timestamp: new Date(),
       processingTime,
@@ -417,7 +418,7 @@ export class MLIntegrationService extends EventEmitter {
   /**
    * Simulate prediction
    */
-  private async simulatePrediction(model: MLModel, input: Record<string, any>): Promise<Record<string, any>> {
+  private async simulatePrediction(model: MLModel, _input: Record<string, any>): Promise<Record<string, any>> {
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -518,7 +519,7 @@ export class MLIntegrationService extends EventEmitter {
       
       let type: 'numeric' | 'categorical' | 'text' | 'image' | 'time_series';
       let distribution: Record<string, any> = {};
-      let missingValues = samples.length - values.length;
+      const missingValues = samples.length - values.length;
       let outliers = 0;
 
       if (typeof values[0] === 'number') {
@@ -614,8 +615,8 @@ export class MLIntegrationService extends EventEmitter {
 
     const models: MLModel[] = [];
 
-    // Simulate AutoML process
-    for (const algorithm of this.autoMLConfig.algorithms) {
+    // Simulate AutoML process - run in parallel for better performance
+    const modelPromises = this.autoMLConfig.algorithms.map(async (algorithm) => {
       const model = await this.createModel({
         name: `AutoML_${algorithm}_${Date.now()}`,
         type: this.determineModelType(dataset),
@@ -625,7 +626,7 @@ export class MLIntegrationService extends EventEmitter {
       });
 
       // Train the model
-      const trainingJob = await this.trainModel(model.id, datasetId, {
+      const _trainingJob = await this.trainModel(model.id, datasetId, {
         algorithm,
         parameters: this.getDefaultParameters(algorithm),
         epochs: 10,
@@ -638,8 +639,11 @@ export class MLIntegrationService extends EventEmitter {
         hyperparameterTuning: true
       });
 
-      models.push(model);
-    }
+      return model;
+    });
+
+    const createdModels = await Promise.all(modelPromises);
+    models.push(...createdModels);
 
     this.emit('automl-completed', { models, datasetId });
 
@@ -700,7 +704,7 @@ export class MLIntegrationService extends EventEmitter {
       }
     };
 
-    return defaults[algorithm] || {};
+    return defaults[algorithm] ?? {};
   }
 
   /**

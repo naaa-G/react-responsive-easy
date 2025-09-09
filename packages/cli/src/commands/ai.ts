@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import boxen from 'boxen';
+import _boxen from 'boxen';
 // @ts-ignore - figlet doesn't have type declarations
 import figlet from 'figlet';
 // @ts-ignore - gradient-string doesn't have type declarations
@@ -240,7 +240,7 @@ async function learnFromProject(
   aiService: AIIntegrationService,
   projectPath: string,
   config: ResponsiveConfig,
-  options: any
+  _options: any
 ): Promise<void> {
   const spinner = ora('Learning from project patterns...').start();
 
@@ -359,7 +359,7 @@ function displayAIAnalysis(insights: any, options: any): void {
   console.log(chalk.cyan('  • Use --export to save results for team review'));
 }
 
-function displayRecommendations(recommendations: any[], options: any): void {
+function displayRecommendations(recommendations: any[], _options: any): void {
   console.log(chalk.blue('\n🎯 AI Recommendations'));
   console.log(chalk.gray('='.repeat(50)));
 
@@ -384,7 +384,7 @@ function displayRecommendations(recommendations: any[], options: any): void {
   });
 }
 
-function displayOptimizationResults(result: any, options: any): void {
+function displayOptimizationResults(result: any, _options: any): void {
   console.log(chalk.blue('\n⚡ Optimization Results'));
   console.log(chalk.gray('='.repeat(50)));
 
@@ -409,12 +409,12 @@ function displayOptimizationResults(result: any, options: any): void {
   }
 }
 
-async function collectUsageData(projectPath: string): Promise<any[]> {
+async function collectUsageData(_projectPath: string): Promise<any[]> {
   // In a real implementation, this would analyze the codebase
   return [];
 }
 
-async function collectPerformanceMetrics(projectPath: string): Promise<any> {
+async function collectPerformanceMetrics(_projectPath: string): Promise<any> {
   // In a real implementation, this would collect actual performance metrics
   return {
     lcp: 2500,

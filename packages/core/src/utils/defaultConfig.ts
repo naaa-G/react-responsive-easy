@@ -1,105 +1,155 @@
 import { ResponsiveConfig, Breakpoint, ScalingStrategy } from '../types';
 
+// Constants for better maintainability and enterprise-grade code
+const MIN_FONT_SIZE = 12;
+const MAX_FONT_SIZE = 48;
+const MIN_RADIUS = 2;
+const MIN_LINE_HEIGHT = 1.2;
+const MIN_BORDER = 1;
+const MIN_TAP_TARGET = 44;
+const MIN_ACCESSIBILITY_FONT_SIZE = 8;
+const PRECISION_DEFAULT = 1;
+const PRECISION_LINE_HEIGHT = 0.1;
+
+// Breakpoint dimensions
+const MOBILE_WIDTH = 390;
+const MOBILE_HEIGHT = 844;
+const TABLET_WIDTH = 768;
+const TABLET_HEIGHT = 1024;
+const LAPTOP_WIDTH = 1366;
+const LAPTOP_HEIGHT = 768;
+const DESKTOP_WIDTH = 1920;
+const DESKTOP_HEIGHT = 1080;
+
+// Scaling factors
+const FONT_SIZE_SCALE = 0.85;
+const SPACING_SCALE = 0.9;
+const RADIUS_SCALE = 0.95;
+const LINE_HEIGHT_SCALE = 0.9;
+const SHADOW_SCALE = 0.8;
+const BORDER_SCALE = 0.9;
+
 /**
  * Default configuration for React Responsive Easy
  * Provides sensible defaults that work for most applications
  */
+/**
+ * Create default breakpoints configuration
+ */
+function createDefaultBreakpoints(): Breakpoint[] {
+  return [
+    {
+      name: 'mobile',
+      width: MOBILE_WIDTH,
+      height: MOBILE_HEIGHT,
+      alias: 'mobile'
+    },
+    {
+      name: 'tablet',
+      width: TABLET_WIDTH,
+      height: TABLET_HEIGHT,
+      alias: 'tablet'
+    },
+    {
+      name: 'laptop',
+      width: LAPTOP_WIDTH,
+      height: LAPTOP_HEIGHT,
+      alias: 'laptop'
+    },
+    {
+      name: 'desktop',
+      width: DESKTOP_WIDTH,
+      height: DESKTOP_HEIGHT,
+      alias: 'base'
+    }
+  ];
+}
+
+/**
+ * Create default scaling tokens configuration
+ */
+function createDefaultTokens() {
+  return {
+    fontSize: {
+      scale: FONT_SIZE_SCALE,
+      min: MIN_FONT_SIZE,
+      max: MAX_FONT_SIZE,
+      unit: 'px',
+      precision: PRECISION_DEFAULT,
+      responsive: true
+    },
+    spacing: {
+      scale: SPACING_SCALE,
+      step: 2,
+      unit: 'px',
+      precision: PRECISION_DEFAULT,
+      responsive: true
+    },
+    radius: {
+      scale: RADIUS_SCALE,
+      min: MIN_RADIUS,
+      unit: 'px',
+      precision: PRECISION_DEFAULT,
+      responsive: true
+    },
+    lineHeight: {
+      scale: LINE_HEIGHT_SCALE,
+      min: MIN_LINE_HEIGHT,
+      unit: 'em',
+      precision: PRECISION_LINE_HEIGHT,
+      responsive: true
+    },
+    shadow: {
+      scale: SHADOW_SCALE,
+      unit: 'px',
+      precision: PRECISION_DEFAULT,
+      responsive: true
+    },
+    border: {
+      scale: BORDER_SCALE,
+      min: MIN_BORDER,
+      unit: 'px',
+      precision: PRECISION_DEFAULT,
+      responsive: true
+    }
+  };
+}
+
+/**
+ * Create default scaling strategy configuration
+ */
+function createDefaultStrategy(): ScalingStrategy {
+  return {
+    origin: 'width',
+    mode: 'linear',
+    tokens: createDefaultTokens(),
+    rounding: {
+      mode: 'nearest',
+      precision: PRECISION_DEFAULT
+    },
+    accessibility: {
+      minFontSize: MIN_FONT_SIZE,
+      minTapTarget: MIN_TAP_TARGET,
+      contrastPreservation: true
+    },
+    performance: {
+      memoization: true,
+      cacheStrategy: 'memory',
+      precomputeValues: true
+    }
+  };
+}
+
 export function createDefaultConfig(): ResponsiveConfig {
   return {
     base: {
       name: 'desktop',
-      width: 1920,
-      height: 1080,
+      width: DESKTOP_WIDTH,
+      height: DESKTOP_HEIGHT,
       alias: 'base'
     },
-    breakpoints: [
-      {
-        name: 'mobile',
-        width: 390,
-        height: 844,
-        alias: 'mobile'
-      },
-      {
-        name: 'tablet',
-        width: 768,
-        height: 1024,
-        alias: 'tablet'
-      },
-      {
-        name: 'laptop',
-        width: 1366,
-        height: 768,
-        alias: 'laptop'
-      },
-      {
-        name: 'desktop',
-        width: 1920,
-        height: 1080,
-        alias: 'base'
-      }
-    ],
-    strategy: {
-      origin: 'width',
-      mode: 'linear',
-      tokens: {
-        fontSize: {
-          scale: 0.85,
-          min: 12,
-          max: 48,
-          unit: 'px',
-          precision: 1,
-          responsive: true
-        },
-        spacing: {
-          scale: 0.9,
-          step: 2,
-          unit: 'px',
-          precision: 1,
-          responsive: true
-        },
-        radius: {
-          scale: 0.95,
-          min: 2,
-          unit: 'px',
-          precision: 1,
-          responsive: true
-        },
-        lineHeight: {
-          scale: 0.9,
-          min: 1.2,
-          unit: 'em',
-          precision: 0.1,
-          responsive: true
-        },
-        shadow: {
-          scale: 0.8,
-          unit: 'px',
-          precision: 1,
-          responsive: true
-        },
-        border: {
-          scale: 0.9,
-          min: 1,
-          unit: 'px',
-          precision: 1,
-          responsive: true
-        }
-      },
-      rounding: {
-        mode: 'nearest',
-        precision: 1
-      },
-      accessibility: {
-        minFontSize: 12,
-        minTapTarget: 44,
-        contrastPreservation: true
-      },
-      performance: {
-        memoization: true,
-        cacheStrategy: 'memory',
-        precomputeValues: true
-      }
-    },
+    breakpoints: createDefaultBreakpoints(),
+    strategy: createDefaultStrategy(),
     development: {
       enableDebugMode: false,
       showScalingInfo: false,
@@ -125,68 +175,7 @@ export function createBreakpoint(name: string, width: number, height: number, al
  * Create a custom scaling strategy with proper typing
  */
 export function createScalingStrategy(overrides: Partial<ScalingStrategy> = {}): ScalingStrategy {
-  const defaultStrategy: ScalingStrategy = {
-    origin: 'width',
-    mode: 'linear',
-    tokens: {
-      fontSize: {
-        scale: 0.85,
-        min: 12,
-        max: 48,
-        unit: 'px',
-        precision: 1,
-        responsive: true
-      },
-      spacing: {
-        scale: 0.9,
-        step: 2,
-        unit: 'px',
-        precision: 1,
-        responsive: true
-      },
-      radius: {
-        scale: 0.95,
-        min: 2,
-        unit: 'px',
-        precision: 1,
-        responsive: true
-      },
-      lineHeight: {
-        scale: 0.9,
-        min: 1.2,
-        unit: 'em',
-        precision: 0.1,
-        responsive: true
-      },
-      shadow: {
-        scale: 0.8,
-        unit: 'px',
-        precision: 1,
-        responsive: true
-      },
-      border: {
-        scale: 0.9,
-        min: 1,
-        unit: 'px',
-        precision: 1,
-        responsive: true
-      }
-    },
-    rounding: {
-      mode: 'nearest',
-      precision: 1
-    },
-    accessibility: {
-      minFontSize: 12,
-      minTapTarget: 44,
-      contrastPreservation: true
-    },
-    performance: {
-      memoization: true,
-      cacheStrategy: 'memory',
-      precomputeValues: true
-    }
-  };
+  const defaultStrategy: ScalingStrategy = createDefaultStrategy();
 
   return {
     ...defaultStrategy,
@@ -312,12 +301,12 @@ export function validateConfig(config: ResponsiveConfig): string[] {
   }
 
   // Check accessibility constraints
-  if (config.strategy.accessibility.minFontSize < 8) {
-    issues.push('Minimum font size should be at least 8px for accessibility');
+  if (config.strategy.accessibility.minFontSize < MIN_ACCESSIBILITY_FONT_SIZE) {
+    issues.push(`Minimum font size should be at least ${MIN_ACCESSIBILITY_FONT_SIZE}px for accessibility`);
   }
 
-  if (config.strategy.accessibility.minTapTarget < 44) {
-    issues.push('Minimum tap target should be at least 44px for accessibility');
+  if (config.strategy.accessibility.minTapTarget < MIN_TAP_TARGET) {
+    issues.push(`Minimum tap target should be at least ${MIN_TAP_TARGET}px for accessibility`);
   }
 
   return issues;

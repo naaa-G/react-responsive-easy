@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
-interface ErrorInfo {
+interface _CustomErrorInfo {
   error: Error;
   errorInfo: React.ErrorInfo;
   timestamp: number;
@@ -45,16 +45,19 @@ export function useErrorBoundary() {
     });
 
     // Log error for debugging
-    console.error('Error Boundary caught an error:', {
-      error,
-      errorInfo,
-      errorId,
-      timestamp: new Date().toISOString()
-    });
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('Error Boundary caught an error:', {
+        error,
+        errorInfo,
+        errorId,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Report error to monitoring service (if available)
-    if (typeof window !== 'undefined' && (window as any).errorReporting) {
-      (window as any).errorReporting.captureException(error, {
+    if (typeof window !== 'undefined' && (window as unknown as { errorReporting?: { captureException: (error: Error, context: unknown) => void } }).errorReporting) {
+      (window as unknown as { errorReporting: { captureException: (error: Error, context: unknown) => void } }).errorReporting.captureException(error, {
         extra: {
           errorInfo,
           errorId,

@@ -70,7 +70,7 @@ export class AIIntegrationService extends EventEmitter {
   /**
    * Initialize the AI service
    */
-  async initialize(config?: Partial<AIModelConfig>): Promise<void> {
+  async initialize(_config?: Partial<AIModelConfig>): Promise<void> {
     try {
       this.logger.info('Initializing AI Integration Service...');
       
@@ -153,7 +153,7 @@ export class AIIntegrationService extends EventEmitter {
       
       // Filter by confidence threshold
       const filteredRecommendations = recommendations.filter(
-        rec => rec.confidence >= (context.config as any).confidenceThreshold || 0.7
+        rec => rec.confidence >= ((context.config as any).confidenceThreshold ?? 0.7)
       );
 
       this.emit('recommendations:generated', filteredRecommendations);
@@ -189,18 +189,20 @@ export class AIIntegrationService extends EventEmitter {
     try {
       const originalConfig = { ...config };
       const changes: string[] = [];
-      const confidenceThreshold = options.confidenceThreshold || 0.8;
+      const confidenceThreshold = options.confidenceThreshold ?? 0.8;
 
       if (!options.dryRun) {
         // Apply high-confidence optimizations
-        for (const [key, suggestion] of Object.entries(suggestions)) {
-          if (suggestion.confidence >= confidenceThreshold) {
-            const change = await this.applySuggestion(config, key, suggestion);
-            if (change) {
-              changes.push(change);
-            }
-          }
-        }
+        const highConfidenceEntries = Object.entries(suggestions).filter(
+          ([, suggestion]) => suggestion.confidence >= confidenceThreshold
+        );
+        
+        const changePromises = highConfidenceEntries.map(async ([key, suggestion]) => {
+          return this.applySuggestion(config, key, suggestion);
+        });
+        
+        const results = await Promise.all(changePromises);
+        changes.push(...results.filter(change => change !== null));
       }
 
       const result = {
@@ -238,8 +240,8 @@ export class AIIntegrationService extends EventEmitter {
    */
   async learnFromProject(
     projectPath: string,
-    config: ResponsiveConfig,
-    performanceData: PerformanceMetrics
+    _config: ResponsiveConfig,
+    _performanceData: PerformanceMetrics
   ): Promise<void> {
     if (!this.isInitialized || !this.aiOptimizer) {
       throw new Error('AI Integration Service not initialized');
@@ -308,8 +310,8 @@ export class AIIntegrationService extends EventEmitter {
    * Predict performance impact of configuration changes
    */
   async predictPerformanceImpact(
-    config: ResponsiveConfig,
-    proposedChanges: Partial<ResponsiveConfig>
+    _config: ResponsiveConfig,
+    _proposedChanges: Partial<ResponsiveConfig>
   ): Promise<{
     predictedImpact: {
       performance: number; // -100 to 100
@@ -339,12 +341,12 @@ export class AIIntegrationService extends EventEmitter {
       
       const result = {
         predictedImpact: {
-          performance: prediction.performance || 0,
-          accessibility: prediction.accessibility || 0,
-          bundleSize: prediction.bundleSize || 0
+          performance: prediction.performance ?? 0,
+          accessibility: prediction.accessibility ?? 0,
+          bundleSize: prediction.bundleSize ?? 0
         },
-        confidence: prediction.confidence || 0.5,
-        recommendations: prediction.recommendations || []
+        confidence: prediction.confidence ?? 0.5,
+        recommendations: prediction.recommendations ?? []
       };
 
       this.emit('prediction:complete', result);
@@ -367,12 +369,16 @@ export class AIIntegrationService extends EventEmitter {
         ignore: ['node_modules/**', 'dist/**', 'build/**', '*.test.*', '*.spec.*']
       });
 
-      for (const file of files) {
+      const fileProcessingPromises = files.map(async (file) => {
         const filePath = path.join(projectPath, file);
         const content = await fs.readFile(filePath, 'utf-8');
         
         // Analyze file for responsive hook usage
-        const fileUsageData = this.analyzeFileForUsage(content, file);
+        return this.analyzeFileForUsage(content, file);
+      });
+      
+      const fileResults = await Promise.all(fileProcessingPromises);
+      for (const fileUsageData of fileResults) {
         if (fileUsageData.length > 0) {
           usageData.push(...fileUsageData);
         }
@@ -392,13 +398,13 @@ export class AIIntegrationService extends EventEmitter {
     
     // Look for useResponsiveValue usage
     const responsiveValueMatches = content.matchAll(/useResponsiveValue\s*\(\s*(\d+)/g);
-    for (const match of responsiveValueMatches) {
+    for (const _match of responsiveValueMatches) {
       usageData.push({
         componentId: path.basename(filePath, path.extname(filePath)),
         componentType: 'Component',
         responsiveValues: [{
           property: 'fontSize',
-          baseValue: parseInt(match[1]!, 10),
+          baseValue: parseInt(_match[1]!, 10),
           token: 'fontSize',
           breakpointValues: {},
           usageFrequency: 1
@@ -425,7 +431,7 @@ export class AIIntegrationService extends EventEmitter {
 
     // Look for useScaledStyle usage
     const scaledStyleMatches = content.matchAll(/useScaledStyle\s*\(\s*\{/g);
-    for (const match of scaledStyleMatches) {
+    for (const _match of scaledStyleMatches) {
       usageData.push({
         componentId: path.basename(filePath, path.extname(filePath)),
         componentType: 'Component',
@@ -459,7 +465,7 @@ export class AIIntegrationService extends EventEmitter {
     return usageData;
   }
 
-  private async collectPerformanceMetrics(projectPath: string): Promise<PerformanceMetrics> {
+  private async collectPerformanceMetrics(_projectPath: string): Promise<PerformanceMetrics> {
     // In a real implementation, this would collect actual performance metrics
     // For now, return mock data compatible with the expected interface
     return {
@@ -487,7 +493,7 @@ export class AIIntegrationService extends EventEmitter {
 
     // Performance insights
     if (options.includePerformance) {
-      const lcp = (performanceMetrics as any).navigation?.loadTime || 0;
+      const lcp = (performanceMetrics as any).navigation?.loadTime ?? 0;
       if (lcp > 2500) {
         insights.push('Largest Contentful Paint (LCP) is above recommended threshold');
         recommendations.push({
@@ -576,7 +582,7 @@ export class AIIntegrationService extends EventEmitter {
 
   private async analyzeIssue(
     issue: string,
-    context: {
+    _context: {
       config: ResponsiveConfig;
       usageData: ComponentUsageData[];
       performanceMetrics: PerformanceMetrics;
@@ -612,7 +618,7 @@ export class AIIntegrationService extends EventEmitter {
   private async applySuggestion(
     config: ResponsiveConfig,
     key: string,
-    suggestion: any
+    _suggestion: any
   ): Promise<string | null> {
     // In a real implementation, this would apply the specific suggestion
     // For now, return a generic change description

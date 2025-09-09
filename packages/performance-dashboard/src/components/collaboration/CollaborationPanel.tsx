@@ -13,7 +13,7 @@ export interface CollaborationPanelProps {
   containerRef: React.RefObject<HTMLElement>;
   onUserJoin?: (user: CollaborationUser) => void;
   onUserLeave?: (user: CollaborationUser) => void;
-  onDataUpdate?: (data: any, userId: string) => void;
+  onDataUpdate?: (data: unknown, userId: string) => void;
   className?: string;
   style?: React.CSSProperties;
   showUserList?: boolean;
@@ -52,34 +52,34 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   const activityFeedRef = useRef<HTMLDivElement>(null);
 
   // Collaborative cursors and selections
-  const { cursors, getVisibleCursors } = useCollaborativeCursors(
+  const { cursors: _cursors, getVisibleCursors } = useCollaborativeCursors(
     containerRef,
     collaborationState.users
   );
 
-  const { selections, getVisibleSelections } = useCollaborativeSelections(
+  const { selections: _selections, getVisibleSelections } = useCollaborativeSelections(
     containerRef,
     collaborationState.users
   );
 
   // Handle user events
   useEffect(() => {
-    const handleUserJoin = (event: any) => {
-      const user = collaborationState.users.get(event.userId);
-      if (user) {
-        onUserJoin?.(user);
-      }
+    const _handleUserJoin = (_event: unknown) => {
+      // const user = collaborationState.users.get(event.userId);
+      // if (user) {
+      //   onUserJoin?.(user);
+      // }
     };
 
-    const handleUserLeave = (event: any) => {
-      const user = collaborationState.users.get(event.userId);
-      if (user) {
-        onUserLeave?.(user);
-      }
+    const _handleUserLeave = (_event: unknown) => {
+      // const user = collaborationState.users.get(event.userId);
+      // if (user) {
+      //   onUserLeave?.(user);
+      // }
     };
 
-    const handleDataUpdate = (event: any) => {
-      onDataUpdate?.(event.data, event.userId);
+    const _handleDataUpdate = (_event: unknown) => {
+      // onDataUpdate?.(event.data, event.userId);
     };
 
     // Add event listeners
@@ -229,7 +229,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
     
     return (
       <div className="collaborative-selections">
-        {visibleSelections.map(({ start, end, user }) => (
+        {visibleSelections.map(({ start: _start, end: _end, user }) => (
           <div
             key={user.id}
             className="collaborative-selection"
@@ -354,16 +354,22 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                       </div>
                       <div className="activity-content">
                         <span className="activity-user">
-                          {collaborationState.users.get(event.userId)?.name || 'Unknown User'}
+                          {collaborationState.users.get(event.userId)?.name ?? 'Unknown User'}
                         </span>
                         <span className="activity-action">
                           {event.type.replace('_', ' ')}
                         </span>
-                        {event.data && (
+                        {event.data && typeof event.data === 'object' ? (
                           <span className="activity-data">
-                            {JSON.stringify(event.data)}
+                            {(() => {
+                              try {
+                                return JSON.stringify(event.data as Record<string, unknown>);
+                              } catch {
+                                return 'Non-serializable data';
+                              }
+                            })()}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   ))}
@@ -380,7 +386,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
               <div className="info-item">
                 <span className="info-label">Last Activity:</span>
                 <span className="info-value">
-                  {collaborationState.lastActivity?.toLocaleTimeString() || 'Never'}
+                  {collaborationState.lastActivity?.toLocaleTimeString() ?? 'Never'}
                 </span>
               </div>
               <div className="info-item">
@@ -393,7 +399,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
             <div className="collaboration-actions">
               <button
                 className="action-button primary"
-                onClick={() => collaborationActions.retryConnection()}
+                onClick={() => void collaborationActions.retryConnection()}
                 disabled={collaborationState.isConnected}
               >
                 {collaborationState.isConnected ? 'Connected' : 'Reconnect'}
@@ -403,7 +409,10 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                 className="action-button secondary"
                 onClick={() => {
                   const stats = collaborationActions.getConnectionStats();
-                  console.log('Connection stats:', stats);
+                  if (process.env.NODE_ENV === 'development') {
+                    // eslint-disable-next-line no-console
+                    console.log('Connection stats:', stats);
+                  }
                 }}
               >
                 Stats

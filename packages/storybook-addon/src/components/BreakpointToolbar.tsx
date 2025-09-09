@@ -116,7 +116,7 @@ export const BreakpointToolbar: React.FC<ToolbarProps> = ({ api }) => {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap'
         }}>
-          {currentBreakpoint?.name || 'Responsive'}
+          {currentBreakpoint?.name ?? 'Responsive'}
         </span>
         </IconButton>
       }

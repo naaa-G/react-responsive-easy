@@ -23,7 +23,7 @@ import path from 'path';
 import winston from 'winston';
 // @ts-ignore - Conf module has type resolution issues
 import Conf from 'conf';
-import semver from 'semver';
+import _semver from 'semver';
 
 export interface EnterpriseConfig {
   // AI Configuration
@@ -116,7 +116,7 @@ export class EnterpriseCLI extends EventEmitter {
     }) as unknown as Conf<Record<string, unknown>>;
     
     this.logger = this.createLogger();
-    this.initializeEnterpriseFeatures();
+    this.initializeEnterpriseFeatures().catch(() => {});
   }
 
   private mergeWithDefaults(config: Partial<EnterpriseConfig>): EnterpriseConfig {
@@ -392,7 +392,7 @@ export class EnterpriseCLI extends EventEmitter {
       if (options.includePerformance && this.performanceMonitor) {
         this.logger.info('Running performance analysis...');
         try {
-          const performanceData = await this.performanceMonitor.collectMetrics();
+          const performanceData = this.performanceMonitor.collectMetrics();
           if (performanceData !== null && performanceData !== undefined && typeof performanceData === 'object') {
             result.performance = {
               score: this.calculatePerformanceScore(performanceData),
@@ -501,7 +501,7 @@ export class EnterpriseCLI extends EventEmitter {
         // Update project metadata
         await this.updateProjectMetadata(projectId, projectPath, {
           lastOptimized: new Date(),
-          optimizationCount: (this.projectMetadata.get(projectId)?.optimizationCount || 0) + 1
+          optimizationCount: (this.projectMetadata.get(projectId)?.optimizationCount ?? 0) + 1
         });
 
         changes.push('Configuration optimized');
@@ -582,7 +582,7 @@ export class EnterpriseCLI extends EventEmitter {
     this.logger.info('Stopping real-time monitoring...');
 
     if (this.performanceMonitor) {
-      await this.performanceMonitor.stop();
+      this.performanceMonitor.stop();
     }
 
           if (this.alertingSystem) {
@@ -627,7 +627,7 @@ export class EnterpriseCLI extends EventEmitter {
       };
 
       // Generate report file
-      const reportPath = await this.saveReport(report, options.format || 'json');
+      const reportPath = await this.saveReport(report, options.format ?? 'json');
       
       this.logger.info(`Project report generated: ${reportPath}`);
       return reportPath;
@@ -681,8 +681,8 @@ export default defineConfig(${JSON.stringify(config, null, 2)});`;
 
     const metadata: ProjectMetadata = {
       id: projectId,
-      name: packageJson.name || path.basename(projectPath),
-      version: packageJson.version || '1.0.0',
+      name: packageJson.name ?? path.basename(projectPath),
+      version: packageJson.version ?? '1.0.0',
       framework: this.detectFramework(projectPath),
       lastAnalyzed: new Date(),
       lastOptimized: new Date(),
@@ -710,7 +710,7 @@ export default defineConfig(${JSON.stringify(config, null, 2)});`;
     return 'unknown';
   }
 
-  private async collectUsageData(projectPath: string): Promise<any[]> {
+  private async collectUsageData(_projectPath: string): Promise<any[]> {
     // In a real implementation, this would analyze the codebase
     // to collect actual usage data
     return [];
@@ -766,7 +766,7 @@ export default defineConfig(${JSON.stringify(config, null, 2)});`;
     return 'high';
   }
 
-  private async analyzeCompliance(config: ResponsiveConfig, projectPath: string): Promise<{
+  private async analyzeCompliance(config: ResponsiveConfig, _projectPath: string): Promise<{
     status: 'compliant' | 'warning' | 'non-compliant';
     issues: string[];
   }> {
@@ -791,7 +791,7 @@ export default defineConfig(${JSON.stringify(config, null, 2)});`;
     return { status, issues };
   }
 
-  private async applyOptimizations(config: ResponsiveConfig, suggestions: OptimizationSuggestions): Promise<ResponsiveConfig> {
+  private async applyOptimizations(config: ResponsiveConfig, _suggestions: OptimizationSuggestions): Promise<ResponsiveConfig> {
     // In a real implementation, this would apply the AI suggestions to the config
     // For now, we'll return the original config
     return config;
@@ -813,15 +813,15 @@ export default defineConfig(${JSON.stringify(config, null, 2)});`;
   }
 
   private async getLatestAnalysis(projectId: string): Promise<AnalysisResult | null> {
-    const analyses = this.storage.get(`analytics.${projectId}`) || {};
+    const analyses = this.storage.get(`analytics.${projectId}`) ?? {};
     const latest = Object.values(analyses).sort((a: any, b: any) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     )[0] as AnalysisResult;
     
-    return latest || null;
+    return latest ?? null;
   }
 
-  private async getPerformanceTrends(projectId: string): Promise<any> {
+  private async getPerformanceTrends(_projectId: string): Promise<any> {
     // In a real implementation, this would return actual trend data
     return {
       performanceScore: [85, 87, 89, 91, 88],

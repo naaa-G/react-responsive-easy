@@ -20,7 +20,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:unit": "vitest --grep \"Unit Tests\"",
     "test:integration": "vitest --grep \"Integration Tests\"",

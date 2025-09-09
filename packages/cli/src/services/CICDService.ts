@@ -8,14 +8,9 @@
  * @version 2.0.0
  */
 
-import { execa } from 'execa';
-import { readFile, writeFile, mkdir, access } from 'fs-extra';
-import { join, resolve } from 'path';
-import { glob } from 'glob';
-import { performance } from 'perf_hooks';
+import { writeFile, mkdir } from 'fs-extra';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { createHash, randomBytes } from 'crypto';
 
 // Enterprise CI/CD Types
 export interface CICDPlatform {
@@ -359,7 +354,7 @@ export class CICDService extends EventEmitter {
   constructor(config: CICDConfiguration) {
     super();
     this.config = config;
-    this.initializeTemplates();
+    this.initializeTemplates().catch(() => {});
   }
 
   /**
@@ -575,7 +570,7 @@ export class CICDService extends EventEmitter {
     // Mock GitHub client - in real implementation, use @octokit/rest
     return {
       token,
-      request: async (options: any) => {
+      request: async (_options: any) => {
         // Mock implementation
         return { data: {}, status: 200 };
       }
@@ -590,7 +585,7 @@ export class CICDService extends EventEmitter {
     return {
       token,
       url,
-      request: async (options: any) => {
+      request: async (_options: any) => {
         // Mock implementation
         return { data: {}, status: 200 };
       }
@@ -606,7 +601,7 @@ export class CICDService extends EventEmitter {
       url,
       username,
       token,
-      request: async (options: any) => {
+      request: async (_options: any) => {
         // Mock implementation
         return { data: {}, status: 200 };
       }
@@ -616,43 +611,31 @@ export class CICDService extends EventEmitter {
   /**
    * Validate GitHub permissions
    */
-  private async validateGitHubPermissions(client: any, owner: string, repository: string): Promise<string[]> {
-    try {
-      // Mock permission validation
-      return ['read', 'write', 'admin'];
-    } catch (error) {
-      throw new Error(`Failed to validate GitHub permissions: ${error}`);
-    }
+  private async validateGitHubPermissions(_client: any, _owner: string, _repository: string): Promise<string[]> {
+    // Mock permission validation
+    return ['read', 'write', 'admin'];
   }
 
   /**
    * Validate GitLab permissions
    */
-  private async validateGitLabPermissions(client: any, projectId: string): Promise<string[]> {
-    try {
-      // Mock permission validation
-      return ['read', 'write', 'admin'];
-    } catch (error) {
-      throw new Error(`Failed to validate GitLab permissions: ${error}`);
-    }
+  private async validateGitLabPermissions(_client: any, _projectId: string): Promise<string[]> {
+    // Mock permission validation
+    return ['read', 'write', 'admin'];
   }
 
   /**
    * Validate Jenkins permissions
    */
-  private async validateJenkinsPermissions(client: any): Promise<string[]> {
-    try {
-      // Mock permission validation
-      return ['read', 'write', 'admin'];
-    } catch (error) {
-      throw new Error(`Failed to validate Jenkins permissions: ${error}`);
-    }
+  private async validateJenkinsPermissions(_client: any): Promise<string[]> {
+    // Mock permission validation
+    return ['read', 'write', 'admin'];
   }
 
   /**
    * Get GitHub rate limit
    */
-  private async getGitHubRateLimit(client: any): Promise<RateLimit> {
+  private async getGitHubRateLimit(_client: any): Promise<RateLimit> {
     try {
       // Mock rate limit
       return {
@@ -668,7 +651,7 @@ export class CICDService extends EventEmitter {
   /**
    * Get GitLab rate limit
    */
-  private async getGitLabRateLimit(client: any): Promise<RateLimit> {
+  private async getGitLabRateLimit(_client: any): Promise<RateLimit> {
     try {
       // Mock rate limit
       return {
@@ -693,10 +676,10 @@ export class CICDService extends EventEmitter {
 
       const workflow: CICDWorkflow = {
         id: uuidv4(),
-        name: customizations.name || templateData.name,
+        name: customizations.name ?? templateData.name,
         platform: templateData.platform,
-        triggers: templateData.triggers || [],
-        jobs: templateData.jobs || [],
+        triggers: templateData.triggers ?? [],
+        jobs: templateData.jobs ?? [],
         environment: this.config.environment,
         secrets: Object.keys(this.config.secrets),
         variables: { ...this.config.variables, ...customizations.variables },
@@ -706,9 +689,9 @@ export class CICDService extends EventEmitter {
         metadata: {
           version: '1.0.0',
           author: 'React Responsive Easy CLI',
-          description: customizations.description || 'Generated workflow',
-          tags: customizations.tags || [],
-          documentation: customizations.documentation || '',
+          description: customizations.description ?? 'Generated workflow',
+          tags: customizations.tags ?? [],
+          documentation: customizations.documentation ?? '',
           lastModified: new Date(),
           created: new Date()
         }
@@ -765,7 +748,7 @@ export class CICDService extends EventEmitter {
   /**
    * Deploy GitHub Actions workflow
    */
-  private async deployGitHubWorkflow(workflow: CICDWorkflow, integration: CICDIntegration): Promise<void> {
+  private async deployGitHubWorkflow(workflow: CICDWorkflow, _integration: CICDIntegration): Promise<void> {
     try {
       const workflowContent = this.generateGitHubWorkflow(workflow);
       const workflowPath = `.github/workflows/${workflow.name.toLowerCase().replace(/\s+/g, '-')}.yml`;
@@ -782,7 +765,7 @@ export class CICDService extends EventEmitter {
   /**
    * Deploy GitLab CI workflow
    */
-  private async deployGitLabWorkflow(workflow: CICDWorkflow, integration: CICDIntegration): Promise<void> {
+  private async deployGitLabWorkflow(workflow: CICDWorkflow, _integration: CICDIntegration): Promise<void> {
     try {
       const workflowContent = this.generateGitLabWorkflow(workflow);
       const workflowPath = '.gitlab-ci.yml';
@@ -799,7 +782,7 @@ export class CICDService extends EventEmitter {
   /**
    * Deploy Jenkins workflow
    */
-  private async deployJenkinsWorkflow(workflow: CICDWorkflow, integration: CICDIntegration): Promise<void> {
+  private async deployJenkinsWorkflow(workflow: CICDWorkflow, _integration: CICDIntegration): Promise<void> {
     try {
       const workflowContent = this.generateJenkinsWorkflow(workflow);
       const workflowPath = 'Jenkinsfile';
@@ -817,7 +800,7 @@ export class CICDService extends EventEmitter {
    * Generate GitHub Actions workflow content
    */
   private generateGitHubWorkflow(workflow: CICDWorkflow): string {
-    const { name, triggers, jobs, secrets, variables } = workflow;
+    const { name, triggers, jobs } = workflow;
 
     let content = `name: ${name}\n\n`;
     
@@ -1026,14 +1009,14 @@ export class CICDService extends EventEmitter {
    * Get CI/CD status for a workflow
    */
   async getWorkflowStatus(workflowId: string): Promise<CICDStatus | null> {
-    return this.statuses.get(workflowId) || null;
+    return this.statuses.get(workflowId) ?? null;
   }
 
   /**
    * Get CI/CD report for a workflow
    */
   async getWorkflowReport(workflowId: string): Promise<CICDReport | null> {
-    return this.reports.get(workflowId) || null;
+    return this.reports.get(workflowId) ?? null;
   }
 
   /**

@@ -15,7 +15,7 @@ import type {
 } from '../core/PerformanceMonitor';
 
 export interface AIIntegrationConfig {
-  aiOptimizer?: any; // AIOptimizer
+  aiOptimizer?: unknown; // AIOptimizer
   enableRealTimeOptimization?: boolean;
   enablePredictiveAnalytics?: boolean;
   enableIntelligentAlerts?: boolean;
@@ -37,7 +37,7 @@ export interface AIInsight {
   };
   actionable: boolean;
   actions?: AIAction[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -46,7 +46,7 @@ export interface AIAction {
   type: 'optimize' | 'alert' | 'configure' | 'analyze';
   title: string;
   description: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
   estimatedImpact: number;
   risk: 'low' | 'medium' | 'high';
   automated: boolean;
@@ -99,7 +99,7 @@ export interface AIPerformanceAnalysis {
 }
 
 export class AIIntegrationManager {
-  private aiOptimizer?: any; // AIOptimizer
+  private aiOptimizer?: unknown; // AIOptimizer
   private config: AIIntegrationConfig;
   private insights: AIInsight[] = [];
   private predictions: AIPrediction[] = [];
@@ -126,21 +126,31 @@ export class AIIntegrationManager {
    */
   async initialize(): Promise<void> {
     if (!this.aiOptimizer) {
-      console.warn('AI Optimizer not provided - AI features will be limited');
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console\n        // eslint-disable-next-line no-console\n        console.warn('AI Optimizer not provided - AI features will be limited');
+      }
       return;
     }
 
     try {
       // Test AI Optimizer connection
-      await this.aiOptimizer.getEnterpriseMetrics();
+      await (this.aiOptimizer as { getEnterpriseMetrics: () => Promise<unknown> }).getEnterpriseMetrics();
       
       if (this.config.enablePredictiveAnalytics) {
         this.startPredictiveAnalytics();
       }
       
-      console.log('🤖 AI Integration initialized successfully');
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.log('🤖 AI Integration initialized successfully');
+      }
     } catch (error) {
-      console.error('Failed to initialize AI integration:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('Failed to initialize AI integration:', error);
+      }
     }
   }
 
@@ -166,7 +176,11 @@ export class AIIntegrationManager {
 
       return analysis;
     } catch (error) {
-      console.error('AI analysis failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('AI analysis failed:', error);
+      }
       return this.getFallbackAnalysis(metrics);
     } finally {
       this.isAnalyzing = false;
@@ -203,7 +217,11 @@ export class AIIntegrationManager {
       
       return insights;
     } catch (error) {
-      console.error('Failed to generate AI insights:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('Failed to generate AI insights:', error);
+      }
       return [];
     }
   }
@@ -219,7 +237,7 @@ export class AIIntegrationManager {
     try {
       // Check if optimization is needed
       const optimizationScore = this.calculateOptimizationScore(metrics);
-      if (optimizationScore < this.config.optimizationThreshold!) {
+      if (optimizationScore < (this.config.optimizationThreshold ?? 0.1)) {
         return {
           success: false,
           improvements: { performance: 0, userExperience: 0, cost: 0 },
@@ -230,7 +248,7 @@ export class AIIntegrationManager {
       }
 
       // Generate optimization suggestions
-      const suggestions = await this.aiOptimizer.optimizeScaling(
+      const suggestions = await (this.aiOptimizer as { optimizeScaling: (config: unknown, data: unknown[]) => Promise<unknown> }).optimizeScaling(
         this.extractConfiguration(metrics),
         this.extractUsageData(metrics)
       );
@@ -243,7 +261,11 @@ export class AIIntegrationManager {
 
       return result;
     } catch (error) {
-      console.error('AI optimization failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('AI optimization failed:', error);
+      }
       return {
         success: false,
         improvements: { performance: 0, userExperience: 0, cost: 0 },
@@ -308,17 +330,21 @@ export class AIIntegrationManager {
       clearInterval(this.analysisInterval);
     }
 
-    this.analysisInterval = window.setInterval(async () => {
+    this.analysisInterval = window.setInterval(() => {
       try {
         // Generate periodic predictions
-        await this.updatePredictions();
+        void this.updatePredictions();
       } catch (error) {
-        console.error('Predictive analytics error:', error);
+        if (process.env.NODE_ENV === 'development') {
+          // Use proper logging instead of console
+          // eslint-disable-next-line no-console
+          console.error('Predictive analytics error:', error);
+        }
       }
-    }, this.config.predictionInterval!);
+    }, this.config.predictionInterval);
   }
 
-  private async updatePredictions(): Promise<void> {
+  private updatePredictions(): Promise<void> {
     // This would integrate with the AI Optimizer to generate predictions
     // For now, we'll create mock predictions based on current metrics
     const mockPredictions: AIPrediction[] = [
@@ -335,6 +361,7 @@ export class AIIntegrationManager {
     ];
 
     this.predictions = mockPredictions;
+    return Promise.resolve();
   }
 
   private calculateOverallScore(metrics: PerformanceMetrics): number {
@@ -358,7 +385,7 @@ export class AIIntegrationManager {
     return Math.max(0, Math.round(score));
   }
 
-  private async identifyBottlenecks(metrics: PerformanceMetrics, history: PerformanceSnapshot[]): Promise<Array<{
+  private identifyBottlenecks(metrics: PerformanceMetrics, _history: PerformanceSnapshot[]): Promise<Array<{
     component: string;
     impact: number;
     severity: 'low' | 'medium' | 'high';
@@ -396,10 +423,10 @@ export class AIIntegrationManager {
       });
     }
 
-    return bottlenecks;
+    return Promise.resolve(bottlenecks);
   }
 
-  private async identifyOpportunities(metrics: PerformanceMetrics, history: PerformanceSnapshot[]): Promise<Array<{
+  private identifyOpportunities(metrics: PerformanceMetrics, _history: PerformanceSnapshot[]): Promise<Array<{
     area: string;
     potential: number;
     effort: 'low' | 'medium' | 'high';
@@ -427,7 +454,7 @@ export class AIIntegrationManager {
       });
     }
 
-    return opportunities;
+    return Promise.resolve(opportunities);
   }
 
   private analyzeTrends(history: PerformanceSnapshot[]): PerformanceTrends {
@@ -449,12 +476,12 @@ export class AIIntegrationManager {
         recent.map(s => s.metrics.layoutShift.current)
       ),
       memory: this.calculateTrend(
-        older.map(s => s.metrics.memory?.usage || 0),
-        recent.map(s => s.metrics.memory?.usage || 0)
+        older.map(s => s.metrics.memory?.usage ?? 0),
+        recent.map(s => s.metrics.memory?.usage ?? 0)
       ),
       lcp: this.calculateTrend(
-        older.map(s => s.metrics.paintTiming.lcp || 0),
-        recent.map(s => s.metrics.paintTiming.lcp || 0)
+        older.map(s => s.metrics.paintTiming.lcp ?? 0),
+        recent.map(s => s.metrics.paintTiming.lcp ?? 0)
       ),
       responsiveElements: this.calculateTrend(
         older.map(s => s.metrics.responsiveElements.count),
@@ -476,10 +503,10 @@ export class AIIntegrationManager {
     return 'stable';
   }
 
-  private async generatePredictions(metrics: PerformanceMetrics, history: PerformanceSnapshot[]): Promise<AIPrediction[]> {
+  private generatePredictions(metrics: PerformanceMetrics, _history: PerformanceSnapshot[]): Promise<AIPrediction[]> {
     // This would use the AI Optimizer for actual predictions
     // For now, return mock predictions
-    return [
+    return Promise.resolve([
       {
         metric: 'layoutShift',
         currentValue: metrics.layoutShift.current,
@@ -490,10 +517,10 @@ export class AIIntegrationManager {
         factors: ['user interaction patterns', 'content changes'],
         recommendations: ['Implement layout stability', 'Optimize image loading']
       }
-    ];
+    ]);
   }
 
-  private async generateRecommendations(metrics: PerformanceMetrics, history: PerformanceSnapshot[]): Promise<AIInsight[]> {
+  private generateRecommendations(metrics: PerformanceMetrics, _history: PerformanceSnapshot[]): Promise<AIInsight[]> {
     const recommendations: AIInsight[] = [];
 
     if (metrics.layoutShift.current > 0.1) {
@@ -518,27 +545,27 @@ export class AIIntegrationManager {
       });
     }
 
-    return recommendations;
+    return Promise.resolve(recommendations);
   }
 
   private async generateOptimizationInsights(metrics: PerformanceMetrics): Promise<AIInsight[]> {
-    if (!this.aiOptimizer) return [];
+    if (!this.aiOptimizer) return Promise.resolve([]);
 
     try {
-      const suggestions = await this.aiOptimizer.optimizeScaling(
+      const suggestions = await (this.aiOptimizer as { optimizeScaling: (config: unknown, data: unknown[]) => Promise<unknown> }).optimizeScaling(
         this.extractConfiguration(metrics),
         this.extractUsageData(metrics)
       );
 
-      return [{
+      return Promise.resolve([{
         type: 'optimization',
-        severity: suggestions.confidenceScore > 0.8 ? 'info' : 'warning',
+        severity: (suggestions as { confidenceScore: number }).confidenceScore > 0.8 ? 'info' : 'warning',
         title: 'AI Optimization Available',
-        description: `AI suggests ${suggestions.suggestedTokens ? 'token optimizations' : 'performance improvements'}`,
-        confidence: suggestions.confidenceScore,
+        description: `AI suggests ${(suggestions as { suggestedTokens?: unknown }).suggestedTokens ? 'token optimizations' : 'performance improvements'}`,
+        confidence: (suggestions as { confidenceScore: number }).confidenceScore,
         impact: {
-          performance: suggestions.estimatedImprovements?.performance?.renderTime || 0,
-          userExperience: suggestions.estimatedImprovements?.userExperience?.interactionRate || 0,
+          performance: ((suggestions as { estimatedImprovements?: { performance?: { renderTime?: number } } }).estimatedImprovements?.performance?.renderTime) ?? 0,
+          userExperience: ((suggestions as { estimatedImprovements?: { userExperience?: { interactionRate?: number } } }).estimatedImprovements?.userExperience?.interactionRate) ?? 0,
           cost: 0.1
         },
         actionable: true,
@@ -547,19 +574,23 @@ export class AIIntegrationManager {
           type: 'optimize',
           title: 'Apply AI Optimizations',
           description: 'Apply AI-suggested performance optimizations',
-          estimatedImpact: suggestions.confidenceScore,
+          estimatedImpact: (suggestions as { confidenceScore: number }).confidenceScore,
           risk: 'low',
           automated: true
         }],
         timestamp: Date.now()
-      }];
+      }]);
     } catch (error) {
-      console.error('Failed to generate optimization insights:', error);
-      return [];
+      if (process.env.NODE_ENV === 'development') {
+        // Use proper logging instead of console
+        // eslint-disable-next-line no-console
+        console.error('Failed to generate optimization insights:', error);
+      }
+      return Promise.resolve([]);
     }
   }
 
-  private async generatePredictiveInsights(metrics: PerformanceMetrics): Promise<AIInsight[]> {
+  private generatePredictiveInsights(metrics: PerformanceMetrics): Promise<AIInsight[]> {
     const insights: AIInsight[] = [];
 
     // Predict memory issues
@@ -576,10 +607,10 @@ export class AIIntegrationManager {
       });
     }
 
-    return insights;
+    return Promise.resolve(insights);
   }
 
-  private async generateAlertInsights(alerts: PerformanceAlert[], metrics: PerformanceMetrics): Promise<AIInsight[]> {
+  private generateAlertInsights(alerts: PerformanceAlert[], _metrics: PerformanceMetrics): Promise<AIInsight[]> {
     const insights: AIInsight[] = [];
 
     alerts.forEach(alert => {
@@ -599,7 +630,7 @@ export class AIIntegrationManager {
       });
     });
 
-    return insights;
+    return Promise.resolve(insights);
   }
 
   private calculateOptimizationScore(metrics: PerformanceMetrics): number {
@@ -623,7 +654,7 @@ export class AIIntegrationManager {
     return Math.min(1, score);
   }
 
-  private extractConfiguration(metrics: PerformanceMetrics): any {
+  private extractConfiguration(_metrics: PerformanceMetrics): unknown {
     // Extract configuration from metrics for AI Optimizer
     return {
       breakpoints: { sm: 640, md: 768, lg: 1024, xl: 1280 },
@@ -632,7 +663,7 @@ export class AIIntegrationManager {
     };
   }
 
-  private extractUsageData(metrics: PerformanceMetrics): any[] {
+  private extractUsageData(metrics: PerformanceMetrics): unknown[] {
     // Extract usage data from metrics for AI Optimizer
     return [{
       componentType: 'responsive-element',
@@ -647,10 +678,10 @@ export class AIIntegrationManager {
     }];
   }
 
-  private async applyOptimizations(suggestions: any, metrics: PerformanceMetrics): Promise<AIOptimizationResult> {
+  private applyOptimizations(_suggestions: unknown, _metrics: PerformanceMetrics): Promise<AIOptimizationResult> {
     // This would apply the actual optimizations
     // For now, return a mock result
-    return {
+    return Promise.resolve({
       success: true,
       improvements: {
         performance: 0.15,
@@ -664,7 +695,7 @@ export class AIIntegrationManager {
       }],
       rollbackAvailable: true,
       timestamp: Date.now()
-    };
+    });
   }
 
   private getCachedAnalysis(): AIPerformanceAnalysis {

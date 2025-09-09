@@ -114,13 +114,13 @@ program
         console.log(chalk.green('✅ Enterprise configuration reset to defaults'));
 
       } else if (options.export) {
-        const config = await configService.loadConfig();
+        const _config = await configService.loadConfig();
         const exported = await configService.exportConfig(options.export as any);
         console.log(chalk.green(`✅ Configuration exported in ${options.export.toUpperCase()} format:`));
         console.log(chalk.gray(exported));
 
       } else if (options.validate) {
-        const config = await configService.loadConfig();
+        const _config = await configService.loadConfig();
         const status = configService.getStatus();
         console.log(chalk.green('📋 Configuration Validation Results:'));
         console.log(chalk.cyan(`   Valid: ${status.valid ? '✅' : '❌'}`));
@@ -164,9 +164,9 @@ program
       if (options.log) {
         // Log sample audit event
         const event = await auditService.logEvent({
-          eventType: options.type || 'system_event',
+          eventType: options.type ?? 'system_event',
           category: 'operational',
-          severity: options.severity || 'medium',
+          severity: options.severity ?? 'medium',
           source: {
             system: 'cli',
             component: 'enterprise',
@@ -179,7 +179,7 @@ program
             requestId: 'req-456'
           },
           user: {
-            id: options.user || 'system',
+            id: options.user ?? 'system',
             username: 'admin',
             email: 'admin@example.com',
             roles: ['admin'],

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import chalk from 'chalk';
+import _chalk from 'chalk';
 
 // Visualization Types
 export interface VisualizationConfig {
@@ -347,9 +347,9 @@ export class DataVisualizationService extends EventEmitter {
     interactive?: boolean;
     responsive?: boolean;
   }): Promise<Visualization> {
-    const theme = this.themes.get(config.theme || this.config.defaultTheme);
+    const theme = this.themes.get(config.theme ?? this.config.defaultTheme);
     if (!theme) {
-      throw new Error(`Theme ${config.theme || this.config.defaultTheme} not found`);
+      throw new Error(`Theme ${config.theme ?? this.config.defaultTheme} not found`);
     }
 
     const visualization: Visualization = {
@@ -434,9 +434,9 @@ export class DataVisualizationService extends EventEmitter {
         widgets: [],
         ...config.layout
       },
-      visualizations: config.visualizations || [],
-      filters: config.filters || [],
-      refreshInterval: config.refreshInterval || 300,
+      visualizations: config.visualizations ?? [],
+      filters: config.filters ?? [],
+      refreshInterval: config.refreshInterval ?? 300,
       autoRefresh: true,
       sharing: {
         enabled: false,
@@ -485,8 +485,8 @@ export class DataVisualizationService extends EventEmitter {
     groupBy?: string;
     aggregation?: 'sum' | 'avg' | 'count' | 'min' | 'max';
   }): ChartData {
-    const labels: string[] = [];
-    const datasets: ChartDataset[] = [];
+    const _labels: string[] = [];
+    const _datasets: ChartDataset[] = [];
 
     switch (config.type) {
       case 'line':
@@ -518,9 +518,7 @@ export class DataVisualizationService extends EventEmitter {
     const groupedData = data.reduce((acc, item) => {
       const timeKey = new Date(item[config.xField]).toISOString().split('T')[0];
       if (timeKey !== undefined) {
-        if (!acc[timeKey]) {
-          acc[timeKey] = [];
-        }
+        acc[timeKey] ??= [];
         acc[timeKey].push(item);
       }
       return acc;
@@ -536,11 +534,11 @@ export class DataVisualizationService extends EventEmitter {
       const groups = [...new Set(data.map(item => item[config.groupBy]))];
       groups.forEach((group, index) => {
         const theme = this.themes.get(this.config.defaultTheme);
-        const color = theme?.colors[index % theme.colors.length] || '#3B82F6';
+        const color = theme?.colors[index % theme.colors.length] ?? '#3B82F6';
         
         const groupData = labels.map(label => {
-          const dayData = groupedData[label]?.filter((item: any) => item[config.groupBy] === group) || [];
-          return this.aggregateData(dayData, config.yField, config.aggregation || 'sum');
+          const dayData = groupedData[label]?.filter((item: any) => item[config.groupBy] === group) ?? [];
+          return this.aggregateData(dayData, config.yField, config.aggregation ?? 'sum');
         });
 
         datasets.push({
@@ -555,11 +553,11 @@ export class DataVisualizationService extends EventEmitter {
       });
     } else {
       const theme = this.themes.get(this.config.defaultTheme);
-      const color = theme?.colors[0] || '#3B82F6';
+      const color = theme?.colors[0] ?? '#3B82F6';
       
       const aggregatedData = labels.map(label => {
-        const dayData = groupedData[label] || [];
-        return this.aggregateData(dayData, config.yField, config.aggregation || 'sum');
+        const dayData = groupedData[label] ?? [];
+        return this.aggregateData(dayData, config.yField, config.aggregation ?? 'sum');
       });
 
       datasets.push({
@@ -582,10 +580,8 @@ export class DataVisualizationService extends EventEmitter {
   private generatePieChartData(data: any[], config: any): ChartData {
     const groupedData = data.reduce((acc, item) => {
       const key = item[config.xField];
-      if (!acc[key]) {
-        acc[key] = 0;
-      }
-      acc[key] += this.aggregateData([item], config.yField, config.aggregation || 'sum');
+      acc[key] ??= 0;
+      acc[key] += this.aggregateData([item], config.yField, config.aggregation ?? 'sum');
       return acc;
     }, {} as Record<string, number>);
 
@@ -596,7 +592,7 @@ export class DataVisualizationService extends EventEmitter {
       label: config.yField,
       data: Object.values(groupedData) as number[],
       backgroundColor: labels.map((_, index) => 
-        theme?.colors[index % theme.colors.length] || '#3B82F6'
+        theme?.colors[index % theme.colors.length] ?? '#3B82F6'
       ),
       borderColor: '#ffffff',
       borderWidth: 2
@@ -610,7 +606,7 @@ export class DataVisualizationService extends EventEmitter {
    */
   private generateScatterPlotData(data: any[], config: any): ChartData {
     const theme = this.themes.get(this.config.defaultTheme);
-    const color = theme?.colors[0] || '#3B82F6';
+    const color = theme?.colors[0] ?? '#3B82F6';
 
     const scatterData = data.map(item => ({
       x: item[config.xField],
@@ -759,7 +755,7 @@ export class DataVisualizationService extends EventEmitter {
     <title>${data.visualization.title}</title>
     <style>
         body {
-            font-family: ${theme?.fonts.primary || 'Inter, sans-serif'};
+            font-family: ${theme?.fonts.primary ?? 'Inter, sans-serif'};
             margin: 0;
             padding: 20px;
             background-color: ${theme?.darkMode ? '#1a1a1a' : '#ffffff'};
@@ -768,18 +764,18 @@ export class DataVisualizationService extends EventEmitter {
         .visualization {
             max-width: 800px;
             margin: 0 auto;
-            padding: ${theme?.layout.padding || 16}px;
-            border-radius: ${theme?.layout.borderRadius || 8}px;
+            padding: ${theme?.layout.padding ?? 16}px;
+            border-radius: ${theme?.layout.borderRadius ?? 8}px;
             ${theme?.layout.shadow ? 'box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);' : ''}
             background-color: ${theme?.darkMode ? '#2a2a2a' : '#ffffff'};
         }
         .title {
-            font-size: ${theme?.fonts.size.title || 24}px;
+            font-size: ${theme?.fonts.size.title ?? 24}px;
             font-weight: bold;
             margin-bottom: 10px;
         }
         .description {
-            font-size: ${theme?.fonts.size.body || 14}px;
+            font-size: ${theme?.fonts.size.body ?? 14}px;
             margin-bottom: 20px;
             opacity: 0.8;
         }
@@ -808,7 +804,7 @@ export class DataVisualizationService extends EventEmitter {
    * Get visualization
    */
   getVisualization(id: string): Visualization | null {
-    return this.visualizations.get(id) || null;
+    return this.visualizations.get(id) ?? null;
   }
 
   /**
@@ -840,7 +836,7 @@ export class DataVisualizationService extends EventEmitter {
    * Get dashboard
    */
   getDashboard(id: string): Dashboard | null {
-    return this.dashboards.get(id) || null;
+    return this.dashboards.get(id) ?? null;
   }
 
   /**

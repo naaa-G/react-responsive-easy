@@ -29,109 +29,180 @@ export interface ResponsiveProviderProps {
   debug?: boolean;
 }
 
-// The main provider component  
-export const ResponsiveProvider = ({
-  config,
-  initialBreakpoint,
-  debug = false,
-  children
-}: React.PropsWithChildren<ResponsiveProviderProps>) => {
-  // Create the scaling engine instance
-  const scalingEngine = useMemo(() => new ScalingEngine(config), [config]);
-  
-  // Resolve initial breakpoint
-  const resolvedInitialBreakpoint = useMemo(() => {
-    if (!initialBreakpoint) return config.base;
-    
-    // If initialBreakpoint is a string, find the matching breakpoint
-    if (typeof initialBreakpoint === 'string') {
-      const found = config.breakpoints.find(bp => 
-        bp.name === initialBreakpoint || bp.alias === initialBreakpoint
-      );
-      return found ?? config.base;
-    }
-    
-    // If it's already a Breakpoint object, use it
-    return initialBreakpoint;
-  }, [initialBreakpoint, config.breakpoints, config.base]);
+// Constants for better maintainability
+const TEST_VALUE_FOR_RATIO = 100;
+const DEFAULT_RATIO = 1;
+const DEFAULT_COMPUTATION_TIME = 0;
 
-  // State for current breakpoint
-  const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>(
-    resolvedInitialBreakpoint
-  );
+// Helper function to resolve initial breakpoint
+const resolveInitialBreakpoint = (
+  initialBreakpoint: Breakpoint | string | undefined,
+  config: ResponsiveConfig
+): Breakpoint => {
+  if (!initialBreakpoint) return config.base;
   
-  // State for scaling ratios (pre-computed for performance)
+  // If initialBreakpoint is a string, find the matching breakpoint
+  if (typeof initialBreakpoint === 'string') {
+    const found = config.breakpoints.find(bp => 
+      bp.name === initialBreakpoint || bp.alias === initialBreakpoint
+    );
+    return found ?? config.base;
+  }
+  
+  // If it's already a Breakpoint object, use it
+  return initialBreakpoint;
+};
+
+// Helper function to compute scaling ratios
+const computeScalingRatios = (
+  breakpoints: Breakpoint[],
+  scalingEngine: ScalingEngine
+): Record<string, number> => {
+  const ratios: Record<string, number> = {};
+  breakpoints.forEach(breakpoint => {
+    try {
+      const testResult = scalingEngine.scaleValue(TEST_VALUE_FOR_RATIO, breakpoint);
+      ratios[breakpoint.name] = testResult.ratio;
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
+      }
+    }
+  });
+  return ratios;
+};
+
+// Helper function to find best matching breakpoint
+const findBestMatchingBreakpoint = (
+  width: number,
+  height: number,
+  breakpoints: Breakpoint[],
+  base: Breakpoint
+): Breakpoint => {
+  let bestMatch = base;
+  let bestScore = 0;
+  
+  breakpoints.forEach(breakpoint => {
+    const widthScore = 1 - Math.abs(width - breakpoint.width) / Math.max(width, breakpoint.width);
+    const heightScore = 1 - Math.abs(height - breakpoint.height) / Math.max(height, breakpoint.height);
+    const score = (widthScore + heightScore) / 2;
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = breakpoint;
+    }
+  });
+  
+  return bestMatch;
+};
+
+// Helper function to create fallback scaled value
+const createFallbackScaledValue = (
+  value: number,
+  currentBreakpoint: Breakpoint | null,
+  base: Breakpoint
+): ScaledValue => ({
+  original: value,
+  scaled: value,
+  targetBreakpoint: currentBreakpoint ?? base,
+  ratio: DEFAULT_RATIO,
+  constraints: {
+    minApplied: false,
+    maxApplied: false,
+    stepApplied: false
+  },
+  performance: {
+    computationTime: DEFAULT_COMPUTATION_TIME,
+    cacheHit: false
+  }
+});
+
+// Custom hook for scaling ratios management
+const useScalingRatios = (config: ResponsiveConfig, scalingEngine: ScalingEngine) => {
   const [scalingRatios, setScalingRatios] = useState<Record<string, number>>({});
   
-  // State for computed values cache
-  const [computedValues, setComputedValues] = useState<Map<string, ScaledValue>>(new Map());
-  
-  // Pre-compute scaling ratios for all breakpoints
-  useEffect(() => {
-    const ratios: Record<string, number> = {};
-    config.breakpoints.forEach(breakpoint => {
-      try {
-        // Use a simple test value to get the ratio
-        const testResult = scalingEngine.scaleValue(100, breakpoint);
-        ratios[breakpoint.name] = testResult.ratio;
-      } catch (error) {
-        // Log error in development mode only
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
-        }
-      }
-    });
+  const computeRatios = useCallback(() => {
+    const ratios = computeScalingRatios(config.breakpoints, scalingEngine);
     setScalingRatios(ratios);
   }, [config.breakpoints, scalingEngine]);
   
-  // Function to invalidate cache
-  const invalidateCache = useCallback(() => {
-    scalingEngine.clearCache();
-    setComputedValues(new Map());
-  }, [scalingEngine]);
+  useEffect(() => {
+    computeRatios();
+  }, [computeRatios]);
   
-  // Function to force re-computation
-  const forceRecompute = useCallback(() => {
-    invalidateCache();
-    // Re-compute ratios
-    const ratios: Record<string, number> = {};
-    config.breakpoints.forEach(breakpoint => {
-      try {
-        const testResult = scalingEngine.scaleValue(100, breakpoint);
-        ratios[breakpoint.name] = testResult.ratio;
-      } catch (error) {
-        // Log error in development mode only
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.warn(`Failed to compute ratio for breakpoint ${breakpoint.name}:`, error);
-        }
-      }
-    });
-    setScalingRatios(ratios);
-  }, [config.breakpoints, scalingEngine, invalidateCache]);
+  return { scalingRatios, computeRatios };
+};
 
-  // Enhanced scaling function that uses ScaleOptions
-  const scaleValueWithOptions = useCallback((value: number, options: ScaleOptions = {}): ScaledValue => {
+// Custom hook for handling initial breakpoint updates
+const useInitialBreakpoint = (
+  initialBreakpoint: Breakpoint | string | undefined,
+  resolvedInitialBreakpoint: Breakpoint,
+  currentBreakpoint: Breakpoint,
+  setCurrentBreakpoint: (bp: Breakpoint) => void
+) => {
+  useEffect(() => {
+    if (initialBreakpoint && currentBreakpoint.name !== resolvedInitialBreakpoint.name) {
+      setCurrentBreakpoint(resolvedInitialBreakpoint);
+    }
+  }, [initialBreakpoint, resolvedInitialBreakpoint, currentBreakpoint.name, setCurrentBreakpoint]);
+};
+
+// Custom hook for viewport-based breakpoint detection
+const useViewportBreakpoint = (
+  config: ResponsiveConfig,
+  initialBreakpoint: Breakpoint | string | undefined,
+  resolvedInitialBreakpoint: Breakpoint
+) => {
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>(resolvedInitialBreakpoint);
+  
+  useInitialBreakpoint(initialBreakpoint, resolvedInitialBreakpoint, currentBreakpoint, setCurrentBreakpoint);
+  
+  useEffect(() => {
+    if (initialBreakpoint) {
+      return;
+    }
+    
+    const updateBreakpoint = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const bestMatch = findBestMatchingBreakpoint(width, height, config.breakpoints, config.base);
+      setCurrentBreakpoint(bestMatch);
+    };
+    
+    updateBreakpoint();
+    
+    const handleResize = () => updateBreakpoint();
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, [config.breakpoints, config.base, initialBreakpoint]);
+  
+  return currentBreakpoint;
+};
+
+// Custom hook for scaling functionality
+const useScalingFunction = (
+  scalingEngine: ScalingEngine,
+  currentBreakpoint: Breakpoint,
+  config: ResponsiveConfig,
+  setComputedValues: React.Dispatch<React.SetStateAction<Map<string, ScaledValue>>>
+) => {
+  return useCallback((value: number, options: ScaleOptions = {}): ScaledValue => {
     try {
-      // Ensure we have a valid currentBreakpoint
       if (!currentBreakpoint) {
-        // Log warning in development mode only
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
           console.warn('No current breakpoint available, using base breakpoint');
         }
-        const result = scalingEngine.scaleValue(value, config.base, options);
-        return result;
+        return scalingEngine.scaleValue(value, config.base, options);
       }
       
       const result = scalingEngine.scaleValue(value, currentBreakpoint, options);
       
-      // Cache the result if caching is enabled
       if (!options.bypassCache) {
         const cacheKey = `${value}-${currentBreakpoint.name}-${JSON.stringify(options)}`;
         setComputedValues(prev => {
-          // Only update if the value is different
           if (prev.get(cacheKey)?.scaled !== result.scaled) {
             const newMap = new Map(prev);
             newMap.set(cacheKey, result);
@@ -143,82 +214,23 @@ export const ResponsiveProvider = ({
       
       return result;
     } catch (error) {
-      // Log error in development mode only
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
         console.warn('Failed to scale value with options:', error);
       }
-      // Return fallback value
-      return {
-        original: value,
-        scaled: value,
-        targetBreakpoint: currentBreakpoint || config.base,
-        ratio: 1,
-        constraints: {
-          minApplied: false,
-          maxApplied: false,
-          stepApplied: false
-        },
-        performance: {
-          computationTime: 0,
-          cacheHit: false
-        }
-      };
+      return createFallbackScaledValue(value, currentBreakpoint, config.base);
     }
-  }, [scalingEngine, currentBreakpoint.name, currentBreakpoint.width, currentBreakpoint.height, config.base.name, config.base.width, config.base.height]);
-  
-  // Update current breakpoint based on viewport (only if no initialBreakpoint is provided)
-  useEffect(() => {
-    // If we have an initialBreakpoint, use it and don't set up viewport-based detection
-    if (initialBreakpoint) {
-      // Only update if the current breakpoint is different
-      if (currentBreakpoint.name !== resolvedInitialBreakpoint.name) {
-        setCurrentBreakpoint(resolvedInitialBreakpoint);
-      }
-      return;
-    }
-    
-    // Only set up viewport-based detection if no initialBreakpoint is provided
-    const updateBreakpoint = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      
-      // Find the best matching breakpoint
-      let bestMatch = config.base;
-      let bestScore = 0;
-      
-      config.breakpoints.forEach(breakpoint => {
-        // Calculate how well this breakpoint matches current viewport
-        const widthScore = 1 - Math.abs(width - breakpoint.width) / Math.max(width, breakpoint.width);
-        const heightScore = 1 - Math.abs(height - breakpoint.height) / Math.max(height, breakpoint.height);
-        const score = (widthScore + heightScore) / 2;
-        
-        if (score > bestScore) {
-          bestScore = score;
-          bestMatch = breakpoint;
-        }
-      });
-      
-      setCurrentBreakpoint(bestMatch);
-    };
-    
-    // Initial update for dynamic detection
-    updateBreakpoint();
-    
-    // Listen for resize events to enable responsive behavior
-    const handleResize = () => {
-      updateBreakpoint();
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [config.breakpoints, config.base, initialBreakpoint, resolvedInitialBreakpoint]);
-  
-  // Debug logging
+  }, [scalingEngine, currentBreakpoint, config.base, setComputedValues]);
+};
+
+// Custom hook for debug logging
+const useDebugLogging = (
+  debug: boolean,
+  currentBreakpoint: Breakpoint,
+  scalingRatios: Record<string, number>,
+  computedValues: Map<string, ScaledValue>,
+  config: ResponsiveConfig
+) => {
   useEffect(() => {
     if (debug && process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
@@ -234,6 +246,48 @@ export const ResponsiveProvider = ({
       });
     }
   }, [debug, currentBreakpoint, scalingRatios, computedValues.size, config.base.name, config.breakpoints, config.strategy.origin]);
+};
+
+// The main provider component  
+export const ResponsiveProvider = ({
+  config,
+  initialBreakpoint,
+  debug = false,
+  children
+}: React.PropsWithChildren<ResponsiveProviderProps>) => {
+  // Create the scaling engine instance
+  const scalingEngine = useMemo(() => new ScalingEngine(config), [config]);
+  
+  // Resolve initial breakpoint
+  const resolvedInitialBreakpoint = useMemo(() => 
+    resolveInitialBreakpoint(initialBreakpoint, config),
+    [initialBreakpoint, config]
+  );
+
+  // State for computed values cache
+  const [computedValues, setComputedValues] = useState<Map<string, ScaledValue>>(new Map());
+  
+  // Use custom hooks for complex logic
+  const { scalingRatios, computeRatios } = useScalingRatios(config, scalingEngine);
+  const currentBreakpoint = useViewportBreakpoint(config, initialBreakpoint, resolvedInitialBreakpoint);
+  
+  // Function to invalidate cache
+  const invalidateCache = useCallback(() => {
+    scalingEngine.clearCache();
+    setComputedValues(new Map());
+  }, [scalingEngine]);
+  
+  // Function to force re-computation
+  const forceRecompute = useCallback(() => {
+    invalidateCache();
+    computeRatios();
+  }, [invalidateCache, computeRatios]);
+
+  // Enhanced scaling function that uses ScaleOptions
+  const scaleValueWithOptions = useScalingFunction(scalingEngine, currentBreakpoint, config, setComputedValues);
+  
+  // Debug logging
+  useDebugLogging(debug, currentBreakpoint, scalingRatios, computedValues, config);
   
   // Create the context value
   const contextValue: ResponsiveContextValue = useMemo(() => ({
@@ -243,7 +297,7 @@ export const ResponsiveProvider = ({
     computedValues,
     invalidateCache,
     forceRecompute,
-    scaleValueWithOptions // Add the new scaling function
+    scaleValueWithOptions
   }), [config, currentBreakpoint, scalingRatios, computedValues, invalidateCache, forceRecompute, scaleValueWithOptions]);
   
   return (

@@ -1,8 +1,13 @@
-// @ts-nocheck - React type conflicts with Recharts components
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useVirtualScrolling, VirtualScrollingOptions } from '../../hooks/useVirtualScrolling';
 import { PerformanceSnapshot } from '../../core/PerformanceMonitor';
 import './VirtualScrollingList.css';
+
+interface VisibleItem {
+  item: PerformanceSnapshot;
+  index: number;
+  offset: number;
+}
 
 export interface VirtualScrollingListProps {
   items: PerformanceSnapshot[];
@@ -29,7 +34,7 @@ export interface VirtualScrollingListProps {
  * Enterprise-grade virtual scrolling list component for large datasets
  * Optimized for performance with thousands of items
  */
-export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
+export const VirtualScrollingList = ({
   items,
   itemHeight = 60,
   containerHeight = 400,
@@ -48,7 +53,7 @@ export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
   sortBy,
   sortOrder = 'asc',
   filterFn
-}) => {
+}: VirtualScrollingListProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [searchResults, setSearchResults] = useState<PerformanceSnapshot[]>(items);
   const [sortedItems, setSortedItems] = useState<PerformanceSnapshot[]>(items);
@@ -87,8 +92,8 @@ export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
     }
 
     const sorted = [...searchResults].sort((a, b) => {
-      const aValue = a[sortBy] as any;
-      const bValue = b[sortBy] as any;
+      const aValue = a[sortBy] as unknown;
+      const bValue = b[sortBy] as unknown;
 
       if (aValue === bValue) return 0;
 
@@ -117,7 +122,7 @@ export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
     containerWidth
   };
 
-  const [virtualState, virtualActions, virtualRefs] = useVirtualScrolling(
+  const [virtualState, virtualActions] = useVirtualScrolling(
     sortedItems,
     virtualScrollingOptions
   );
@@ -174,7 +179,7 @@ export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
   }, [virtualActions, virtualState, sortedItems.length]);
 
   // Handle scroll events
-  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback((_event: React.UIEvent<HTMLDivElement>) => {
     // Custom scroll handling if needed
   }, []);
 
@@ -229,9 +234,14 @@ export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
           position: 'relative'
         }}
       >
-        {virtualState.visibleItems.map(({ item, index, offset }) => (
+        {virtualState.visibleItems.map((visibleItem) => {
+          const typedVisibleItem = visibleItem as VisibleItem;
+          const item = typedVisibleItem.item;
+          const index = typedVisibleItem.index;
+          const offset = typedVisibleItem.offset;
+          return (
           <div
-            key={`${item.timestamp.getTime()}-${index}`}
+            key={`${typeof item.timestamp === 'number' ? item.timestamp : new Date(item.timestamp).getTime()}-${index}`}
             className="virtual-scrolling-item"
             style={{
               position: 'absolute',
@@ -258,7 +268,8 @@ export const VirtualScrollingList: React.FC<VirtualScrollingListProps> = ({
               width: enableHorizontal ? itemWidth : '100%'
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -346,7 +357,7 @@ export function useVirtualScrollingList<T>(
     if (options.searchQuery?.trim()) {
       const query = options.searchQuery.toLowerCase();
       filtered = filtered.filter(item => {
-        return Object.values(item as any).some(value => 
+        return Object.values(item as Record<string, unknown>).some(value => 
           typeof value === 'string' ? value.toLowerCase().includes(query) :
           typeof value === 'number' ? value.toString().includes(query) : false
         );
@@ -368,8 +379,11 @@ export function useVirtualScrollingList<T>(
     }
 
     const sorted = [...filteredItems].sort((a, b) => {
-      const aValue = a[options.sortBy!];
-      const bValue = b[options.sortBy!];
+      const sortKey = options.sortBy;
+      if (!sortKey) return 0;
+      
+      const aValue = a[sortKey] as unknown;
+      const bValue = b[sortKey] as unknown;
 
       if (aValue === bValue) return 0;
 
@@ -394,7 +408,7 @@ export function useVirtualScrollingList<T>(
     overscan: 5
   };
 
-  const [virtualState, virtualActions, virtualRefs] = useVirtualScrolling(
+  const [virtualState, virtualActions] = useVirtualScrolling(
     sortedItems,
     virtualScrollingOptions
   );
@@ -403,7 +417,6 @@ export function useVirtualScrollingList<T>(
     items: sortedItems,
     virtualState,
     virtualActions,
-    virtualRefs,
     totalItems: items.length,
     filteredItems: filteredItems.length,
     visibleItems: virtualState.visibleItems.length

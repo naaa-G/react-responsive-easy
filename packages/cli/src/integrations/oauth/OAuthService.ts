@@ -279,7 +279,7 @@ export class OAuthService extends EventEmitter {
    * Get OAuth provider
    */
   getProvider(providerId: string): OAuthProvider | null {
-    return this.providers.get(providerId) || null;
+    return this.providers.get(providerId) ?? null;
   }
 
   /**
@@ -303,9 +303,9 @@ export class OAuthService extends EventEmitter {
       throw new Error(`OAuth provider not found: ${providerId}`);
     }
 
-    const state = options.state || this.generateState();
-    const nonce = options.nonce || this.generateNonce();
-    const scopes = options.scopes || provider.scopes;
+    const state = options.state ?? this.generateState();
+    const nonce = options.nonce ?? this.generateNonce();
+    const scopes = options.scopes ?? provider.scopes;
 
     const params = new URLSearchParams({
       client_id: provider.config.clientId,
@@ -380,11 +380,11 @@ export class OAuthService extends EventEmitter {
       const token: OAuthToken = {
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
-        tokenType: response.token_type || 'Bearer',
-        expiresIn: response.expires_in || 3600,
-        scope: response.scope || '',
+        tokenType: response.token_type ?? 'Bearer',
+        expiresIn: response.expires_in ?? 3600,
+        scope: response.scope ?? '',
         issuedAt: new Date(),
-        expiresAt: new Date(Date.now() + (response.expires_in || 3600) * 1000)
+        expiresAt: new Date(Date.now() + (response.expires_in ?? 3600) * 1000)
       };
 
       this.tokens.set(token.accessToken, token);
@@ -439,12 +439,12 @@ export class OAuthService extends EventEmitter {
       
       const token: OAuthToken = {
         accessToken: response.access_token,
-        refreshToken: response.refresh_token || refreshToken,
-        tokenType: response.token_type || 'Bearer',
-        expiresIn: response.expires_in || 3600,
-        scope: response.scope || '',
+        refreshToken: response.refresh_token ?? refreshToken,
+        tokenType: response.token_type ?? 'Bearer',
+        expiresIn: response.expires_in ?? 3600,
+        scope: response.scope ?? '',
         issuedAt: new Date(),
-        expiresAt: new Date(Date.now() + (response.expires_in || 3600) * 1000)
+        expiresAt: new Date(Date.now() + (response.expires_in ?? 3600) * 1000)
       };
 
       this.tokens.set(token.accessToken, token);
@@ -507,7 +507,7 @@ export class OAuthService extends EventEmitter {
    * Get OAuth session
    */
   getSession(sessionId: string): OAuthSession | null {
-    return this.sessions.get(sessionId) || null;
+    return this.sessions.get(sessionId) ?? null;
   }
 
   /**
@@ -556,17 +556,17 @@ export class OAuthService extends EventEmitter {
 
   private mapUserInfo(userInfo: any, mapping: UserInfoMapping, providerId: string): OAuthUser {
     return {
-      id: userInfo[mapping.id]?.toString() || '',
-      email: userInfo[mapping.email] || '',
-      name: userInfo[mapping.name] || '',
-      firstName: userInfo[mapping.firstName] || '',
-      lastName: userInfo[mapping.lastName] || '',
+      id: userInfo[mapping.id]?.toString() ?? '',
+      email: userInfo[mapping.email] ?? '',
+      name: userInfo[mapping.name] ?? '',
+      firstName: userInfo[mapping.firstName] ?? '',
+      lastName: userInfo[mapping.lastName] ?? '',
       avatar: userInfo[mapping.avatar],
       locale: userInfo[mapping.locale],
       timezone: userInfo[mapping.timezone],
       verified: Boolean(userInfo[mapping.verified]),
       provider: providerId,
-      providerId: userInfo[mapping.id]?.toString() || '',
+      providerId: userInfo[mapping.id]?.toString() ?? '',
       custom: Object.entries(mapping.custom).reduce((acc, [key, value]) => {
         acc[key] = userInfo[value];
         return acc;
@@ -574,7 +574,7 @@ export class OAuthService extends EventEmitter {
     };
   }
 
-  private async makeTokenRequest(url: string, data: Record<string, any>): Promise<any> {
+  private async makeTokenRequest(_url: string, _data: Record<string, any>): Promise<any> {
     // Mock implementation - in real implementation, make HTTP request
     return {
       access_token: 'mock-access-token',
@@ -585,7 +585,7 @@ export class OAuthService extends EventEmitter {
     };
   }
 
-  private async makeUserInfoRequest(url: string, token: OAuthToken): Promise<any> {
+  private async makeUserInfoRequest(_url: string, _token: OAuthToken): Promise<any> {
     // Mock implementation - in real implementation, make HTTP request
     return {
       id: 'mock-user-id',
@@ -598,7 +598,7 @@ export class OAuthService extends EventEmitter {
     };
   }
 
-  private async makeRevokeRequest(url: string, token: string, clientId: string): Promise<void> {
+  private async makeRevokeRequest(_url: string, _token: string, _clientId: string): Promise<void> {
     // Mock implementation - in real implementation, make HTTP request
     return;
   }

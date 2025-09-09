@@ -33,7 +33,7 @@ const getMemoryThreshold = (testType: 'single' | 'parallel' | 'stress' = 'single
   const isCI = !!process.env.CI;
   
   // Allow configuration via environment variables
-  const envLimit = process.env.CI_MEMORY_LIMIT || process.env.MEMORY_LIMIT;
+  const envLimit = process.env.CI_MEMORY_LIMIT ?? process.env.MEMORY_LIMIT;
   if (envLimit) {
     return parseInt(envLimit, 10);
   }
@@ -87,7 +87,7 @@ function transformWithMetrics(code: string, options = {}): { code: string; metri
     const endMemory = process.memoryUsage().heapUsed;
 
     return {
-      code: result?.code || '',
+      code: result?.code ?? '',
       metrics: {
         executionTime: endTime - startTime,
         memoryUsage: endMemory - startMemory,

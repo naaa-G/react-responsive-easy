@@ -140,7 +140,7 @@ function isValidScalingStrategy(strategy: any): boolean {
     return false;
   }
 
-  for (const [key, tokenConfig] of Object.entries(strategy.tokens)) {
+  for (const [, tokenConfig] of Object.entries(strategy.tokens)) {
     if (!isValidTokenConfig(tokenConfig)) {
       return false;
     }

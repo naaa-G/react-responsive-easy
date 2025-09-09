@@ -17,7 +17,7 @@ function transformCode(code: string, options = {}) {
     ]
   });
   
-  return result?.code || '';
+  return result?.code ?? '';
 }
 
 describe('Fixture Tests', () => {
@@ -739,7 +739,7 @@ describe('Fixture Tests', () => {
 
           render() {
             if (this.state.hasError) {
-              return this.props.fallback || <ErrorFallback error={this.state.error} />;
+              return this.props.fallback ?? <ErrorFallback error={this.state.error} />;
             }
 
             return this.props.children;
@@ -765,7 +765,7 @@ describe('Fixture Tests', () => {
                 Something went wrong
               </h2>
               <p style={{ fontSize, margin: 0 }}>
-                {error?.message || 'An unexpected error occurred'}
+                {error?.message ?? 'An unexpected error occurred'}
               </p>
             </div>
           );

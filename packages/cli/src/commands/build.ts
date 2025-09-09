@@ -154,7 +154,7 @@ async function loadConfig(configPath: string): Promise<any> {
 async function processFiles(
   files: string[], 
   config: any, 
-  options: any
+  _options: any
 ): Promise<any> {
   const results = {
     totalFiles: files.length,
@@ -165,21 +165,31 @@ async function processFiles(
     fileResults: [] as any[]
   };
   
-  for (const file of files) {
+  const fileProcessingPromises = files.map(async (file) => {
     try {
       const content = await fs.readFile(file, 'utf-8');
       const fileResult = await processFile(file, content, config);
       
-      results.responsiveValues += fileResult.responsiveValues;
-      results.processedFiles++;
-      results.fileResults.push(fileResult);
-      
-      if (fileResult.warnings.length > 0) {
-        results.warnings.push(...fileResult.warnings.map((w: string) => `${file}: ${w}`));
-      }
-      
+      return { file, fileResult };
     } catch (error) {
-      results.errors.push(`${file}: ${error}`);
+      return { file, error: `${file}: ${error}` };
+    }
+  });
+  
+  const fileResults = await Promise.all(fileProcessingPromises);
+  
+  for (const { file, fileResult, error } of fileResults) {
+    if (error) {
+      results.errors.push(error);
+      continue;
+    }
+    
+    results.responsiveValues += fileResult!.responsiveValues;
+    results.processedFiles++;
+    results.fileResults.push(fileResult!);
+    
+    if (fileResult!.warnings.length > 0) {
+      results.warnings.push(...fileResult!.warnings.map((w: string) => `${file}: ${w}`));
     }
   }
   
@@ -226,7 +236,7 @@ async function processFile(
   return result;
 }
 
-function analyzeResponsiveUsage(match: RegExpMatchArray, config: any): any {
+function analyzeResponsiveUsage(match: RegExpMatchArray, _config: any): any {
   // This would contain logic to analyze how the responsive value is used
   // and suggest optimizations
   return {
@@ -271,7 +281,7 @@ function estimateBundleSize(results: any, config: any): string {
 
 function calculateScalingComplexity(config: any): string {
   const breakpointCount = config.breakpoints.length;
-  const tokenCount = Object.keys(config.strategy.tokens || {}).length;
+  const tokenCount = Object.keys(config.strategy.tokens ?? {}).length;
   
   if (breakpointCount <= 3 && tokenCount <= 3) return 'Low';
   if (breakpointCount <= 5 && tokenCount <= 5) return 'Medium';
@@ -299,7 +309,7 @@ function generateRecommendations(results: any, config: any): string[] {
   return recommendations;
 }
 
-function findBreakpointGaps(widths: number[]): any[] {
+function _findBreakpointGaps(widths: number[]): any[] {
   const gaps = [];
   for (let i = 1; i < widths.length; i++) {
     const gap = widths[i]! - widths[i - 1]!;
