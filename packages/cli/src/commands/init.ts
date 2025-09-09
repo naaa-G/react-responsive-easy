@@ -134,11 +134,11 @@ export const initCommand = new Command('init')
       
       // Show next steps
       console.log(chalk.green('\n🎉 Setup complete! Next steps:'));
-      console.log(chalk.cyan('1. ') + 'Install dependencies: npm install @react-responsive-easy/core');
-      console.log(chalk.cyan('2. ') + 'Wrap your app with <ResponsiveProvider>');
-      console.log(chalk.cyan('3. ') + 'Use responsive hooks in your components');
-      console.log(chalk.cyan('4. ') + 'Run rre build to transform your code');
-      console.log(chalk.cyan('5. ') + 'Run rre analyze to check scaling');
+      console.log(`${chalk.cyan('1. ')}Install dependencies: npm install @react-responsive-easy/core`);
+      console.log(`${chalk.cyan('2. ')}Wrap your app with <ResponsiveProvider>`);
+      console.log(`${chalk.cyan('3. ')}Use responsive hooks in your components`);
+      console.log(`${chalk.cyan('4. ')}Run rre build to transform your code`);
+      console.log(`${chalk.cyan('5. ')}Run rre analyze to check scaling`);
       
       console.log(chalk.yellow('\n📁 Files created:'));
       console.log(chalk.gray('  • ') + configPath);

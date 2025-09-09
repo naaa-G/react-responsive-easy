@@ -16,7 +16,7 @@ class DevToolsIntegration {
         console.log('🛠️ React Responsive Easy DevTools panel created');
         
         // Handle panel shown/hidden
-        panel.onShown.addListener((window) => {
+        panel.onShown.addListener(() => {
           console.log('DevTools panel shown');
         });
         

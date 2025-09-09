@@ -342,12 +342,7 @@ async function authenticateSecurity(options: SecurityAuthOptions): Promise<void>
     spinner.succeed(chalk.green('✅ Authorization URL generated'));
 
     console.log(boxen(
-      chalk.cyan(`Provider: ${provider.displayName}\n`) +
-      chalk.cyan(`Authorization URL:\n`) +
-      chalk.yellow(authUrl) + '\n\n' +
-      chalk.cyan('Please visit the URL above to complete authentication.\n') +
-      chalk.cyan('After authentication, you will receive an authorization code.\n') +
-      chalk.cyan('Use the code with: rre security auth --code <code>'),
+      `${chalk.cyan(`Provider: ${provider.displayName}\n`)}${chalk.cyan(`Authorization URL:\n`)}${chalk.yellow(authUrl)}\n\n${chalk.cyan('Please visit the URL above to complete authentication.\n')}${chalk.cyan('After authentication, you will receive an authorization code.\n')}${chalk.cyan('Use the code with: rre security auth --code <code>')}`,
       {
         title: 'Authentication Required',
         titleAlignment: 'center',

@@ -2,7 +2,7 @@
  * Scaling engine for responsive value calculations
  */
 
-import type { ResponsiveConfig, Viewport, Breakpoint, TokenConfig } from './types';
+import type { ResponsiveConfig, Viewport, Breakpoint } from './types';
 
 export class ScalingEngine {
   private config: ResponsiveConfig;

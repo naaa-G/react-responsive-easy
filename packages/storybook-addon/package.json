@@ -19,6 +19,7 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "type-check": "tsc --noEmit",
+    "lint": "eslint src",
     "clean": "rm -rf dist"
   },
   "keywords": [
@@ -45,12 +46,17 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
     "rollup": "^4.9.4",
     "rollup-plugin-dts": "^6.1.0",
     "typescript": "^5.3.3",

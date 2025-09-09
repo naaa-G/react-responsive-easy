@@ -2,7 +2,7 @@
  * Type definitions for the Babel plugin
  */
 
-import type { PluginPass, NodePath, types as BabelTypes } from '@babel/core';
+import type { NodePath } from '@babel/core';
 
 export interface BabelPluginOptions {
   /** Path to the RRE configuration file */
@@ -36,9 +36,9 @@ export interface BabelPluginOptions {
   /** Minify transformed code */
   minifyOutput?: boolean;
   /** Custom transformation hooks */
-  onTransform?: (node: any, context: TransformContext) => void;
+  onTransform?: (_node: any, _context: TransformContext) => void;
   /** Error handling hook */
-  onError?: (error: Error, context: TransformContext) => void;
+  onError?: (_error: Error, _context: TransformContext) => void;
 }
 
 export interface ResponsiveConfig {
@@ -70,7 +70,7 @@ export interface ScalingStrategy {
 
 export interface TokenConfig {
   [key: string]: {
-    scale?: number | ((value: number, ratio: number) => number);
+    scale?: number | ((_value: number, _ratio: number) => number);
     min?: number;
     max?: number;
     step?: number;
@@ -131,8 +131,8 @@ export type SupportedHook =
 
 export interface HookTransform {
   name: SupportedHook;
-  transform: (path: NodePath<any>, state: PluginState) => void;
-  shouldTransform: (path: NodePath<any>) => boolean;
+  transform: (_path: NodePath<any>, _state: PluginState) => void;
+  shouldTransform: (_path: NodePath<any>) => boolean;
 }
 
 export interface CSSProperty {

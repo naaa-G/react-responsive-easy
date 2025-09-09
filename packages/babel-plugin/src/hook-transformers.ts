@@ -4,7 +4,7 @@
 
 import type * as t from '@babel/types';
 import type { NodePath } from '@babel/core';
-import type { PluginState, SupportedHook, HookTransform, BabelPluginOptions } from './types';
+import type { PluginState, SupportedHook, HookTransform } from './types';
 import { ScalingEngine } from './scaling-engine';
 
 export class HookTransformers {

@@ -52,8 +52,8 @@ class ContentScript {
    * Setup message listener for extension communication
    */
   private setupMessageListener(): void {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      this.handleMessage(message, sender, sendResponse);
+    chrome.runtime.onMessage.addListener((message, sender, __sendResponse) => {
+      this.handleMessage(message, sender, __sendResponse);
       return true; // Keep message channel open for async responses
     });
   }
@@ -73,31 +73,31 @@ class ContentScript {
    */
   private async handleMessage(
     message: any, 
-    sender: chrome.runtime.MessageSender, 
-    sendResponse: (response: any) => void
+    _sender: chrome.runtime.MessageSender, 
+    __sendResponse: () => void
   ): Promise<void> {
     try {
       switch (message.type) {
         case 'enable-debugger':
           await this.enableDebugger();
-          sendResponse({ success: true, enabled: true });
+          __sendResponse({ success: true, enabled: true });
           break;
 
         case 'disable-debugger':
           await this.disableDebugger();
-          sendResponse({ success: true, enabled: false });
+          __sendResponse({ success: true, enabled: false });
           break;
 
         case 'toggle-debugger':
           await this.toggleDebugger();
-          sendResponse({ 
+          __sendResponse({ 
             success: true, 
             enabled: this.debugger?.isDebuggerEnabled() || false 
           });
           break;
 
         case 'get-status':
-          sendResponse({
+          __sendResponse({
             success: true,
             enabled: this.debugger?.isDebuggerEnabled() || false,
             hasResponsiveEasy: this.hasResponsiveEasy(),
@@ -106,9 +106,9 @@ class ContentScript {
           });
           break;
 
-        case 'get-responsive-elements':
+        case 'get-responsive-elements': {
           const elements = this.debugger?.getResponsiveElements() || [];
-          sendResponse({
+          __sendResponse({
             success: true,
             elements: elements.map(el => ({
               selector: el.selector,
@@ -119,29 +119,31 @@ class ContentScript {
             }))
           });
           break;
+        }
 
         case 'highlight-element':
           await this.highlightElement(message.selector, message.options);
-          sendResponse({ success: true });
+          __sendResponse({ success: true });
           break;
 
         case 'remove-highlight':
           await this.removeHighlight(message.selector);
-          sendResponse({ success: true });
+          __sendResponse({ success: true });
           break;
 
-        case 'analyze-performance':
+        case 'analyze-performance': {
           const performanceData = await this.analyzePerformance();
-          sendResponse({ success: true, data: performanceData });
+          __sendResponse({ success: true, data: performanceData });
           break;
+        }
 
         default:
-          sendResponse({ success: false, error: 'Unknown message type' });
+          __sendResponse({ success: false, error: 'Unknown message type' });
       }
     } catch (error) {
       console.error('Content script error:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      sendResponse({ success: false, error: errorMessage });
+      __sendResponse({ success: false, error: errorMessage });
     }
   }
 

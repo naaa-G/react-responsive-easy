@@ -398,7 +398,7 @@ export class AIIntegrationService extends EventEmitter {
         componentType: 'Component',
         responsiveValues: [{
           property: 'fontSize',
-          baseValue: parseInt(match[1]!),
+          baseValue: parseInt(match[1]!, 10),
           token: 'fontSize',
           breakpointValues: {},
           usageFrequency: 1

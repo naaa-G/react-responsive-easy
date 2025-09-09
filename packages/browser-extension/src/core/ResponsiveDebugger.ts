@@ -532,7 +532,7 @@ export class ResponsiveDebugger {
     if (responsiveData) {
       try {
         return JSON.parse(responsiveData);
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse responsive data:', responsiveData);
       }
     }
@@ -817,7 +817,7 @@ export class ResponsiveDebugger {
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Cross-origin stylesheets may throw errors
         continue;
       }

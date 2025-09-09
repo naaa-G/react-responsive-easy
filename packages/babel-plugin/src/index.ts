@@ -162,7 +162,7 @@ export default declare<BabelPluginOptions>((api, options) => {
           });
         },
         
-        exit(path, state: PluginState) {
+        exit(_path, _state: PluginState) {
           // Program exit handler - imports are now handled in CallExpression
         }
       },

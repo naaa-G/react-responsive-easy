@@ -109,10 +109,10 @@ export const buildCommand = new Command('build')
       spinner.succeed('Build completed successfully!');
       
       console.log(chalk.green('\n🎉 Build Results:'));
-      console.log(chalk.cyan('  • ') + `Files processed: ${results.totalFiles}`);
-      console.log(chalk.cyan('  • ') + `Responsive values found: ${results.responsiveValues}`);
-      console.log(chalk.cyan('  • ') + `Breakpoints configured: ${config.breakpoints.length}`);
-      console.log(chalk.cyan('  • ') + `Build report: ${reportPath}`);
+      console.log(`${chalk.cyan('  • ')}Files processed: ${results.totalFiles}`);
+      console.log(`${chalk.cyan('  • ')}Responsive values found: ${results.responsiveValues}`);
+      console.log(`${chalk.cyan('  • ')}Breakpoints configured: ${config.breakpoints.length}`);
+      console.log(`${chalk.cyan('  • ')}Build report: ${reportPath}`);
       
       if (results.warnings.length > 0) {
         console.log(chalk.yellow('\n⚠️  Warnings:'));

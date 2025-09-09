@@ -605,7 +605,7 @@ function displayAnalysis(analysis: any, options: any): void {
 }
 
 function showSummary(analysis: any): void {
-  console.log(chalk.gray('\n' + '='.repeat(60)));
+  console.log(chalk.gray(`\n${'='.repeat(60)}`));
   
   if (analysis.summary.score >= 80) {
     console.log(chalk.green('🎉 Excellent! Your setup is well-optimized.'));

@@ -264,7 +264,7 @@ class InjectedScript {
       try {
         const data = JSON.parse(responsiveData);
         content += `Values: ${Object.keys(data).length}<br>`;
-      } catch (e) {
+      } catch {
         content += `Data: Invalid JSON<br>`;
       }
     }
@@ -339,9 +339,9 @@ class InjectedScript {
       const hook = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
       
       // Listen for React component updates
-      hook.onCommitFiberRoot = (id: any, root: any, priorityLevel: any) => {
+      hook.onCommitFiberRoot = () => {
         // Check if this commit involved responsive components
-        this.checkForResponsiveUpdates(root);
+        this.checkForResponsiveUpdates();
       };
     }
   }
@@ -349,7 +349,7 @@ class InjectedScript {
   /**
    * Check for responsive component updates
    */
-  private checkForResponsiveUpdates(root: any): void {
+  private checkForResponsiveUpdates(): void {
     // This is a simplified check - in a real implementation,
     // we'd traverse the fiber tree to find responsive components
     const responsiveElements = document.querySelectorAll('[data-responsive]');
@@ -411,7 +411,7 @@ class InjectedScript {
 
       try {
         observer.observe({ entryTypes: ['layout-shift'] });
-      } catch (e) {
+      } catch {
         console.warn('Layout shift monitoring not available');
       }
     }
@@ -428,7 +428,7 @@ class InjectedScript {
 
       try {
         paintObserver.observe({ entryTypes: ['paint'] });
-      } catch (e) {
+      } catch {
         console.warn('Paint timing monitoring not available');
       }
     }

@@ -67,15 +67,17 @@ export class ScalingEngine {
       case 'max':
         return Math.max(to.width, to.height) / Math.max(from.width, from.height);
       
-      case 'diagonal':
+      case 'diagonal': {
         const fromDiagonal = Math.sqrt(from.width ** 2 + from.height ** 2);
         const toDiagonal = Math.sqrt(to.width ** 2 + to.height ** 2);
         return toDiagonal / fromDiagonal;
+      }
       
-      case 'area':
+      case 'area': {
         const fromArea = from.width * from.height;
         const toArea = to.width * to.height;
         return toArea / fromArea;
+      }
       
       default:
         throw new ScalingError(`Invalid scaling origin: ${origin}`, 'INVALID_CONFIG');
@@ -230,9 +232,10 @@ export class ScalingEngine {
           ? 2 * ratio * ratio 
           : 1 - Math.pow(-2 * ratio + 2, 2) / 2);
       
-      case 'golden-ratio':
+      case 'golden-ratio': {
         const phi = 1.618033988749895;
         return value * Math.pow(ratio, 1 / phi);
+      }
       
       default:
         return value;

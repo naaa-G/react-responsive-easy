@@ -117,7 +117,7 @@ program
       } else if (options.list) {
         const filters: any = {};
         if (options.filter) filters.type = options.filter;
-        if (options.limit) filters.limit = parseInt(options.limit);
+        if (options.limit) filters.limit = parseInt(options.limit, 10);
 
         const data = analyticsService.getData(filters);
         console.log(chalk.green(`📊 Analytics Data (${data.length} items):`));
@@ -162,7 +162,7 @@ program
         const filters: any = {};
         if (options.type) filters.type = options.type;
         if (options.severity) filters.severity = options.severity;
-        if (options.limit) filters.limit = parseInt(options.limit);
+        if (options.limit) filters.limit = parseInt(options.limit, 10);
 
         const insights = analyticsService.getInsights(filters);
         console.log(chalk.green(`💡 Analytics Insights (${insights.length} items):`));
@@ -224,7 +224,7 @@ program
         }
 
         const endDate = new Date();
-        const startDate = new Date(endDate.getTime() - parseInt(options.period) * 24 * 60 * 60 * 1000);
+        const startDate = new Date(endDate.getTime() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000);
 
         const report = await analyticsService.generateReport({
           name: options.name,
@@ -248,7 +248,7 @@ program
         console.log(chalk.cyan(`   Predictions: ${report.summary.predictionsMade}`));
 
       } else if (options.list) {
-        const reports = analyticsService.getReports(parseInt(options.limit || '10'));
+        const reports = analyticsService.getReports(parseInt(options.limit || '10', 10));
         console.log(chalk.green(`📋 Analytics Reports (${reports.length} items):`));
         
         reports.forEach((report, index) => {

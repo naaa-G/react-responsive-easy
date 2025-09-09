@@ -2,8 +2,8 @@
  * Configuration manager for the Babel plugin
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+// import * as fs from 'fs';
+// import * as path from 'path';
 import { loadConfig, validateConfig, getDefaultConfig } from './config-loader';
 import type { ResponsiveConfig, BabelPluginOptions } from './types';
 

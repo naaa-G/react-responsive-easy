@@ -5,7 +5,7 @@
  * provides performance monitoring capabilities.
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import type { DecoratorFunction } from '@storybook/types';
 import { useChannel, addons } from '@storybook/addons';
 import { EVENTS } from '../constants';

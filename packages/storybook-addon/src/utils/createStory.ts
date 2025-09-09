@@ -199,7 +199,6 @@ export function createPerformanceStory<T = {}>(
     ...baseStory,
     name: 'Performance Test',
     render: (args: T) => {
-      const [currentBreakpoint, setCurrentBreakpoint] = React.useState(0);
       const [isRunning, setIsRunning] = React.useState(false);
       const [results, setResults] = React.useState<any[]>([]);
 

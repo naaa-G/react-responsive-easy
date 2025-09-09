@@ -10,8 +10,8 @@ import type { ResponsiveState, BreakpointConfig } from '../types';
 
 interface ResponsiveControlsProps {
   state: ResponsiveState;
-  onBreakpointChange: (breakpoint: BreakpointConfig) => void;
-  onConfigUpdate: (config: any) => void;
+  onBreakpointChange: () => void;
+  onConfigUpdate: () => void;
 }
 
 export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({
@@ -31,7 +31,7 @@ export const ResponsiveControls: React.FC<ResponsiveControlsProps> = ({
       const config = JSON.parse(customConfig);
       onConfigUpdate(config);
       setCustomConfig('');
-    } catch (error) {
+    } catch {
       alert('Invalid JSON configuration');
     }
   }, [customConfig, onConfigUpdate]);

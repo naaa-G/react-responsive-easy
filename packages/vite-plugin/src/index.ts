@@ -101,6 +101,7 @@ export function reactResponsiveEasy(options: VitePluginOptions = {}): Plugin[] {
         if (id === 'virtual:rre-config') {
           return id;
         }
+        return null;
       },
       
       load(id) {
@@ -118,6 +119,7 @@ export function reactResponsiveEasy(options: VitePluginOptions = {}): Plugin[] {
             return `export default ${JSON.stringify(getMockConfig())};`;
           }
         }
+        return null;
       }
     },
     
@@ -201,6 +203,7 @@ export function reactResponsiveEasy(options: VitePluginOptions = {}): Plugin[] {
           });
           return [];
         }
+        return undefined;
       }
     }
   ];
@@ -245,7 +248,7 @@ function containsRREHooks(code: string): boolean {
   return rreHookPatterns.some(pattern => pattern.test(code));
 }
 
-function transformWithBabel(code: string, options: any): string {
+function transformWithBabel(code: string, _options: any): string {
   // Mock Babel transformation for now
   // In a real implementation, this would use @react-responsive-easy/babel-plugin
   

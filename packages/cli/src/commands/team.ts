@@ -251,7 +251,7 @@ async function createTeam(options: TeamCreateOptions): Promise<void> {
           type: 'number',
           name: 'maxMembers',
           message: 'Maximum number of members:',
-          default: parseInt(String(options.maxMembers || '50')),
+          default: parseInt(String(options.maxMembers || '50'), 10),
           validate: (input: number) => input > 0 || 'Maximum members must be greater than 0'
         }
       ]);
@@ -266,7 +266,7 @@ async function createTeam(options: TeamCreateOptions): Promise<void> {
       createdBy: 'current-user', // In real implementation, get from auth
       settings: {
         visibility: options.visibility as any,
-        maxMembers: parseInt(String(options.maxMembers || '50'))
+        maxMembers: parseInt(String(options.maxMembers || '50'), 10)
       }
     });
 

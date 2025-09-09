@@ -47,8 +47,8 @@ class BackgroundScript {
     });
 
     // Handle messages from content scripts and popup
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      this.handleMessage(message, sender, sendResponse);
+    chrome.runtime.onMessage.addListener((message, sender, __sendResponse) => {
+      this.handleMessage(message, sender, __sendResponse);
       return true; // Keep message channel open for async responses
     });
 
@@ -145,54 +145,56 @@ class BackgroundScript {
    */
   private async handleMessage(
     message: any,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: any) => void
+    _sender: chrome.runtime.MessageSender,
+    __sendResponse: () => void
   ): Promise<void> {
-    const tabId = sender.tab?.id;
+    const tabId = _sender.tab?.id;
     
     try {
       switch (message.type) {
         case 'content-script-event':
           await this.handleContentScriptEvent(message, tabId);
-          sendResponse({ success: true });
+          __sendResponse({ success: true });
           break;
 
         case 'debug-event':
           await this.handleDebugEvent(message.detail, tabId);
-          sendResponse({ success: true });
+          __sendResponse({ success: true });
           break;
 
         case 'get-settings':
-          sendResponse({ success: true, settings: this.settings });
+          __sendResponse({ success: true, settings: this.settings });
           break;
 
         case 'update-settings':
           await this.updateSettings(message.settings);
-          sendResponse({ success: true });
+          __sendResponse({ success: true });
           break;
 
-        case 'get-tab-state':
+        case 'get-tab-state': {
           const state = this.getTabState(tabId);
-          sendResponse({ success: true, state });
+          __sendResponse({ success: true, state });
           break;
+        }
 
-        case 'export-global-data':
+        case 'export-global-data': {
           const globalData = await this.exportGlobalData();
-          sendResponse({ success: true, data: globalData });
+          __sendResponse({ success: true, data: globalData });
           break;
+        }
 
         case 'clear-all-data':
           await this.clearAllData();
-          sendResponse({ success: true });
+          __sendResponse({ success: true });
           break;
 
         default:
-          sendResponse({ success: false, error: 'Unknown message type' });
+          __sendResponse({ success: false, error: 'Unknown message type' });
       }
     } catch (error) {
       console.error('Background script error:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      sendResponse({ success: false, error: errorMessage });
+      __sendResponse({ success: false, error: errorMessage });
     }
   }
 
@@ -247,7 +249,7 @@ class BackgroundScript {
     const state = this.getTabState(tabId);
     
     switch (message.type) {
-      case 'responsive-easy-detected':
+      case 'responsive-easy-detected': {
         state.hasResponsiveEasy = true;
         state.elementCount = message.elementCount || 0;
         state.hasContext = message.hasContext || false;
@@ -256,6 +258,7 @@ class BackgroundScript {
         // Update badge
         this.updateBadge(tabId, 'RRE', '#00ff88');
         break;
+      }
 
       case 'responsive-easy-not-detected':
         state.hasResponsiveEasy = false;
@@ -345,12 +348,13 @@ class BackgroundScript {
     if (!tab?.id) return;
 
     switch (info.menuItemId) {
-      case 'rre-debug-element':
+      case 'rre-debug-element': {
         // Use click position from context menu info
         const x = (info as any).pageX || 0;
         const y = (info as any).pageY || 0;
         await this.debugElementAtPosition(tab.id, x, y);
         break;
+      }
 
       case 'rre-analyze-page':
         await this.analyzePageResponsiveness(tab.id);

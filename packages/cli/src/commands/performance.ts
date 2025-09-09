@@ -53,7 +53,7 @@ export const performanceCommand = new Command('performance')
         },
         analytics: {
           enabled: true,
-          dataRetention: parseInt(options.period),
+          dataRetention: parseInt(options.period, 10),
           anonymizeData: false,
           exportFormat: options.export as any
         }
@@ -65,7 +65,7 @@ export const performanceCommand = new Command('performance')
         realTimeMonitoring: true,
         alerting: true,
         analytics: true,
-        dataRetention: parseInt(options.period)
+        dataRetention: parseInt(options.period, 10)
       }, enterpriseCLI['logger']);
 
       await performanceService.initialize();
@@ -204,7 +204,7 @@ async function generatePerformanceReport(
   try {
     const projectId = path.basename(projectPath);
     const period = {
-      start: new Date(Date.now() - parseInt(options.period) * 24 * 60 * 60 * 1000),
+      start: new Date(Date.now() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000),
       end: new Date()
     };
 
@@ -244,7 +244,7 @@ async function showPerformanceTrends(
 
   try {
     const period = {
-      start: new Date(Date.now() - parseInt(options.period) * 24 * 60 * 60 * 1000),
+      start: new Date(Date.now() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000),
       end: new Date()
     };
 

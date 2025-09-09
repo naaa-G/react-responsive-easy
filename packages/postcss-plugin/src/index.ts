@@ -5,8 +5,7 @@
  * Generates responsive CSS custom properties and media queries.
  */
 
-import type { Plugin, PluginCreator } from 'postcss';
-import postcss from 'postcss';
+import postcss, { type PluginCreator } from 'postcss';
 import valueParser from 'postcss-value-parser';
 
 // Plugin options interface
@@ -89,17 +88,11 @@ function scaleValue(
 // Main plugin creator
 const postcssResponsiveEasy: PluginCreator<PostCSSPluginOptions> = (options = {}) => {
   const {
-    configPath = 'rre.config.ts',
     generateCustomProperties = true,
     generateCustomMedia = true,
     customPropertyPrefix = '--rre',
-    development = false,
-    ciOptimized = false
+    development = false
   } = options;
-
-  // Auto-detect CI environment and apply optimizations
-  const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS || !!process.env.GITLAB_CI || !!process.env.CIRCLECI || !!process.env.TRAVIS;
-  const shouldOptimize = ciOptimized || isCI;
 
   return {
     postcssPlugin: '@react-responsive-easy/postcss-plugin',

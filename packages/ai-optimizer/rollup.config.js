@@ -7,7 +7,7 @@ import { readFileSync } from 'fs';
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 
 export default [
-  // Main build
+  // Main build with TypeScript declarations
   {
     input: 'src/index.ts',
     output: [
@@ -30,6 +30,34 @@ export default [
       commonjs(),
       typescript({
         tsconfig: './tsconfig.json',
+        exclude: ['**/*.test.ts', '**/*.test.tsx'],
+        declaration: true,
+        declarationDir: 'dist',
+        declarationMap: true
+      })
+    ],
+    external: [
+      'react',
+      'react-dom',
+      '@tensorflow/tfjs',
+      '@tensorflow/tfjs-node',
+      '@react-responsive-easy/core',
+      'events',
+      'fs',
+      'path',
+      'util'
+    ]
+  },
+  // Standalone type definitions bundle (enterprise-grade approach)
+  {
+    input: 'src/index.ts',
+    output: [{ 
+      file: 'dist/index.d.ts', 
+      format: 'esm' 
+    }],
+    plugins: [
+      dts({
+        tsconfig: './tsconfig.json',
         exclude: ['**/*.test.ts', '**/*.test.tsx']
       })
     ],
@@ -38,13 +66,11 @@ export default [
       'react-dom',
       '@tensorflow/tfjs',
       '@tensorflow/tfjs-node',
-      '@react-responsive-easy/core'
+      '@react-responsive-easy/core',
+      'events',
+      'fs',
+      'path',
+      'util'
     ]
-  },
-  // Type definitions
-  {
-    input: 'dist/index.d.ts',
-    output: [{ file: 'dist/index.d.ts', format: 'esm' }],
-    plugins: [dts()],
   }
 ];

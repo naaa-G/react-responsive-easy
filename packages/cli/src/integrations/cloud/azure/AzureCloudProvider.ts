@@ -1053,7 +1053,7 @@ export class AzureCloudProvider extends EventEmitter {
           logsDirectorySizeLimit: 35,
           detailedErrorLoggingEnabled: false,
           loadBalancing: 'LeastRequests',
-          publishingUsername: '$' + config.name,
+          publishingUsername: `$${config.name}`,
           appSettings: {},
           connectionStrings: [],
           machineKey: {
@@ -1254,7 +1254,7 @@ export class AzureCloudProvider extends EventEmitter {
           logsDirectorySizeLimit: 35,
           detailedErrorLoggingEnabled: false,
           loadBalancing: 'LeastRequests',
-          publishingUsername: '$' + config.name,
+          publishingUsername: `$${config.name}`,
           appSettings: {},
           connectionStrings: [],
           machineKey: {

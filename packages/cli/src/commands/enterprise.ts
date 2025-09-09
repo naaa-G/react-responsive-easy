@@ -251,7 +251,7 @@ program
         if (options.user) filters.userId = options.user;
         if (options.period) {
           const endDate = new Date();
-          const startDate = new Date(endDate.getTime() - parseInt(options.period) * 24 * 60 * 60 * 1000);
+          const startDate = new Date(endDate.getTime() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000);
           filters.startDate = startDate;
           filters.endDate = endDate;
         }
@@ -281,7 +281,7 @@ program
 
       } else if (options.report) {
         const endDate = new Date();
-        const startDate = new Date(endDate.getTime() - parseInt(options.period) * 24 * 60 * 60 * 1000);
+        const startDate = new Date(endDate.getTime() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000);
 
         const report = await auditService.generateReport({
           name: `Audit Report - ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
@@ -397,7 +397,7 @@ program
 
       } else if (options.report) {
         const endDate = new Date();
-        const startDate = new Date(endDate.getTime() - parseInt(options.period) * 24 * 60 * 60 * 1000);
+        const startDate = new Date(endDate.getTime() - parseInt(options.period, 10) * 24 * 60 * 60 * 1000);
 
         const report = await auditService.generateReport({
           name: `Compliance Report - ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
