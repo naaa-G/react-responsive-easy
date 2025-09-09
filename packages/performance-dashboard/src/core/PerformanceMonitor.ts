@@ -7,7 +7,7 @@
  */
 
 import { AIIntegrationManager } from '../utils/AIIntegration';
-import { AlertingSystem } from '../utils/AlertingSystem';
+import { AlertingSystem, AlertEvent } from '../utils/AlertingSystem';
 import { AnalyticsEngine } from '../utils/AnalyticsEngine';
 
 // Performance Memory Info interface for TypeScript
@@ -898,7 +898,7 @@ export class PerformanceMonitor {
   /**
    * Get active alerts
    */
-  getActiveAlerts(): unknown[] {
+  getActiveAlerts(): AlertEvent[] {
     if (!this.alertingSystem) return [];
     return this.alertingSystem.getActiveAlerts();
   }

@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import type { DecoratorFunction } from '@storybook/types';
 import { useChannel, addons } from '@storybook/addons';
 import { EVENTS } from '../constants';
-import { PerformanceMonitor } from '@react-responsive-easy/performance-dashboard';
+import { PerformanceMonitor, PerformanceMetrics } from '@react-responsive-easy/performance-dashboard';
 
 interface ResponsiveDecoratorProps {
   children: React.ReactNode;
@@ -44,7 +44,7 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
       monitor.start(); // eslint-disable-line @typescript-eslint/no-floating-promises
 
       // Send performance data to addon panel
-      const unsubscribe = monitor.on('metrics-updated', (metrics) => {
+      const unsubscribe = monitor.on('metrics-updated', (metrics: PerformanceMetrics) => {
         const performanceData = {
           renderTime: metrics.responsiveElements.averageRenderTime ?? 0,
           memoryUsage: metrics.memory?.used ?? 0,

@@ -180,7 +180,7 @@ export class ScalingEngine {
    * Get token configuration with fallback handling
    */
   private getTokenConfig(token: string): ScalingToken | null {
-    const tokenConfig = this.config.strategy.tokens[token];
+    const tokenConfig = this.config.strategy.tokens[token as keyof typeof this.config.strategy.tokens];
     if (!tokenConfig) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console

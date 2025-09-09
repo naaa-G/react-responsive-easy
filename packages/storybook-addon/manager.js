@@ -1391,19 +1391,33 @@ const ResponsiveControls = ({ state, onBreakpointChange, onConfigUpdate }) => {
             setCustomConfig('');
         }
         catch {
-            alert('Invalid JSON configuration');
+            // In production, this should be handled by a proper error reporting system
+            if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-alert
+                alert('Invalid JSON configuration');
+            }
         }
     }, [customConfig, onConfigUpdate]);
     const exportCurrentConfig = require$$0.useCallback(() => {
         if (state.config) {
             const configStr = JSON.stringify(state.config, null, 2);
             navigator.clipboard.writeText(configStr).then(() => {
-                alert('Configuration copied to clipboard!');
+                // In production, this should be handled by a proper notification system
+                if (process.env.NODE_ENV === 'development') {
+                    // eslint-disable-next-line no-alert
+                    alert('Configuration copied to clipboard!');
+                }
+            }).catch((error) => {
+                if (process.env.NODE_ENV === 'development') {
+                    // eslint-disable-next-line no-console
+                    console.error('Failed to copy configuration:', error);
+                }
             });
         }
     }, [state.config]);
     return (jsxRuntimeExports.jsxs("div", { className: "responsive-controls", children: [jsxRuntimeExports.jsxs("div", { className: "control-section", children: [jsxRuntimeExports.jsx("h3", { children: "Current Breakpoint" }), jsxRuntimeExports.jsx("div", { className: "breakpoint-selector", children: state.availableBreakpoints.map((breakpoint) => (jsxRuntimeExports.jsxs("button", { className: `breakpoint-button ${state.currentBreakpoint?.alias === breakpoint.alias ? 'active' : ''}`, onClick: () => handleBreakpointSelect(breakpoint), children: [jsxRuntimeExports.jsx("div", { className: "breakpoint-icon", children: getBreakpointIcon$3(breakpoint) }), jsxRuntimeExports.jsxs("div", { className: "breakpoint-info", children: [jsxRuntimeExports.jsx("div", { className: "breakpoint-name", children: breakpoint.name }), jsxRuntimeExports.jsxs("div", { className: "breakpoint-size", children: [breakpoint.width, "\u00D7", breakpoint.height] })] })] }, breakpoint.alias))) })] }), jsxRuntimeExports.jsxs("div", { className: "control-section", children: [jsxRuntimeExports.jsx("h3", { children: "Quick Actions" }), jsxRuntimeExports.jsxs("div", { className: "action-buttons", children: [jsxRuntimeExports.jsx("button", { className: "btn btn-secondary", onClick: () => window.location.reload(), children: "\uD83D\uDD04 Refresh Story" }), jsxRuntimeExports.jsx("button", { className: "btn btn-secondary", onClick: () => {
-                                    if (state.config) {
+                                    if (state.config && process.env.NODE_ENV === 'development') {
+                                        // eslint-disable-next-line no-console
                                         console.log('Current Responsive Config:', state.config);
                                     }
                                 }, children: "\uD83D\uDC1B Debug Config" }), jsxRuntimeExports.jsx("button", { className: "btn btn-secondary", onClick: exportCurrentConfig, disabled: !state.config, children: "\uD83D\uDCCB Copy Config" })] })] }), state.config && (jsxRuntimeExports.jsxs("div", { className: "control-section", children: [jsxRuntimeExports.jsx("h3", { children: "Configuration Info" }), jsxRuntimeExports.jsxs("div", { className: "config-info", children: [jsxRuntimeExports.jsxs("div", { className: "info-item", children: [jsxRuntimeExports.jsx("span", { className: "info-label", children: "Base Breakpoint:" }), jsxRuntimeExports.jsxs("span", { className: "info-value", children: [state.config.base.name, " (", state.config.base.width, "\u00D7", state.config.base.height, ")"] })] }), jsxRuntimeExports.jsxs("div", { className: "info-item", children: [jsxRuntimeExports.jsx("span", { className: "info-label", children: "Scaling Mode:" }), jsxRuntimeExports.jsx("span", { className: "info-value", children: state.config.strategy.mode })] }), jsxRuntimeExports.jsxs("div", { className: "info-item", children: [jsxRuntimeExports.jsx("span", { className: "info-label", children: "Origin:" }), jsxRuntimeExports.jsx("span", { className: "info-value", children: state.config.strategy.origin })] }), jsxRuntimeExports.jsxs("div", { className: "info-item", children: [jsxRuntimeExports.jsx("span", { className: "info-label", children: "Breakpoints:" }), jsxRuntimeExports.jsx("span", { className: "info-value", children: state.config.breakpoints.length })] })] })] })), jsxRuntimeExports.jsxs("div", { className: "control-section", children: [jsxRuntimeExports.jsxs("button", { className: "btn btn-ghost", onClick: () => setShowAdvanced(!showAdvanced), children: [showAdvanced ? '▼' : '▶', " Advanced Settings"] }), showAdvanced && (jsxRuntimeExports.jsxs("div", { className: "advanced-controls", children: [jsxRuntimeExports.jsxs("div", { className: "form-group", children: [jsxRuntimeExports.jsx("label", { children: "Import Configuration" }), jsxRuntimeExports.jsx("textarea", { value: customConfig, onChange: (e) => setCustomConfig(e.target.value), placeholder: "Paste your responsive configuration JSON here...", rows: 6 }), jsxRuntimeExports.jsx("button", { className: "btn btn-primary btn-sm", onClick: handleConfigImport, disabled: !customConfig.trim(), children: "Import Config" })] }), jsxRuntimeExports.jsxs("div", { className: "form-group", children: [jsxRuntimeExports.jsx("label", { children: "Performance Settings" }), jsxRuntimeExports.jsxs("div", { className: "checkbox-group", children: [jsxRuntimeExports.jsxs("label", { className: "checkbox-label", children: [jsxRuntimeExports.jsx("input", { type: "checkbox", defaultChecked: true }), jsxRuntimeExports.jsx("span", { children: "Enable performance monitoring" })] }), jsxRuntimeExports.jsxs("label", { className: "checkbox-label", children: [jsxRuntimeExports.jsx("input", { type: "checkbox", defaultChecked: true }), jsxRuntimeExports.jsx("span", { children: "Show performance warnings" })] }), jsxRuntimeExports.jsxs("label", { className: "checkbox-label", children: [jsxRuntimeExports.jsx("input", { type: "checkbox" }), jsxRuntimeExports.jsx("span", { children: "Enable debug mode" })] })] })] })] }))] }), jsxRuntimeExports.jsx("style", { children: `
@@ -2014,7 +2028,7 @@ function ResponsiveLayout() {
     mobile: 1,
     tablet: 2,
     desktop: 3
-  }[breakpoint.alias] || 1;
+  }[breakpoint.alias] ?? 1;
   
   return (
     <div style={{ 
@@ -2286,9 +2300,9 @@ const ResponsivePanel = ({ active, api }) => {
             if (parameters) {
                 setState(prevState => ({
                     ...prevState,
-                    config: parameters.config || null,
-                    availableBreakpoints: parameters.breakpoints || [],
-                    currentBreakpoint: parameters.breakpoints?.[0] || null
+                    config: parameters.config ?? null,
+                    availableBreakpoints: parameters.breakpoints ?? [],
+                    currentBreakpoint: parameters.breakpoints?.[0] ?? null
                 }));
             }
         };
@@ -2519,7 +2533,7 @@ const BreakpointToolbar = ({ api }) => {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
-                    }, children: currentBreakpoint?.name || 'Responsive' })] }, "responsive-breakpoint-selector") }));
+                    }, children: currentBreakpoint?.name ?? 'Responsive' })] }, "responsive-breakpoint-selector") }));
 };
 function getBreakpointIcon(breakpoint) {
     if (!breakpoint)
@@ -2542,7 +2556,7 @@ addons.addons.register(ADDON_ID, (api) => {
         type: addons.types.PANEL,
         title: 'Responsive',
         match: ({ viewMode }) => viewMode === 'story',
-        render: ({ active, key }) => (jsxRuntimeExports.jsx(ResponsivePanel, { active: active || false, api: api }, String(key || 'responsive-panel'))),
+        render: ({ active, key }) => (jsxRuntimeExports.jsx(ResponsivePanel, { active: active ?? false, api: api }, String(key ?? 'responsive-panel'))),
         paramKey: 'responsiveEasy'
     });
     // Register the toolbar

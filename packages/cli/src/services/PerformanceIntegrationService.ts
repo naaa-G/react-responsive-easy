@@ -12,7 +12,7 @@ import {
   AlertingSystem,
   AnalyticsEngine,
   PerformanceMetrics,
-  PerformanceAlert
+  AlertEvent
 } from '@yaseratiar/react-responsive-easy-performance-dashboard';
 import { EventEmitter } from 'events';
 import fs from 'fs-extra';
@@ -33,7 +33,7 @@ export interface PerformanceSnapshot {
   id: string;
   timestamp: Date;
   metrics: PerformanceMetrics;
-  alerts: PerformanceAlert[];
+  alerts: AlertEvent[];
   score: number;
   trends: {
     performance: 'improving' | 'stable' | 'degrading';
@@ -388,7 +388,7 @@ export class PerformanceIntegrationService extends EventEmitter {
   async getAlerts(options: {
     severity?: 'info' | 'warning' | 'critical';
     limit?: number;
-  } = {}): Promise<PerformanceAlert[]> {
+  } = {}): Promise<AlertEvent[]> {
     if (!this.performanceMonitor) {
       throw new Error('Performance Monitor not initialized');
     }
@@ -724,10 +724,10 @@ export class PerformanceIntegrationService extends EventEmitter {
     if (avgScore < 70) {
       insights.recommendations.push('Consider optimizing responsive scaling configuration');
     }
-    if (allAlerts.some(a => a.type === 'memory')) {
+    if (allAlerts.some(a => a.type === 'performance' && a.description.toLowerCase().includes('memory'))) {
       insights.recommendations.push('Implement memory optimization strategies');
     }
-    if (allAlerts.some(a => a.type === 'render')) {
+    if (allAlerts.some(a => a.type === 'performance' && a.description.toLowerCase().includes('render'))) {
       insights.recommendations.push('Optimize rendering performance');
     }
 

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AIOptimizer, createAIOptimizer, optimizeConfiguration } from '../index.js';
+import { AIOptimizer, createAIOptimizer, optimizeConfiguration, type ComponentUsageData, type AIModelConfig } from '../index.js';
 import { testDataFactory } from './factories/TestDataFactory.js';
-import type { ComponentUsageData, AIModelConfig } from '../index.js';
 import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 /**
@@ -379,9 +378,10 @@ describe('Performance and Memory', () => {
     const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
     
     // Run multiple optimizations
-    for (let i = 0; i < 5; i++) {
-      await performanceOptimizer.optimizeScaling(performanceConfig, performanceUsageData);
-    }
+    const optimizationPromises = Array.from({ length: 5 }, () => 
+      performanceOptimizer.optimizeScaling(performanceConfig, performanceUsageData)
+    );
+    await Promise.all(optimizationPromises);
     
     const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
     const memoryIncrease = finalMemory - initialMemory;

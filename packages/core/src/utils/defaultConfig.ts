@@ -74,41 +74,41 @@ function createDefaultTokens() {
       scale: FONT_SIZE_SCALE,
       min: MIN_FONT_SIZE,
       max: MAX_FONT_SIZE,
-      unit: 'px',
+      unit: 'px' as const,
       precision: PRECISION_DEFAULT,
       responsive: true
     },
     spacing: {
       scale: SPACING_SCALE,
       step: 2,
-      unit: 'px',
+      unit: 'px' as const,
       precision: PRECISION_DEFAULT,
       responsive: true
     },
     radius: {
       scale: RADIUS_SCALE,
       min: MIN_RADIUS,
-      unit: 'px',
+      unit: 'px' as const,
       precision: PRECISION_DEFAULT,
       responsive: true
     },
     lineHeight: {
       scale: LINE_HEIGHT_SCALE,
       min: MIN_LINE_HEIGHT,
-      unit: 'em',
+      unit: 'em' as const,
       precision: PRECISION_LINE_HEIGHT,
       responsive: true
     },
     shadow: {
       scale: SHADOW_SCALE,
-      unit: 'px',
+      unit: 'px' as const,
       precision: PRECISION_DEFAULT,
       responsive: true
     },
     border: {
       scale: BORDER_SCALE,
       min: MIN_BORDER,
-      unit: 'px',
+      unit: 'px' as const,
       precision: PRECISION_DEFAULT,
       responsive: true
     }

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useResponsiveContext } from '../provider/ResponsiveContext';
-import { ScaleOptions } from '../types';
+import { ScaleOptions, ScalingStrategy } from '../types';
 
 // Type for style objects that can contain numeric values
 type StyleObject = Record<string, string | number>;
@@ -86,7 +86,7 @@ export const useScaledStyle = (
  * ```
  */
 export const useScaledStyleWithTokens = (
-  styles: Record<string, { value: number; token?: string; options?: ScaleOptions }>
+  styles: Record<string, { value: number; token?: keyof ScalingStrategy['tokens']; options?: ScaleOptions }>
 ): StyleObject => {
   const { config, currentBreakpoint, scaleValueWithOptions } = useResponsiveContext();
   
@@ -107,7 +107,7 @@ export const useScaledStyleWithTokens = (
       for (const [key, { value, token, options = {} }] of Object.entries(styles)) {
         const scaleOptions: ScaleOptions = {
           ...options,
-          token: token ?? options.token
+          token: (token as keyof ScalingStrategy['tokens']) ?? options.token
         };
         
         const result = scaleValueWithOptions(value, scaleOptions);

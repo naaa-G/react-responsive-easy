@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ModelTrainer } from '../engine/ModelTrainer.js';
-import type { AIModelConfig, TrainingData, ModelEvaluationMetrics } from '../types/index.js';
+import type { AIModelConfig, TrainingData } from '../types/index.js';
 
 // TensorFlow.js is mocked globally in setup.ts
 

@@ -11,7 +11,7 @@ import { configManager } from './config-manager';
 import { cacheManager } from './cache-manager';
 import { ScalingEngine } from './scaling-engine';
 import { HookTransformers } from './hook-transformers';
-import type { BabelPluginOptions, PluginState, ResponsiveConfig, TransformContext, PerformanceMetrics } from './types';
+import type { BabelPluginOptions, PluginState, ResponsiveConfig, TransformContext, PerformanceMetrics, HookTransform } from './types';
 
 // Default plugin options
 const defaultOptions: BabelPluginOptions = {
@@ -267,7 +267,7 @@ const createVisitor = (api: any, hookTransformers: any, opts: BabelPluginOptions
       const transformers = hookTransformers.getTransformers();
       
       // Try to transform each supported hook
-      for (const transformer of Object.values(transformers)) {
+      for (const transformer of Object.values(transformers) as HookTransform[]) {
         if (transformer.shouldTransform(path)) {
           try {
             // Check cache first (optimized for CI environments)
