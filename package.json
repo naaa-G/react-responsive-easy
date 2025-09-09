@@ -31,7 +31,9 @@
     "type-check": "pnpm --filter=@react-responsive-easy/core --filter=@react-responsive-easy/ai-optimizer --filter=@react-responsive-easy/babel-plugin --filter=@react-responsive-easy/cli --filter=@react-responsive-easy/performance-dashboard --filter=@react-responsive-easy/postcss-plugin --filter=@react-responsive-easy/storybook-addon --filter=@react-responsive-easy/vite-plugin --filter=@react-responsive-easy/next-plugin type-check",
     "type-check:extensions": "pnpm --filter=@react-responsive-easy/browser-extension --filter=@react-responsive-easy/figma-plugin type-check",
     "type-check:all": "pnpm type-check && pnpm type-check:extensions && pnpm --filter=@react-responsive-easy/docs type-check",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "collect-errors": "node scripts/collect-errors.js",
+    "collect-errors:ci": "node tools/error-collector.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
