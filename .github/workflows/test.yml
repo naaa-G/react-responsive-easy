@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20.18.1, 22]
       fail-fast: false  # Don't cancel other jobs if one fails
     
     steps:
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20.18.1, 22]
       fail-fast: false
     
     steps:
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18]
+        node-version: [20.18.1]
       fail-fast: false  # Don't cancel other jobs if one fails
     
     steps:
@@ -238,10 +238,10 @@ jobs:
       with:
         version: 10.13.1
     
-    - name: Use Node.js 18
+    - name: Use Node.js 20.18.1
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20.18.1
         cache: 'pnpm'
     
     - name: Install dependencies
@@ -267,7 +267,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18]
+        node-version: [20.18.1]
     
     steps:
     - uses: actions/checkout@v4
@@ -320,7 +320,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18]
+        node-version: [20.18.1]
     
     steps:
     - uses: actions/checkout@v4
@@ -393,7 +393,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18]
+        node-version: [20.18.1]
     
     steps:
     - uses: actions/checkout@v4
@@ -428,7 +428,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18]
+        node-version: [20.18.1]
     
     steps:
     - uses: actions/checkout@v4
