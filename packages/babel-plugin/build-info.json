@@ -1,12 +1,12 @@
 {
   "name": "@yaseratiar/react-responsive-easy-babel-plugin",
   "version": "1.0.1",
-  "timestamp": "2025-09-10T21:25:35.641Z",
+  "timestamp": "2025-09-10T22:08:31.572Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 3915,
-  "rollupTime": 3900,
+  "buildTime": 4675,
+  "rollupTime": 4658,
   "analysis": {
     "totalSize": 254319,
     "fileCount": 20,

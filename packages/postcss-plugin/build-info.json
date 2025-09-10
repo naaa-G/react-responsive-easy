@@ -1,12 +1,12 @@
 {
   "name": "@yaseratiar/react-responsive-easy-postcss-plugin",
   "version": "1.0.1",
-  "timestamp": "2025-09-10T21:26:10.506Z",
+  "timestamp": "2025-09-10T22:09:07.916Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 3476,
-  "rollupTime": 3460,
+  "buildTime": 3938,
+  "rollupTime": 3924,
   "analysis": {
     "totalSize": 63315,
     "fileCount": 9,

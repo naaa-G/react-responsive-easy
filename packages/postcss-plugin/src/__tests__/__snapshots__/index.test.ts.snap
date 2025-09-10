@@ -1907,7 +1907,12 @@ exports[`PostCSS Plugin Snapshot Tests > Real-World Scenarios > should generate 
         @custom-media --laptop (max-width: 1366px);
         @custom-media --tablet (max-width: 768px);
         @custom-media --mobile (max-width: 390px);
+        /* Design System */
         :root {
+          --primary-color: #007bff;
+          --secondary-color: #6c757d;
+          --success-color: #28a745;
+          --danger-color: #dc3545;
           --rre-font-size: 12px;
           --rre-font-size: 14px;
           --rre-font-size: 16px;
@@ -1923,13 +1928,6 @@ exports[`PostCSS Plugin Snapshot Tests > Real-World Scenarios > should generate 
           --rre-border-radius: 6px;
           --rre-border-radius: 8px;
           --rre-border-radius: 12px;
-}
-        /* Design System */
-        :root {
-          --primary-color: #007bff;
-          --secondary-color: #6c757d;
-          --success-color: #28a745;
-          --danger-color: #dc3545;
         }
 
         .text-xs { font-size: var(--rre-font-size); }

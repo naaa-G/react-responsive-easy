@@ -1,13 +1,13 @@
 {
   "name": "@yaseratiar/react-responsive-easy-performance-dashboard",
   "version": "2.1.0",
-  "timestamp": "2025-09-10T21:25:18.105Z",
+  "timestamp": "2025-09-10T22:08:12.647Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 17005,
-  "rollupTime": 7678,
-  "viteTime": 3850,
+  "buildTime": 18308,
+  "rollupTime": 7761,
+  "viteTime": 4389,
   "mainPackage": {
     "totalSize": 1542841,
     "totalSizeFormatted": "1.47 MB",
