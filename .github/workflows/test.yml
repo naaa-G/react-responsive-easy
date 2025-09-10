@@ -7,13 +7,12 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  # Unit Tests
-  unit-tests:
-    name: Unit Tests
-    runs-on: ${{ matrix.os }}
+  # Unit Tests - Linux
+  unit-tests-linux:
+    name: Unit Tests (Linux)
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1, 22]
       fail-fast: false  # Don't cancel other jobs if one fails
     
@@ -34,64 +33,93 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-     - name: Run unit tests (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         # Run tests with better error handling
-         pnpm test --reporter=verbose --bail=1
-       continue-on-error: false  # Unit tests are critical
-     
-     - name: Run unit tests (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         # Run tests with better error handling
-         pnpm test --reporter=verbose --bail=1
-       shell: pwsh
-       continue-on-error: false  # Unit tests are critical
-     
-     - name: Run type checking (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         pnpm type-check
-       continue-on-error: false  # Type checking is critical
-     
-     - name: Run type checking (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         pnpm type-check
-       shell: pwsh
-       continue-on-error: false  # Type checking is critical
-     
-     - name: Run linting (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         pnpm lint
-       continue-on-error: false  # Linting is critical for code quality
-     
-     - name: Run linting (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         pnpm lint
-       shell: pwsh
-       continue-on-error: false  # Linting is critical for code quality
+    - name: Run unit tests
+      run: |
+        # Run tests with better error handling
+        pnpm test --reporter=verbose --bail=1
+      continue-on-error: false  # Unit tests are critical
+    
+    - name: Run type checking
+      run: |
+        pnpm type-check
+      continue-on-error: false  # Type checking is critical
+    
+    - name: Run linting
+      run: |
+        pnpm lint
+      continue-on-error: false  # Linting is critical for code quality
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: unit-test-results-${{ matrix.node-version }}
+        name: unit-test-results-linux-${{ matrix.node-version }}
         path: |
           packages/*/coverage/
           packages/*/test-results/
         retention-days: 7
 
-  # Build Tests
-  build-tests:
-    name: Build Tests
-    runs-on: ${{ matrix.os }}
+  # Unit Tests - Windows
+  unit-tests-windows:
+    name: Unit Tests (Windows)
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1, 22]
+      fail-fast: false  # Don't cancel other jobs if one fails
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Run unit tests
+      run: |
+        # Run tests with better error handling
+        pnpm test --reporter=verbose --bail=1
+      shell: pwsh
+      continue-on-error: false  # Unit tests are critical
+    
+    - name: Run type checking
+      run: |
+        pnpm type-check
+      shell: pwsh
+      continue-on-error: false  # Type checking is critical
+    
+    - name: Run linting
+      run: |
+        pnpm lint
+      shell: pwsh
+      continue-on-error: false  # Linting is critical for code quality
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: unit-test-results-windows-${{ matrix.node-version }}
+        path: |
+          packages/*/coverage/
+          packages/*/test-results/
+        retention-days: 7
+
+  # Build Tests - Linux
+  build-tests-linux:
+    name: Build Tests (Linux)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
         node-version: [20.18.1, 22]
       fail-fast: false
     
@@ -112,106 +140,135 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-     - name: Build all packages (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         # Build with better error handling
-         pnpm build || {
-           echo "Build failed, checking individual packages..."
-           # Try building packages individually to identify issues
-           for package in packages/*/; do
-             if [ -f "$package/package.json" ]; then
-               echo "Building $(basename $package)..."
-               cd "$package" && pnpm build || echo "Failed to build $(basename $package)"
-               cd - > /dev/null
-             fi
-           done
-           exit 1
-         }
-       continue-on-error: false  # Build is critical
-     
-     - name: Build all packages (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         # Build with better error handling
-         pnpm build
-         if ($LASTEXITCODE -ne 0) {
-           Write-Host "Build failed, checking individual packages..."
-           Get-ChildItem packages -Directory | ForEach-Object {
-             if (Test-Path "$($_.FullName)/package.json") {
-               Write-Host "Building $($_.Name)..."
-               Push-Location $_.FullName
-               pnpm build
-               if ($LASTEXITCODE -ne 0) {
-                 Write-Host "Failed to build $($_.Name)"
-               }
-               Pop-Location
-             }
-           }
-           exit 1
-         }
-       shell: pwsh
-       continue-on-error: false  # Build is critical
-     
-     - name: Verify build outputs (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         echo "Checking build outputs..."
-         
-         # Check that dist directories exist
-         find packages -name "dist" -type d | while read dir; do
-           if [ -d "$dir" ] && [ "$(ls -A $dir 2>/dev/null)" ]; then
-             echo "✅ $dir has content"
-           else
-             echo "❌ $dir is empty or missing"
-           fi
-         done
-         
-         # Verify specific outputs if they exist
-         [ -f "packages/cli/dist/cli.js" ] && echo "✅ CLI built" || echo "⚠️ CLI not found"
-         [ -f "packages/babel-plugin/dist/index.js" ] && echo "✅ Babel plugin built" || echo "⚠️ Babel plugin not found"
-         [ -f "packages/postcss-plugin/dist/index.js" ] && echo "✅ PostCSS plugin built" || echo "⚠️ PostCSS plugin not found"
-         [ -f "packages/vite-plugin/dist/index.js" ] && echo "✅ Vite plugin built" || echo "⚠️ Vite plugin not found"
-         [ -f "packages/next-plugin/dist/index.js" ] && echo "✅ Next plugin built" || echo "⚠️ Next plugin not found"
-     
-     - name: Verify build outputs (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         Write-Host "Checking build outputs..."
-         
-         # Check that dist directories exist
-         Get-ChildItem packages -Recurse -Directory -Name "dist" | ForEach-Object {
-           $distPath = "packages/$_"
-           if ((Get-ChildItem $distPath).Count -gt 0) {
-             Write-Host "✅ $distPath has content"
-           } else {
-             Write-Host "❌ $distPath is empty or missing"
-           }
-         }
-         
-         # Verify specific outputs if they exist
-         if (Test-Path "packages/cli/dist/cli.js") { Write-Host "✅ CLI built" } else { Write-Host "⚠️ CLI not found" }
-         if (Test-Path "packages/babel-plugin/dist/index.js") { Write-Host "✅ Babel plugin built" } else { Write-Host "⚠️ Babel plugin not found" }
-         if (Test-Path "packages/postcss-plugin/dist/index.js") { Write-Host "✅ PostCSS plugin built" } else { Write-Host "⚠️ PostCSS plugin not found" }
-         if (Test-Path "packages/vite-plugin/dist/index.js") { Write-Host "✅ Vite plugin built" } else { Write-Host "⚠️ Vite plugin not found" }
-         if (Test-Path "packages/next-plugin/dist/index.js") { Write-Host "✅ Next plugin built" } else { Write-Host "⚠️ Next plugin not found" }
-       shell: pwsh
+    - name: Build all packages
+      run: |
+        # Build with better error handling
+        pnpm build || {
+          echo "Build failed, checking individual packages..."
+          # Try building packages individually to identify issues
+          for package in packages/*/; do
+            if [ -f "$package/package.json" ]; then
+              echo "Building $(basename $package)..."
+              cd "$package" && pnpm build || echo "Failed to build $(basename $package)"
+              cd - > /dev/null
+            fi
+          done
+          exit 1
+        }
+      continue-on-error: false  # Build is critical
+    
+    - name: Verify build outputs
+      run: |
+        echo "Checking build outputs..."
+        
+        # Check that dist directories exist
+        find packages -name "dist" -type d | while read dir; do
+          if [ -d "$dir" ] && [ "$(ls -A $dir 2>/dev/null)" ]; then
+            echo "✅ $dir has content"
+          else
+            echo "❌ $dir is empty or missing"
+          fi
+        done
+        
+        # Verify specific outputs if they exist
+        [ -f "packages/cli/dist/cli.js" ] && echo "✅ CLI built" || echo "⚠️ CLI not found"
+        [ -f "packages/babel-plugin/dist/index.js" ] && echo "✅ Babel plugin built" || echo "⚠️ Babel plugin not found"
+        [ -f "packages/postcss-plugin/dist/index.js" ] && echo "✅ PostCSS plugin built" || echo "⚠️ PostCSS plugin not found"
+        [ -f "packages/vite-plugin/dist/index.js" ] && echo "✅ Vite plugin built" || echo "⚠️ Vite plugin not found"
+        [ -f "packages/next-plugin/dist/index.js" ] && echo "✅ Next plugin built" || echo "⚠️ Next plugin not found"
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: build-artifacts-${{ matrix.node-version }}
+        name: build-artifacts-linux-${{ matrix.node-version }}
         path: packages/*/dist/
         retention-days: 7
 
-  # E2E Tests
-  e2e-tests:
-    name: E2E Tests
-    runs-on: ${{ matrix.os }}
+  # Build Tests - Windows
+  build-tests-windows:
+    name: Build Tests (Windows)
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1, 22]
+      fail-fast: false
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build all packages
+      run: |
+        # Build with better error handling
+        pnpm build
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "Build failed, checking individual packages..."
+          Get-ChildItem packages -Directory | ForEach-Object {
+            if (Test-Path "$($_.FullName)/package.json") {
+              Write-Host "Building $($_.Name)..."
+              Push-Location $_.FullName
+              pnpm build
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "Failed to build $($_.Name)"
+              }
+              Pop-Location
+            }
+          }
+          exit 1
+        }
+      shell: pwsh
+      continue-on-error: false  # Build is critical
+    
+    - name: Verify build outputs
+      run: |
+        Write-Host "Checking build outputs..."
+        
+        # Check that dist directories exist
+        Get-ChildItem packages -Recurse -Directory -Name "dist" | ForEach-Object {
+          $distPath = "packages/$_"
+          if ((Get-ChildItem $distPath).Count -gt 0) {
+            Write-Host "✅ $distPath has content"
+          } else {
+            Write-Host "❌ $distPath is empty or missing"
+          }
+        }
+        
+        # Verify specific outputs if they exist
+        if (Test-Path "packages/cli/dist/cli.js") { Write-Host "✅ CLI built" } else { Write-Host "⚠️ CLI not found" }
+        if (Test-Path "packages/babel-plugin/dist/index.js") { Write-Host "✅ Babel plugin built" } else { Write-Host "⚠️ Babel plugin not found" }
+        if (Test-Path "packages/postcss-plugin/dist/index.js") { Write-Host "✅ PostCSS plugin built" } else { Write-Host "⚠️ PostCSS plugin not found" }
+        if (Test-Path "packages/vite-plugin/dist/index.js") { Write-Host "✅ Vite plugin built" } else { Write-Host "⚠️ Vite plugin not found" }
+        if (Test-Path "packages/next-plugin/dist/index.js") { Write-Host "✅ Next plugin built" } else { Write-Host "⚠️ Next plugin not found" }
+      shell: pwsh
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-artifacts-windows-${{ matrix.node-version }}
+        path: packages/*/dist/
+        retention-days: 7
+
+  # E2E Tests - Linux
+  e2e-tests-linux:
+    name: E2E Tests (Linux)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
         node-version: [20.18.1]
       fail-fast: false  # Don't cancel other jobs if one fails
     
@@ -242,89 +299,42 @@ jobs:
     - name: Verify Playwright installation
       run: npx playwright --version
     
-     - name: Start test application (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         # Start the test app in background with proper error handling
-         pnpm dev > dev-server.log 2>&1 &
-         echo $! > dev-server.pid
-         
-         # Wait for app to start with better error handling
-         timeout 60 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' || {
-           echo "Dev server failed to start"
-           cat dev-server.log
-           exit 1
-         }
-         
-         echo "Dev server started successfully"
-     
-     - name: Start test application (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         # Start the test app in background with proper error handling
-         Start-Process -NoNewWindow -FilePath "pnpm" -ArgumentList "dev" -RedirectStandardOutput "dev-server.log" -RedirectStandardError "dev-server-error.log"
-         $pid = (Get-Process -Name "node" | Where-Object { $_.CommandLine -like "*dev*" } | Select-Object -First 1).Id
-         $pid | Out-File -FilePath "dev-server.pid" -Encoding ASCII
-         
-         # Wait for app to start with better error handling
-         $timeout = 60
-         $elapsed = 0
-         do {
-           Start-Sleep -Seconds 2
-           $elapsed += 2
-           try {
-             $response = Invoke-WebRequest -Uri "http://localhost:3000" -UseBasicParsing -TimeoutSec 5
-             if ($response.StatusCode -eq 200) {
-               Write-Host "Dev server started successfully"
-               break
-             }
-           } catch {
-             # Continue waiting
-           }
-         } while ($elapsed -lt $timeout)
-         
-         if ($elapsed -ge $timeout) {
-           Write-Host "Dev server failed to start"
-           Get-Content "dev-server.log" -ErrorAction SilentlyContinue
-           exit 1
-         }
-       shell: pwsh
-     
-     - name: Run E2E tests (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         # Run tests with better error handling and reporting
-         npx playwright test \
-           --reporter=html,json,junit \
-           --output-dir=test-results \
-           --max-failures=3 \
-           --timeout=30000 \
-           --retries=2
-         
-         # Check if tests actually ran
-         if [ ! -f "test-results/results.json" ]; then
-           echo "No test results found - tests may not have run"
-           exit 1
-         fi
-     
-     - name: Run E2E tests (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         # Run tests with better error handling and reporting
-         npx playwright test --reporter=html,json,junit --output-dir=test-results --max-failures=3 --timeout=30000 --retries=2
-         
-         # Check if tests actually ran
-         if (-not (Test-Path "test-results/results.json")) {
-           Write-Host "No test results found - tests may not have run"
-           exit 1
-         }
-       shell: pwsh
+    - name: Start test application
+      run: |
+        # Start the test app in background with proper error handling
+        pnpm dev > dev-server.log 2>&1 &
+        echo $! > dev-server.pid
+        
+        # Wait for app to start with better error handling
+        timeout 60 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' || {
+          echo "Dev server failed to start"
+          cat dev-server.log
+          exit 1
+        }
+        
+        echo "Dev server started successfully"
+    
+    - name: Run E2E tests
+      run: |
+        # Run tests with better error handling and reporting
+        npx playwright test \
+          --reporter=html,json,junit \
+          --output-dir=test-results \
+          --max-failures=3 \
+          --timeout=30000 \
+          --retries=2
+        
+        # Check if tests actually ran
+        if [ ! -f "test-results/results.json" ]; then
+          echo "No test results found - tests may not have run"
+          exit 1
+        fi
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report-${{ matrix.node-version }}
+        name: playwright-report-linux-${{ matrix.node-version }}
         path: |
           playwright-report/
           test-results/
@@ -334,37 +344,141 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: dev-server-logs-${{ matrix.node-version }}
+        name: dev-server-logs-linux-${{ matrix.node-version }}
         path: dev-server.log
         retention-days: 7
     
-     - name: Cleanup (Linux)
-       if: always() && matrix.os == 'ubuntu-latest'
-       run: |
-         if [ -f dev-server.pid ]; then
-           kill $(cat dev-server.pid) 2>/dev/null || true
-         fi
-     
-     - name: Cleanup (Windows)
-       if: always() && matrix.os == 'windows-latest'
-       run: |
-         if (Test-Path "dev-server.pid") {
-           $pid = Get-Content "dev-server.pid" -ErrorAction SilentlyContinue
-           if ($pid) {
-             Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-           }
-         }
-         # Also kill any remaining node processes
-         Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*dev*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-       shell: pwsh
+    - name: Cleanup
+      if: always()
+      run: |
+        if [ -f dev-server.pid ]; then
+          kill $(cat dev-server.pid) 2>/dev/null || true
+        fi
 
-  # Cross-browser Tests
-  cross-browser:
-    name: Cross-browser Tests
-    runs-on: ${{ matrix.os }}
+  # E2E Tests - Windows
+  e2e-tests-windows:
+    name: E2E Tests (Windows)
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1]
+      fail-fast: false  # Don't cancel other jobs if one fails
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build packages
+      run: pnpm build
+      continue-on-error: true  # Don't fail if build has issues
+    
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium firefox webkit
+    
+    - name: Verify Playwright installation
+      run: npx playwright --version
+    
+    - name: Start test application
+      run: |
+        # Start the test app in background with proper error handling
+        Start-Process -NoNewWindow -FilePath "pnpm" -ArgumentList "dev" -RedirectStandardOutput "dev-server.log" -RedirectStandardError "dev-server-error.log"
+        $pid = (Get-Process -Name "node" | Where-Object { $_.CommandLine -like "*dev*" } | Select-Object -First 1).Id
+        $pid | Out-File -FilePath "dev-server.pid" -Encoding ASCII
+        
+        # Wait for app to start with better error handling
+        $timeout = 60
+        $elapsed = 0
+        do {
+          Start-Sleep -Seconds 2
+          $elapsed += 2
+          try {
+            $response = Invoke-WebRequest -Uri "http://localhost:3000" -UseBasicParsing -TimeoutSec 5
+            if ($response.StatusCode -eq 200) {
+              Write-Host "Dev server started successfully"
+              break
+            }
+          } catch {
+            # Continue waiting
+          }
+        } while ($elapsed -lt $timeout)
+        
+        if ($elapsed -ge $timeout) {
+          Write-Host "Dev server failed to start"
+          Get-Content "dev-server.log" -ErrorAction SilentlyContinue
+          exit 1
+        }
+      shell: pwsh
+    
+    - name: Run E2E tests
+      run: |
+        # Run tests with better error handling and reporting
+        npx playwright test --reporter=html,json,junit --output-dir=test-results --max-failures=3 --timeout=30000 --retries=2
+        
+        # Check if tests actually ran
+        if (-not (Test-Path "test-results/results.json")) {
+          Write-Host "No test results found - tests may not have run"
+          exit 1
+        }
+      shell: pwsh
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-windows-${{ matrix.node-version }}
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 30
+    
+    - name: Upload dev server logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dev-server-logs-windows-${{ matrix.node-version }}
+        path: dev-server.log
+        retention-days: 7
+    
+    - name: Cleanup
+      if: always()
+      run: |
+        if (Test-Path "dev-server.pid") {
+          $pid = Get-Content "dev-server.pid" -ErrorAction SilentlyContinue
+          if ($pid) {
+            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+          }
+        }
+        # Also kill any remaining node processes
+        Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*dev*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+      shell: pwsh
+
+  # Cross-browser Tests - Linux
+  cross-browser-linux:
+    name: Cross-browser Tests (Linux)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+  # Cross-browser Tests - Windows
+  cross-browser-windows:
+    name: Cross-browser Tests (Windows)
+    runs-on: windows-latest
+    strategy:
+      matrix:
         browser: [chromium, firefox, webkit]
     
     steps:
@@ -412,13 +526,20 @@ jobs:
        run: npx playwright test --project=${{ matrix.browser }} --reporter=html
        shell: pwsh
 
-  # Performance Tests
-  performance-tests:
-    name: Performance Tests
-    runs-on: ${{ matrix.os }}
+  # Performance Tests - Linux
+  performance-tests-linux:
+    name: Performance Tests (Linux)
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1]
+
+  # Performance Tests - Windows
+  performance-tests-windows:
+    name: Performance Tests (Windows)
+    runs-on: windows-latest
+    strategy:
+      matrix:
         node-version: [20.18.1]
     
     steps:
@@ -491,13 +612,20 @@ jobs:
         name: performance-report-${{ matrix.node-version }}
         path: performance-report.txt
 
-  # Bundle Size Analysis
-  bundle-analysis:
-    name: Bundle Size Analysis
-    runs-on: ${{ matrix.os }}
+  # Bundle Size Analysis - Linux
+  bundle-analysis-linux:
+    name: Bundle Size Analysis (Linux)
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1]
+
+  # Bundle Size Analysis - Windows
+  bundle-analysis-windows:
+    name: Bundle Size Analysis (Windows)
+    runs-on: windows-latest
+    strategy:
+      matrix:
         node-version: [20.18.1]
     
     steps:
@@ -609,13 +737,20 @@ jobs:
         name: bundle-analysis-${{ matrix.node-version }}
         path: bundle-analysis.txt
 
-  # Security Audit
-  security-audit:
-    name: Security Audit
-    runs-on: ${{ matrix.os }}
+  # Security Audit - Linux
+  security-audit-linux:
+    name: Security Audit (Linux)
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1]
+
+  # Security Audit - Windows
+  security-audit-windows:
+    name: Security Audit (Windows)
+    runs-on: windows-latest
+    strategy:
+      matrix:
         node-version: [20.18.1]
     
     steps:
@@ -645,13 +780,20 @@ jobs:
       with:
         args: --severity-threshold=high
 
-  # Test Coverage
-  coverage:
-    name: Test Coverage
-    runs-on: ${{ matrix.os }}
+  # Test Coverage - Linux
+  coverage-linux:
+    name: Test Coverage (Linux)
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        node-version: [20.18.1]
+
+  # Test Coverage - Windows
+  coverage-windows:
+    name: Test Coverage (Windows)
+    runs-on: windows-latest
+    strategy:
+      matrix:
         node-version: [20.18.1]
     
     steps:
@@ -720,7 +862,7 @@ jobs:
   status:
     name: Test Status
     runs-on: ubuntu-latest
-    needs: [unit-tests, build-tests, e2e-tests, cross-browser, performance-tests, bundle-analysis, security-audit, coverage, error-summary]
+    needs: [unit-tests-linux, unit-tests-windows, build-tests-linux, build-tests-windows, e2e-tests-linux, e2e-tests-windows, cross-browser-linux, cross-browser-windows, performance-tests-linux, performance-tests-windows, bundle-analysis-linux, bundle-analysis-windows, security-audit-linux, security-audit-windows, coverage-linux, coverage-windows, error-summary]
     if: always()
     
     steps:
@@ -728,20 +870,28 @@ jobs:
       run: |
         echo "Test Suite Summary"
         echo "================="
-        echo "Unit Tests: ${{ needs.unit-tests.result }}"
-        echo "Build Tests: ${{ needs.build-tests.result }}"
-        echo "E2E Tests: ${{ needs.e2e-tests.result }}"
-        echo "Cross-browser Tests: ${{ needs.cross-browser.result }}"
-        echo "Performance Tests: ${{ needs.performance-tests.result }}"
-        echo "Bundle Analysis: ${{ needs.bundle-analysis.result }}"
-        echo "Security Audit: ${{ needs.security-audit.result }}"
-        echo "Coverage: ${{ needs.coverage.result }}"
+        echo "Unit Tests (Linux): ${{ needs.unit-tests-linux.result }}"
+        echo "Unit Tests (Windows): ${{ needs.unit-tests-windows.result }}"
+        echo "Build Tests (Linux): ${{ needs.build-tests-linux.result }}"
+        echo "Build Tests (Windows): ${{ needs.build-tests-windows.result }}"
+        echo "E2E Tests (Linux): ${{ needs.e2e-tests-linux.result }}"
+        echo "E2E Tests (Windows): ${{ needs.e2e-tests-windows.result }}"
+        echo "Cross-browser Tests (Linux): ${{ needs.cross-browser-linux.result }}"
+        echo "Cross-browser Tests (Windows): ${{ needs.cross-browser-windows.result }}"
+        echo "Performance Tests (Linux): ${{ needs.performance-tests-linux.result }}"
+        echo "Performance Tests (Windows): ${{ needs.performance-tests-windows.result }}"
+        echo "Bundle Analysis (Linux): ${{ needs.bundle-analysis-linux.result }}"
+        echo "Bundle Analysis (Windows): ${{ needs.bundle-analysis-windows.result }}"
+        echo "Security Audit (Linux): ${{ needs.security-audit-linux.result }}"
+        echo "Security Audit (Windows): ${{ needs.security-audit-windows.result }}"
+        echo "Coverage (Linux): ${{ needs.coverage-linux.result }}"
+        echo "Coverage (Windows): ${{ needs.coverage-windows.result }}"
         
         # Count successful jobs
         success_count=0
         total_count=0
         
-        for job in unit-tests build-tests e2e-tests cross-browser performance-tests bundle-analysis security-audit coverage; do
+        for job in unit-tests-linux unit-tests-windows build-tests-linux build-tests-windows e2e-tests-linux e2e-tests-windows cross-browser-linux cross-browser-windows performance-tests-linux performance-tests-windows bundle-analysis-linux bundle-analysis-windows security-audit-linux security-audit-windows coverage-linux coverage-windows; do
           total_count=$((total_count + 1))
           if [[ "${{ needs[job].result }}" == "success" ]]; then
             success_count=$((success_count + 1))
@@ -776,14 +926,22 @@ jobs:
         echo "" >> test-summary.md
         echo "| Job | Status |" >> test-summary.md
         echo "|-----|--------|" >> test-summary.md
-        echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> test-summary.md
-        echo "| Build Tests | ${{ needs.build-tests.result }} |" >> test-summary.md
-        echo "| E2E Tests | ${{ needs.e2e-tests.result }} |" >> test-summary.md
-        echo "| Cross-browser Tests | ${{ needs.cross-browser.result }} |" >> test-summary.md
-        echo "| Performance Tests | ${{ needs.performance-tests.result }} |" >> test-summary.md
-        echo "| Bundle Analysis | ${{ needs.bundle-analysis.result }} |" >> test-summary.md
-        echo "| Security Audit | ${{ needs.security-audit.result }} |" >> test-summary.md
-        echo "| Coverage | ${{ needs.coverage.result }} |" >> test-summary.md
+        echo "| Unit Tests (Linux) | ${{ needs.unit-tests-linux.result }} |" >> test-summary.md
+        echo "| Unit Tests (Windows) | ${{ needs.unit-tests-windows.result }} |" >> test-summary.md
+        echo "| Build Tests (Linux) | ${{ needs.build-tests-linux.result }} |" >> test-summary.md
+        echo "| Build Tests (Windows) | ${{ needs.build-tests-windows.result }} |" >> test-summary.md
+        echo "| E2E Tests (Linux) | ${{ needs.e2e-tests-linux.result }} |" >> test-summary.md
+        echo "| E2E Tests (Windows) | ${{ needs.e2e-tests-windows.result }} |" >> test-summary.md
+        echo "| Cross-browser Tests (Linux) | ${{ needs.cross-browser-linux.result }} |" >> test-summary.md
+        echo "| Cross-browser Tests (Windows) | ${{ needs.cross-browser-windows.result }} |" >> test-summary.md
+        echo "| Performance Tests (Linux) | ${{ needs.performance-tests-linux.result }} |" >> test-summary.md
+        echo "| Performance Tests (Windows) | ${{ needs.performance-tests-windows.result }} |" >> test-summary.md
+        echo "| Bundle Analysis (Linux) | ${{ needs.bundle-analysis-linux.result }} |" >> test-summary.md
+        echo "| Bundle Analysis (Windows) | ${{ needs.bundle-analysis-windows.result }} |" >> test-summary.md
+        echo "| Security Audit (Linux) | ${{ needs.security-audit-linux.result }} |" >> test-summary.md
+        echo "| Security Audit (Windows) | ${{ needs.security-audit-windows.result }} |" >> test-summary.md
+        echo "| Coverage (Linux) | ${{ needs.coverage-linux.result }} |" >> test-summary.md
+        echo "| Coverage (Windows) | ${{ needs.coverage-windows.result }} |" >> test-summary.md
        shell: bash
     
     - name: Upload Test Summary
