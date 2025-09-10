@@ -472,6 +472,37 @@ jobs:
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js 20.18.1
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.18.1
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build packages
+      run: pnpm build
+    
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
+    
+    - name: Start test application
+      run: |
+        pnpm dev &
+        sleep 30
+    
+    - name: Run cross-browser tests
+      run: npx playwright test --project=${{ matrix.browser }} --reporter=html
 
   # Cross-browser Tests - Windows
   cross-browser-windows:
@@ -504,27 +535,15 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps ${{ matrix.browser }}
     
-     - name: Start test application (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         pnpm dev &
-         sleep 30
-     
-     - name: Start test application (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         Start-Process -NoNewWindow -FilePath "pnpm" -ArgumentList "dev"
-         Start-Sleep -Seconds 30
-       shell: pwsh
-     
-     - name: Run cross-browser tests (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: npx playwright test --project=${{ matrix.browser }} --reporter=html
-     
-     - name: Run cross-browser tests (Windows)
-       if: matrix.os == 'windows-latest'
-       run: npx playwright test --project=${{ matrix.browser }} --reporter=html
-       shell: pwsh
+    - name: Start test application
+      run: |
+        Start-Process -NoNewWindow -FilePath "pnpm" -ArgumentList "dev"
+        Start-Sleep -Seconds 30
+      shell: pwsh
+    
+    - name: Run cross-browser tests
+      run: npx playwright test --project=${{ matrix.browser }} --reporter=html
+      shell: pwsh
 
   # Performance Tests - Linux
   performance-tests-linux:
@@ -533,6 +552,51 @@ jobs:
     strategy:
       matrix:
         node-version: [20.18.1]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build packages
+      run: pnpm build
+    
+    - name: Install Playwright
+      run: npx playwright install --with-deps
+    
+    - name: Start test application
+      run: |
+        pnpm dev &
+        sleep 30
+    
+    - name: Run performance tests
+      run: npx playwright test tests/e2e/performance.spec.ts --reporter=html
+    
+    - name: Generate performance report
+      run: |
+        # Generate performance metrics report
+        echo "Performance Test Results:" > performance-report.txt
+        echo "=========================" >> performance-report.txt
+        echo "Node Version: ${{ matrix.node-version }}" >> performance-report.txt
+        echo "Timestamp: $(date)" >> performance-report.txt
+    
+    - name: Upload performance report
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-report-linux-${{ matrix.node-version }}
+        path: performance-report.txt
 
   # Performance Tests - Windows
   performance-tests-windows:
@@ -565,51 +629,29 @@ jobs:
     - name: Install Playwright
       run: npx playwright install --with-deps
     
-     - name: Start test application (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         pnpm dev &
-         sleep 30
-     
-     - name: Start test application (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         Start-Process -NoNewWindow -FilePath "pnpm" -ArgumentList "dev"
-         Start-Sleep -Seconds 30
-       shell: pwsh
-     
-     - name: Run performance tests (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: npx playwright test tests/e2e/performance.spec.ts --reporter=html
-     
-     - name: Run performance tests (Windows)
-       if: matrix.os == 'windows-latest'
-       run: npx playwright test tests/e2e/performance.spec.ts --reporter=html
-       shell: pwsh
-     
-     - name: Generate performance report (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         # Generate performance metrics report
-         echo "Performance Test Results:" > performance-report.txt
-         echo "=========================" >> performance-report.txt
-         echo "Node Version: ${{ matrix.node-version }}" >> performance-report.txt
-         echo "Timestamp: $(date)" >> performance-report.txt
-     
-     - name: Generate performance report (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         # Generate performance metrics report
-         "Performance Test Results:" | Out-File -FilePath "performance-report.txt" -Encoding UTF8
-         "=========================" | Out-File -FilePath "performance-report.txt" -Append -Encoding UTF8
-         "Node Version: ${{ matrix.node-version }}" | Out-File -FilePath "performance-report.txt" -Append -Encoding UTF8
-         "Timestamp: $(Get-Date)" | Out-File -FilePath "performance-report.txt" -Append -Encoding UTF8
-       shell: pwsh
+    - name: Start test application
+      run: |
+        Start-Process -NoNewWindow -FilePath "pnpm" -ArgumentList "dev"
+        Start-Sleep -Seconds 30
+      shell: pwsh
+    
+    - name: Run performance tests
+      run: npx playwright test tests/e2e/performance.spec.ts --reporter=html
+      shell: pwsh
+    
+    - name: Generate performance report
+      run: |
+        # Generate performance metrics report
+        "Performance Test Results:" | Out-File -FilePath "performance-report.txt" -Encoding UTF8
+        "=========================" | Out-File -FilePath "performance-report.txt" -Append -Encoding UTF8
+        "Node Version: ${{ matrix.node-version }}" | Out-File -FilePath "performance-report.txt" -Append -Encoding UTF8
+        "Timestamp: $(Get-Date)" | Out-File -FilePath "performance-report.txt" -Append -Encoding UTF8
+      shell: pwsh
     
     - name: Upload performance report
       uses: actions/upload-artifact@v4
       with:
-        name: performance-report-${{ matrix.node-version }}
+        name: performance-report-windows-${{ matrix.node-version }}
         path: performance-report.txt
 
   # Bundle Size Analysis - Linux
@@ -619,6 +661,71 @@ jobs:
     strategy:
       matrix:
         node-version: [20.18.1]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Build packages
+      run: pnpm build
+    
+    - name: Analyze bundle sizes
+      run: |
+        echo "Bundle Size Analysis:" > bundle-analysis.txt
+        echo "====================" >> bundle-analysis.txt
+        
+        # Core package
+        if [ -f "packages/core/dist/index.js" ]; then
+          core_size=$(wc -c < packages/core/dist/index.js)
+          core_size_kb=$((core_size / 1024))
+          echo "Core Package: ${core_size_kb}KB" >> bundle-analysis.txt
+        fi
+        
+        # CLI package
+        if [ -f "packages/cli/dist/cli.js" ]; then
+          cli_size=$(wc -c < packages/cli/dist/cli.js)
+          cli_size_kb=$((cli_size / 1024))
+          echo "CLI Package: ${cli_size_kb}KB" >> bundle-analysis.txt
+        fi
+        
+        # Plugin packages
+        for plugin in babel-plugin postcss-plugin vite-plugin next-plugin; do
+          if [ -f "packages/${plugin}/dist/index.js" ]; then
+            plugin_size=$(wc -c < packages/${plugin}/dist/index.js)
+            plugin_size_kb=$((plugin_size / 1024))
+            echo "${plugin}: ${plugin_size_kb}KB" >> bundle-analysis.txt
+          fi
+        done
+        
+        # Check size limits
+        if [ $core_size_kb -gt 50 ]; then
+          echo "WARNING: Core package exceeds 50KB limit" >> bundle-analysis.txt
+          exit 1
+        fi
+        
+        if [ $cli_size_kb -gt 100 ]; then
+          echo "WARNING: CLI package exceeds 100KB limit" >> bundle-analysis.txt
+          exit 1
+        fi
+    
+    - name: Upload bundle analysis
+      uses: actions/upload-artifact@v4
+      with:
+        name: bundle-analysis-linux-${{ matrix.node-version }}
+        path: bundle-analysis.txt
 
   # Bundle Size Analysis - Windows
   bundle-analysis-windows:
@@ -744,6 +851,33 @@ jobs:
     strategy:
       matrix:
         node-version: [20.18.1]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Run security audit
+      run: pnpm audit --audit-level moderate
+    
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
 
   # Security Audit - Windows
   security-audit-windows:
@@ -787,6 +921,33 @@ jobs:
     strategy:
       matrix:
         node-version: [20.18.1]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10.13.1
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+    
+    - name: Run tests with coverage
+      run: pnpm test:coverage
+    
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports-linux-${{ matrix.node-version }}
+        path: coverage/
+        retention-days: 30
 
   # Test Coverage - Windows
   coverage-windows:
