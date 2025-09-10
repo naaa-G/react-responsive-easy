@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import type { BreakpointConfig } from '../types';
-import type { ResponsiveConfig } from '@react-responsive-easy/core';
+import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 interface ResponsiveDocumentationProps {
   config: ResponsiveConfig | null;
@@ -107,7 +107,7 @@ export const ResponsiveDocumentation: React.FC<ResponsiveDocumentationProps> = (
             <div className="examples-content">
               <div className="example-block">
                 <h4>Basic Usage</h4>
-                <pre className="code-block">{`import { ResponsiveProvider, useResponsiveValue } from '@react-responsive-easy/core';
+                <pre className="code-block">{`import { ResponsiveProvider, useResponsiveValue } from '@yaseratiar/react-responsive-easy-core';
 
 function MyComponent() {
   const fontSize = useResponsiveValue(24); // Base font size
@@ -123,7 +123,7 @@ function MyComponent() {
 
               <div className="example-block">
                 <h4>Advanced Scaling</h4>
-                <pre className="code-block">{`import { useScaledStyle } from '@react-responsive-easy/core';
+                <pre className="code-block">{`import { useScaledStyle } from '@yaseratiar/react-responsive-easy-core';
 
 function Card() {
   const styles = useScaledStyle({
@@ -140,7 +140,7 @@ function Card() {
 
               <div className="example-block">
                 <h4>Breakpoint-Specific Values</h4>
-                <pre className="code-block">{`import { useBreakpoint } from '@react-responsive-easy/core';
+                <pre className="code-block">{`import { useBreakpoint } from '@yaseratiar/react-responsive-easy-core';
 
 function ResponsiveLayout() {
   const breakpoint = useBreakpoint();

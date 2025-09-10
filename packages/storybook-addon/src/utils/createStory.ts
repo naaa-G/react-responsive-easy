@@ -7,7 +7,7 @@ import type { StoryObj } from '@storybook/react';
 import { generateResponsiveArgs, generateResponsiveArgTypes, createResponsiveParameters } from './generateArgs';
 import { DEFAULT_BREAKPOINTS } from '../constants';
 import type { BreakpointConfig } from '../types';
-import type { ResponsiveConfig } from '@react-responsive-easy/core';
+import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 /**
  * Create a responsive story with automatic args and controls

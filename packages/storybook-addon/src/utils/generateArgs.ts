@@ -3,7 +3,7 @@
  */
 
 import type { ResponsiveArgs, BreakpointConfig } from '../types';
-import type { ResponsiveConfig } from '@react-responsive-easy/core';
+import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 import { DEFAULT_BREAKPOINTS } from '../constants';
 
 // Define proper types for Storybook arg types

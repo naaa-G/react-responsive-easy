@@ -21,8 +21,8 @@ function webpackFinal(config, options) {
       ...config.resolve,
       alias: {
         ...config.resolve?.alias,
-        '@react-responsive-easy/core': require.resolve('@react-responsive-easy/core'),
-        '@react-responsive-easy/performance-dashboard': require.resolve('@react-responsive-easy/performance-dashboard')
+        '@yaseratiar/react-responsive-easy-core': require.resolve('@yaseratiar/react-responsive-easy-core'),
+        '@yaseratiar/react-responsive-easy-performance-dashboard': require.resolve('@yaseratiar/react-responsive-easy-performance-dashboard')
       }
     }
   };

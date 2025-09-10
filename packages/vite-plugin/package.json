@@ -2,6 +2,7 @@
   "name": "@yaseratiar/react-responsive-easy-vite-plugin",
   "version": "1.0.1",
   "description": "Vite plugin for React Responsive Easy integration",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -16,7 +17,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/build.js",
+    "build:legacy": "tsc",
     "dev": "tsc --noEmit --watch",
     "test": "vitest run",
     "test:watch": "vitest --watch",

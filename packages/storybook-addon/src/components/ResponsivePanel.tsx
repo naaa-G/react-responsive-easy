@@ -13,7 +13,7 @@ import { PerformanceMetrics as PerformanceMetricsComponent } from './Performance
 import { BreakpointPreview } from './BreakpointPreview';
 import { ResponsiveDocumentation } from './ResponsiveDocumentation';
 import type { AddonPanelProps, ResponsiveState, BreakpointConfig, PerformanceMetrics } from '../types';
-import type { ResponsiveConfig } from '@react-responsive-easy/core';
+import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 export const ResponsivePanel: React.FC<AddonPanelProps> = ({ active, api }) => {
   const [state, setState] = useState<ResponsiveState>({

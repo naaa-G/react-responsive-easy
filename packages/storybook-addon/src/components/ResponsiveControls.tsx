@@ -7,7 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import type { ResponsiveState, BreakpointConfig } from '../types';
-import type { ResponsiveConfig } from '@react-responsive-easy/core';
+import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 interface ResponsiveControlsProps {
   state: ResponsiveState;

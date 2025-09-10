@@ -31,7 +31,7 @@ program
   .addCommand(analyzeCommand)
   .addCommand(devCommand)
   .addCommand(aiCommand)
-  .addCommand(performanceCommand)
+  .addCommand(performanceCommand(program, null as any))
   .addCommand(createCICommands())
   .addCommand(createTeamCommands())
   .addCommand(createSecurityCommands())

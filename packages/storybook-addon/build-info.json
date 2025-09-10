@@ -1,0 +1,15 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-storybook-addon",
+  "version": "1.0.2",
+  "timestamp": "2025-09-10T21:26:14.574Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 7280,
+  "rollupTime": 7260,
+  "dependencies": {
+    "core": true,
+    "performanceDashboard": "optional"
+  },
+  "success": true
+}

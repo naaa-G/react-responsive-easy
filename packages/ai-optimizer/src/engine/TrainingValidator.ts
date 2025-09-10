@@ -41,6 +41,9 @@ export class TrainingValidator {
       throw new Error('Empty training data provided');
     }
 
+    // Validate each training data item for content quality
+    this.validateAllSamples(trainingData);
+
     let processedTrainingData = trainingData;
     if (processedTrainingData.length < 2) {
       logger.warn('Insufficient data points for training, using single data point for both training and validation');
@@ -168,10 +171,7 @@ export class TrainingValidator {
         return false;
       }
 
-      if (!this.validateAllSamples(trainingData)) {
-        return false;
-      }
-
+      this.validateAllSamples(trainingData);
       return true;
     } catch (error) {
       logger.error('Training data validation failed', error instanceof Error ? error : new Error(String(error)));
@@ -210,62 +210,222 @@ export class TrainingValidator {
   /**
    * Validate all training samples
    */
-  private validateAllSamples(trainingData: TrainingData[]): boolean {
+  private validateAllSamples(trainingData: TrainingData[]): void {
     for (let i = 0; i < trainingData.length; i++) {
-      if (!this.validateSample(trainingData[i], i)) {
-        return false;
-      }
+      this.validateSample(trainingData[i], i);
     }
-    return true;
   }
 
   /**
    * Validate a single training sample
    */
-  private validateSample(sample: TrainingData, index: number): boolean {
+  private validateSample(sample: TrainingData, index: number): void {
     if (!sample) {
-      logger.warn(`Training data validation failed: null/undefined sample at index ${index}`);
-      return false;
+      throw new Error(`Invalid training data at index ${index}: sample is null or undefined`);
     }
 
     if (!sample.features || !sample.labels) {
-      logger.warn(`Training data validation failed: missing features or labels at index ${index}`);
-      return false;
+      throw new Error(`Invalid training data at index ${index}: missing features or labels`);
     }
 
-    if (!this.validateFeatureStructure(sample.features, index)) {
-      return false;
-    }
-
-    if (!this.validateLabelStructure(sample.labels, index)) {
-      return false;
-    }
-
-    return true;
+    this.validateFeatureStructure(sample.features, index);
+    this.validateLabelStructure(sample.labels, index);
+    this.validateFeatureContent(sample.features, index);
   }
 
   /**
    * Validate feature structure
    */
-  private validateFeatureStructure(features: Record<string, unknown>, index: number): boolean {
+  private validateFeatureStructure(features: Record<string, unknown>, index: number): void {
     if (!features.config || !features.usage || 
         !features.performance || !features.context) {
-      logger.warn(`Training data validation failed: incomplete feature structure at index ${index}`);
-      return false;
+      throw new Error(`Invalid training data at index ${index}: incomplete feature structure - missing required sections`);
     }
-    return true;
   }
 
   /**
    * Validate label structure
    */
-  private validateLabelStructure(labels: Record<string, unknown>, index: number): boolean {
+  private validateLabelStructure(labels: Record<string, unknown>, index: number): void {
     if (!labels.optimalTokens || !labels.performanceScores ||
         !labels.satisfactionRatings || !labels.accessibilityScores) {
-      logger.warn(`Training data validation failed: incomplete label structure at index ${index}`);
-      return false;
+      throw new Error(`Invalid training data at index ${index}: incomplete label structure - missing required sections`);
     }
-    return true;
+  }
+
+  /**
+   * Validate feature content for meaningful values
+   */
+  private validateFeatureContent(features: Record<string, unknown>, index: number): void {
+    this.validateConfigFeatures(features, index);
+    this.validateUsageFeatures(features, index);
+    this.validatePerformanceFeatures(features, index);
+  }
+
+  /**
+   * Validate configuration features
+   */
+  private validateConfigFeatures(features: Record<string, unknown>, index: number): void {
+    if (!features.config || typeof features.config !== 'object') {
+      return;
+    }
+
+    const config = features.config as Record<string, unknown>;
+    
+    this.validateBreakpointCount(config, index);
+    this.validateBreakpointRatios(config, index);
+    this.validateTokenComplexity(config, index);
+    this.validateOriginDistribution(config, index);
+  }
+
+  /**
+   * Validate breakpoint count
+   */
+  private validateBreakpointCount(config: Record<string, unknown>, index: number): void {
+    if (typeof config.breakpointCount === 'number' && config.breakpointCount <= 0) {
+      throw new Error(`Invalid training data at index ${index}: features.config.breakpointCount must be greater than 0`);
+    }
+  }
+
+  /**
+   * Validate breakpoint ratios
+   */
+  private validateBreakpointRatios(config: Record<string, unknown>, index: number): void {
+    if (Array.isArray(config.breakpointRatios) && config.breakpointRatios.length === 0) {
+      throw new Error(`Invalid training data at index ${index}: features.config.breakpointRatios cannot be empty`);
+    }
+  }
+
+  /**
+   * Validate token complexity
+   */
+  private validateTokenComplexity(config: Record<string, unknown>, index: number): void {
+    if (typeof config.tokenComplexity === 'number' && config.tokenComplexity <= 0) {
+      throw new Error(`Invalid training data at index ${index}: features.config.tokenComplexity must be greater than 0`);
+    }
+  }
+
+  /**
+   * Validate origin distribution
+   */
+  private validateOriginDistribution(config: Record<string, unknown>, index: number): void {
+    if (!config.originDistribution || typeof config.originDistribution !== 'object') {
+      return;
+    }
+
+    const originDist = config.originDistribution as Record<string, unknown>;
+    
+    if (typeof originDist.width === 'number' && originDist.width < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.config.originDistribution.width must be non-negative`);
+    }
+    
+    if (typeof originDist.height === 'number' && originDist.height < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.config.originDistribution.height must be non-negative`);
+    }
+  }
+
+  /**
+   * Validate usage features
+   */
+  private validateUsageFeatures(features: Record<string, unknown>, index: number): void {
+    if (!features.usage || typeof features.usage !== 'object') {
+      return;
+    }
+
+    const usage = features.usage as Record<string, unknown>;
+    
+    this.validateComponentCount(usage, index);
+    this.validateInteractionRate(usage, index);
+    this.validateViewTime(usage, index);
+    this.validateAccessibilityScore(usage, index);
+  }
+
+  /**
+   * Validate component count
+   */
+  private validateComponentCount(usage: Record<string, unknown>, index: number): void {
+    if (typeof usage.componentCount === 'number' && usage.componentCount <= 0) {
+      throw new Error(`Invalid training data at index ${index}: features.usage.componentCount must be greater than 0`);
+    }
+  }
+
+  /**
+   * Validate interaction rate
+   */
+  private validateInteractionRate(usage: Record<string, unknown>, index: number): void {
+    if (typeof usage.interactionRate === 'number' && (usage.interactionRate < 0 || usage.interactionRate > 1)) {
+      throw new Error(`Invalid training data at index ${index}: features.usage.interactionRate must be between 0 and 1`);
+    }
+  }
+
+  /**
+   * Validate view time
+   */
+  private validateViewTime(usage: Record<string, unknown>, index: number): void {
+    if (typeof usage.viewTime === 'number' && usage.viewTime < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.usage.viewTime must be non-negative`);
+    }
+  }
+
+  /**
+   * Validate accessibility score
+   */
+  private validateAccessibilityScore(usage: Record<string, unknown>, index: number): void {
+    if (typeof usage.accessibilityScore === 'number' && (usage.accessibilityScore < 0 || usage.accessibilityScore > 100)) {
+      throw new Error(`Invalid training data at index ${index}: features.usage.accessibilityScore must be between 0 and 100`);
+    }
+  }
+
+  /**
+   * Validate performance features
+   */
+  private validatePerformanceFeatures(features: Record<string, unknown>, index: number): void {
+    if (!features.performance || typeof features.performance !== 'object') {
+      return;
+    }
+
+    const performance = features.performance as Record<string, unknown>;
+    
+    this.validateRenderTime(performance, index);
+    this.validateLayoutShift(performance, index);
+    this.validateMemoryUsage(performance, index);
+    this.validateBundleSize(performance, index);
+  }
+
+  /**
+   * Validate render time
+   */
+  private validateRenderTime(performance: Record<string, unknown>, index: number): void {
+    if (typeof performance.renderTime === 'number' && performance.renderTime < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.performance.renderTime must be non-negative`);
+    }
+  }
+
+  /**
+   * Validate layout shift
+   */
+  private validateLayoutShift(performance: Record<string, unknown>, index: number): void {
+    if (typeof performance.layoutShift === 'number' && performance.layoutShift < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.performance.layoutShift must be non-negative`);
+    }
+  }
+
+  /**
+   * Validate memory usage
+   */
+  private validateMemoryUsage(performance: Record<string, unknown>, index: number): void {
+    if (typeof performance.memoryUsage === 'number' && performance.memoryUsage < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.performance.memoryUsage must be non-negative`);
+    }
+  }
+
+  /**
+   * Validate bundle size
+   */
+  private validateBundleSize(performance: Record<string, unknown>, index: number): void {
+    if (typeof performance.bundleSize === 'number' && performance.bundleSize < 0) {
+      throw new Error(`Invalid training data at index ${index}: features.performance.bundleSize must be non-negative`);
+    }
   }
 
   /**

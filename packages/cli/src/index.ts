@@ -32,7 +32,6 @@ export type {
 
 export { PerformanceIntegrationService } from './services/PerformanceIntegrationService';
 export type { 
-  PerformanceConfig, 
   PerformanceSnapshot, 
   PerformanceReportData 
 } from './services/PerformanceIntegrationService';

@@ -297,8 +297,8 @@ const createVisitor = (api: any, hookTransformers: any, opts: BabelPluginOptions
   };
 };
 
-// Main plugin declaration
-export default declare<BabelPluginOptions>((api, options) => {
+// Main plugin declaration - now as named export
+export const babelPlugin = declare<BabelPluginOptions>((api, options) => {
   api.assertVersion(7);
 
   // Merge options with defaults and apply CI optimizations
@@ -346,3 +346,7 @@ export function scaleValue(
   const scalingEngine = new ScalingEngine(config);
   return scalingEngine.scaleValue(baseValue, fromBreakpoint, toBreakpoint, token);
 }
+
+// Default export for backward compatibility (deprecated)
+/** @deprecated Use named export 'babelPlugin' instead */
+export default babelPlugin;

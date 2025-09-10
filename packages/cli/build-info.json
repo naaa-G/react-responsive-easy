@@ -1,0 +1,38 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-cli",
+  "version": "2.0.0",
+  "timestamp": "2025-09-10T21:25:44.628Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 25238,
+  "prebuildTime": 4379,
+  "rollupTime": 20852,
+  "analysis": {
+    "totalSize": 6842142,
+    "fileCount": 7,
+    "largestFiles": [
+      {
+        "name": "index.js.map",
+        "size": "1217.44 KB"
+      },
+      {
+        "name": "index.esm.js.map",
+        "size": "1217.11 KB"
+      },
+      {
+        "name": "cli.js.map",
+        "size": "1186.17 KB"
+      },
+      {
+        "name": "index.js",
+        "size": "979.44 KB"
+      },
+      {
+        "name": "index.esm.js",
+        "size": "977.44 KB"
+      }
+    ]
+  },
+  "success": true
+}

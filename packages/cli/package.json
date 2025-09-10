@@ -56,7 +56,8 @@
     "world-class"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "node scripts/build.js",
+    "build:legacy": "rollup -c",
     "build:prod": "cross-env NODE_ENV=production rollup -c",
     "build:watch": "rollup -c --watch",
     "build:clean": "rimraf dist && pnpm build",
@@ -78,7 +79,6 @@
   "dependencies": {
     "@yaseratiar/react-responsive-easy-ai-optimizer": "workspace:*",
     "@yaseratiar/react-responsive-easy-core": "workspace:*",
-    "@yaseratiar/react-responsive-easy-performance-dashboard": "workspace:*",
     "archiver": "^6.0.1",
     "axios": "^1.6.2",
     "boxen": "^7.0.1",

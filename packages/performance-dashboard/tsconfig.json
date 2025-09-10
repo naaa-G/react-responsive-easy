@@ -23,7 +23,6 @@
     "noUnusedParameters": false,
     "noImplicitThis": false,
     "noImplicitOverride": false,
-    "jsx": "react-jsx",
     "allowJs": true,
     "checkJs": false
   },

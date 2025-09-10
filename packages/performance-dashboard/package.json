@@ -12,8 +12,9 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c && npm run build:dashboard",
-    "build:dashboard": "vite build",
+    "build": "node scripts/build.js",
+    "build:legacy": "rollup -c && pnpm run build:dashboard",
+    "build:dashboard": "vite build --config vite.config.ts --logLevel error",
     "dev": "rollup -c -w",
     "dev:dashboard": "vite",
     "test": "vitest run",

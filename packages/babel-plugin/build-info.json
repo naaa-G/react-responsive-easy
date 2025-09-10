@@ -1,0 +1,37 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-babel-plugin",
+  "version": "1.0.1",
+  "timestamp": "2025-09-10T21:25:35.641Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 3915,
+  "rollupTime": 3900,
+  "analysis": {
+    "totalSize": 254319,
+    "fileCount": 20,
+    "largestFiles": [
+      {
+        "name": "index.js.map",
+        "size": "72.19 KB"
+      },
+      {
+        "name": "index.esm.js.map",
+        "size": "72.14 KB"
+      },
+      {
+        "name": "index.js",
+        "size": "39.33 KB"
+      },
+      {
+        "name": "index.esm.js",
+        "size": "38.47 KB"
+      },
+      {
+        "name": "index.d.ts",
+        "size": "8.31 KB"
+      }
+    ]
+  },
+  "success": true
+}

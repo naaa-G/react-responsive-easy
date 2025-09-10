@@ -1,0 +1,33 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-vite-plugin",
+  "version": "1.0.1",
+  "timestamp": "2025-09-10T21:26:22.428Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 1193,
+  "tscTime": 1184,
+  "analysis": {
+    "totalSize": 22940,
+    "fileCount": 4,
+    "largestFiles": [
+      {
+        "name": "index.js",
+        "size": "11.77 KB"
+      },
+      {
+        "name": "index.js.map",
+        "size": "8.83 KB"
+      },
+      {
+        "name": "index.d.ts",
+        "size": "1.07 KB"
+      },
+      {
+        "name": "index.d.ts.map",
+        "size": "0.74 KB"
+      }
+    ]
+  },
+  "success": true
+}

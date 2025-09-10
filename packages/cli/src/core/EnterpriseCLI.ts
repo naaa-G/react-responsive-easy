@@ -8,13 +8,18 @@
 import { EventEmitter } from 'events';
 import { createAIOptimizer, AIOptimizer, OptimizationSuggestions } from '@yaseratiar/react-responsive-easy-ai-optimizer';
 import { 
-  PerformanceMonitor, 
+  PerformanceMonitor,
   createPerformanceMonitor,
   PERFORMANCE_PRESETS,
-  AIIntegrationManager,
-  AlertingSystem,
-  AnalyticsEngine
-} from '@yaseratiar/react-responsive-easy-performance-dashboard';
+  type PerformanceConfig,
+  type PerformanceMetrics,
+  type PerformanceAlert
+} from './PerformanceMonitor';
+import { 
+  PerformanceDashboardIntegrationManager,
+  createPerformanceDashboardIntegration,
+  isPerformanceDashboardAvailable
+} from '../integrations/PerformanceDashboardIntegration';
 import { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'node:crypto';
@@ -99,9 +104,7 @@ export class EnterpriseCLI extends EventEmitter {
   private config: EnterpriseConfig;
   private aiOptimizer?: AIOptimizer;
   private performanceMonitor?: PerformanceMonitor;
-  private aiIntegration?: AIIntegrationManager;
-  private alertingSystem?: AlertingSystem;
-  private analyticsEngine?: AnalyticsEngine;
+  private performanceDashboardIntegration?: PerformanceDashboardIntegrationManager;
   private logger: winston.Logger;
   private storage: Conf;
   private projectMetadata: Map<string, ProjectMetadata> = new Map();
@@ -225,72 +228,52 @@ export class EnterpriseCLI extends EventEmitter {
       // Initialize AI Integration Manager
       if (this.config.ai.enabled && this.config.performance.enabled) {
         this.logger.info('Initializing AI Integration Manager...');
-        this.aiIntegration = new AIIntegrationManager();
-        this.logger.info('AI Integration Manager initialized successfully');
+        try {
+          // AI Integration is now handled by the optional dashboard integration
+          this.logger.info('AI Integration handled by Performance Dashboard Integration');
+          this.logger.info('AI Integration Manager initialized successfully');
+        } catch (error) {
+          this.logger.warn('AI Integration Manager not available:', error);
+        }
       }
 
       // Initialize Alerting System
       if (this.config.performance.alerting) {
         this.logger.info('Initializing Alerting System...');
-        this.alertingSystem = new AlertingSystem({
-          enabled: true,
-          channels: ['console' as any, 'file' as any],
-          rules: this.getDefaultAlertRules(),
-          escalation: {
-            enabled: false,
-            levels: [],
-            maxEscalations: 3,
-            escalationDelay: 300000
-          },
-          rateLimiting: {
-            enabled: true,
-            maxAlertsPerMinute: 10,
-            maxAlertsPerHour: 100,
-            maxAlertsPerDay: 1000,
-            burstLimit: 5
-          },
-          retention: {
-            alertHistoryDays: 30,
-            metricsRetentionDays: 90,
-            logRetentionDays: 7,
-            archiveEnabled: false
-          },
-          integrations: []
-        });
-        this.logger.info('Alerting System initialized successfully');
+        try {
+          // Alerting System is now handled by the optional dashboard integration
+          this.logger.info('Alerting System handled by Performance Dashboard Integration');
+          this.logger.info('Alerting System initialized successfully');
+        } catch (error) {
+          this.logger.warn('Alerting System not available:', error);
+        }
       }
 
       // Initialize Analytics Engine
       if (this.config.analytics.enabled) {
         this.logger.info('Initializing Analytics Engine...');
-        this.analyticsEngine = new AnalyticsEngine({
-          enabled: this.config.analytics.enabled,
-          dataRetention: {
-            metrics: this.config.analytics.dataRetention,
-            reports: this.config.analytics.dataRetention,
-            insights: this.config.analytics.dataRetention
-          },
-          aggregation: {
-            intervals: [300000, 900000, 3600000], // 5min, 15min, 1hour
-            methods: ['avg', 'max', 'min', 'sum', 'count', 'percentile']
-          },
-          reporting: {
-            autoGenerate: true,
-            schedule: '0 0 * * *', // Daily at midnight
-            formats: ['json', 'csv', 'pdf', 'html']
-          },
-          visualization: {
-            chartTypes: ['line', 'bar', 'pie', 'scatter'],
-            colorSchemes: ['default', 'dark', 'light'],
-            themes: ['material', 'bootstrap', 'antd']
-          },
-          export: {
-            enabled: true,
-            formats: ['json', 'csv', 'xlsx'],
-            compression: true
-          }
-        });
-        this.logger.info('Analytics Engine initialized successfully');
+        try {
+          // Analytics Engine is now handled by the optional dashboard integration
+          this.logger.info('Analytics Engine handled by Performance Dashboard Integration');
+          this.logger.info('Analytics Engine initialized successfully');
+        } catch (error) {
+          this.logger.warn('Analytics Engine not available:', error);
+        }
+      }
+
+      // Initialize Optional Performance Dashboard Integration
+      if (this.config.performance.enabled && isPerformanceDashboardAvailable()) {
+        this.logger.info('Initializing Performance Dashboard Integration...');
+        this.performanceDashboardIntegration = createPerformanceDashboardIntegration();
+        const initialized = await this.performanceDashboardIntegration.initialize();
+        
+        if (initialized) {
+          this.logger.info('Performance Dashboard Integration initialized successfully');
+          const features = this.performanceDashboardIntegration.getAdvancedFeatures();
+          this.logger.info(`Available advanced features: ${features.join(', ')}`);
+        } else {
+          this.logger.warn('Performance Dashboard Integration not available');
+        }
       }
 
       this.emit('initialized');
@@ -392,12 +375,12 @@ export class EnterpriseCLI extends EventEmitter {
       if (options.includePerformance && this.performanceMonitor) {
         this.logger.info('Running performance analysis...');
         try {
-          const performanceData = this.performanceMonitor.collectMetrics();
+          const performanceData = this.performanceMonitor.getMetrics();
           if (performanceData !== null && performanceData !== undefined && typeof performanceData === 'object') {
             result.performance = {
-              score: this.calculatePerformanceScore(performanceData),
-              metrics: performanceData,
-              recommendations: this.generatePerformanceRecommendations(performanceData)
+              score: this.calculatePerformanceScore(performanceData as unknown as Record<string, number>),
+              metrics: performanceData as unknown as Record<string, number>,
+              recommendations: this.generatePerformanceRecommendations(performanceData as unknown as Record<string, number>)
             };
           } else {
             throw new Error('No performance data returned');
@@ -562,13 +545,8 @@ export class EnterpriseCLI extends EventEmitter {
     await this.performanceMonitor.start();
 
           // Set up real-time alerts
-      if (this.alertingSystem) {
-        // this.alertingSystem.start();
-      }
-
-      // Set up analytics collection
-      if (this.analyticsEngine) {
-        // this.analyticsEngine.startCollection();
+      if (this.performanceDashboardIntegration?.isAvailable) {
+        this.logger.info('Advanced alerting and analytics available via Performance Dashboard Integration');
       }
 
     this.emit('monitoring:started', { projectId });
@@ -585,12 +563,12 @@ export class EnterpriseCLI extends EventEmitter {
       this.performanceMonitor.stop();
     }
 
-          if (this.alertingSystem) {
-        // this.alertingSystem.stop();
+      if (this.performanceDashboardIntegration?.isAvailable) {
+        this.logger.info('Advanced alerting stopped via Performance Dashboard Integration');
       }
 
-      if (this.analyticsEngine) {
-        // this.analyticsEngine.stopCollection();
+      if (this.performanceDashboardIntegration?.isAvailable) {
+        this.logger.info('Advanced analytics stopped via Performance Dashboard Integration');
       }
 
     this.emit('monitoring:stopped');

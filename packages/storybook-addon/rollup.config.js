@@ -30,7 +30,8 @@ export default [
       commonjs(),
       typescript({
         tsconfig: './tsconfig.json',
-        exclude: ['**/*.test.ts', '**/*.test.tsx']
+        exclude: ['**/*.test.ts', '**/*.test.tsx'],
+        outputToFilesystem: false
       })
     ],
     external: [
@@ -41,8 +42,9 @@ export default [
       '@storybook/components',
       '@storybook/core-events',
       '@storybook/theming',
-      '@react-responsive-easy/core',
-      '@react-responsive-easy/performance-dashboard'
+      '@storybook/types',
+      '@yaseratiar/react-responsive-easy-core',
+      '@yaseratiar/react-responsive-easy-performance-dashboard'
     ]
   },
   // Manager build
@@ -57,7 +59,11 @@ export default [
       resolve(),
       commonjs(),
       typescript({
-        tsconfig: './tsconfig.json'
+        tsconfig: './tsconfig.json',
+        compilerOptions: {
+          skipLibCheck: true,
+          skipDefaultLibCheck: true
+        }
       })
     ],
     external: [
@@ -71,8 +77,24 @@ export default [
   },
   // Type definitions
   {
-    input: 'dist/index.d.ts',
+    input: 'src/index.ts',
     output: [{ file: 'dist/index.d.ts', format: 'esm' }],
-    plugins: [dts()],
+    plugins: [
+      dts({
+        outputToFilesystem: false
+      })
+    ],
+    external: [
+      'react',
+      'react-dom',
+      '@storybook/addons',
+      '@storybook/api',
+      '@storybook/components',
+      '@storybook/core-events',
+      '@storybook/theming',
+      '@storybook/types',
+      '@yaseratiar/react-responsive-easy-core',
+      '@yaseratiar/react-responsive-easy-performance-dashboard'
+    ]
   }
 ];

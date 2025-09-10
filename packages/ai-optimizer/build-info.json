@@ -1,0 +1,37 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-ai-optimizer",
+  "version": "2.0.0",
+  "timestamp": "2025-09-10T21:25:11.753Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 5687,
+  "rollupTime": 5666,
+  "analysis": {
+    "totalSize": 1649802,
+    "fileCount": 5,
+    "largestFiles": [
+      {
+        "name": "index.js",
+        "size": "434.47 KB"
+      },
+      {
+        "name": "index.esm.js",
+        "size": "432.47 KB"
+      },
+      {
+        "name": "index.js.map",
+        "size": "327.67 KB"
+      },
+      {
+        "name": "index.esm.js.map",
+        "size": "327.54 KB"
+      },
+      {
+        "name": "index.d.ts",
+        "size": "88.98 KB"
+      }
+    ]
+  },
+  "success": true
+}

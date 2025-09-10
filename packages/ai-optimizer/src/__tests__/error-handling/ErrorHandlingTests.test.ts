@@ -342,11 +342,11 @@ describe('AI Optimizer Error Handling Tests', () => {
 
   describe('Model Persistence Errors', () => {
     it('should handle model save failure gracefully', async () => {
-      // Mock model save to throw error
-      const mockModel = (optimizer as any).model;
-      vi.spyOn(mockModel, 'save').mockRejectedValue(new Error('Save failed'));
+      // Mock the model manager's saveModel method to throw error
+      const mockModelManager = (optimizer as any).modelManager;
+      vi.spyOn(mockModelManager, 'saveModel').mockRejectedValue(new Error('Save failed'));
 
-      await expect(optimizer.saveModel('./invalid-path')).rejects.toThrow('Model save failed');
+      await expect(optimizer.saveModel('./invalid-path')).rejects.toThrow('Save failed');
     });
 
     it('should handle save on uninitialized model', async () => {

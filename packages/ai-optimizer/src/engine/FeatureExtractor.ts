@@ -146,7 +146,7 @@ export class FeatureExtractor {
     
     return {
       breakpointCount: breakpoints?.length || 0,
-      breakpointRatios: this.padArray(breakpointRatios, ADDITIONAL_CONSTANTS.DEFAULT_STEP - 2, 1),
+      breakpointRatios: this.padArray(breakpointRatios, ADDITIONAL_CONSTANTS.DEFAULT_STEP, 1),
       tokenComplexity,
       originDistribution
     };
@@ -287,10 +287,10 @@ export class FeatureExtractor {
     });
     
     return {
-      avgRenderTimes: this.calculateStatistics(renderTimes, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2),
-      bundleSizes: this.calculateStatistics(bundleSizes, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2),
-      memoryPatterns: this.calculateStatistics(memoryUsages, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2),
-      layoutShiftFreq: this.calculateStatistics(layoutShifts, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2)
+      avgRenderTimes: this.calculateStatistics(renderTimes, 5), // mean, median, min, max, std
+      bundleSizes: this.calculateStatistics(bundleSizes, 5), // mean, median, min, max, std
+      memoryPatterns: this.calculateStatistics(memoryUsages, 5), // mean, median, min, max, std
+      layoutShiftFreq: this.calculateStatistics(layoutShifts, 5) // mean, median, min, max, std
     };
   }
 
@@ -345,9 +345,14 @@ export class FeatureExtractor {
       : sorted[Math.floor(sorted.length / 2)];
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
-    const std = Math.sqrt(
-      values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length
-    );
+    
+    // Calculate standard deviation - handle single value case
+    let std = 0;
+    if (values.length > 1) {
+      std = Math.sqrt(
+        values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length
+      );
+    }
     
     return this.padArray([mean, median, min, max, std], count, 0);
   }

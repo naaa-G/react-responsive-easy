@@ -32,13 +32,17 @@ export default [
       postcss({
         extract: true,
         minimize: true,
-        sourceMap: true
+        sourceMap: true,
+        config: {
+          path: './postcss.config.cjs'
+        }
       }),
       typescript({
         tsconfig: './tsconfig.json',
         exclude: ['**/*.test.ts', '**/*.test.tsx', 'dashboard/**/*'],
         declaration: true,
-        declarationMap: true
+        declarationMap: true,
+        outputToFilesystem: true
       })
     ],
     external: [

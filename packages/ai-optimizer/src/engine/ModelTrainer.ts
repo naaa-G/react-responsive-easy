@@ -83,6 +83,13 @@ export class ModelTrainer {
   ): Promise<ModelEvaluationMetrics> {
     try {
       this.trainingValidator.validateModelForTraining(model);
+      
+      // Handle empty training data gracefully
+      if (!trainingData || trainingData.length === 0) {
+        this.logger.warn('Empty training data provided, returning default metrics');
+        return this.getDefaultMetrics();
+      }
+      
       const processedTrainingData = this.trainingValidator.validateAndProcessTrainingData(trainingData);
       
       this.logger.info(`Training model with ${processedTrainingData.length} samples...`);
@@ -106,6 +113,19 @@ export class ModelTrainer {
     }
   }
 
+  /**
+   * Get default metrics for empty or invalid training data
+   */
+  private getDefaultMetrics(): ModelEvaluationMetrics {
+    return {
+      accuracy: 0,
+      mse: 0,
+      f1Score: 0,
+      precision: 0,
+      recall: 0,
+      confidenceIntervals: {}
+    };
+  }
 
   /**
    * Prepare training data and split into train/validation sets

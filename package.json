@@ -18,7 +18,7 @@
     "configs/*"
   ],
   "scripts": {
-    "build": "pnpm --filter=./packages/* build",
+    "build": "pnpm --filter=@yaseratiar/react-responsive-easy-core build && pnpm --filter=@yaseratiar/react-responsive-easy-ai-optimizer build && pnpm --filter=@yaseratiar/react-responsive-easy-performance-dashboard build && pnpm --filter=@yaseratiar/react-responsive-easy-babel-plugin build && pnpm --filter=@yaseratiar/react-responsive-easy-cli build && pnpm --filter=@yaseratiar/react-responsive-easy-postcss-plugin build && pnpm --filter=@yaseratiar/react-responsive-easy-storybook-addon build && pnpm --filter=@yaseratiar/react-responsive-easy-vite-plugin build && pnpm --filter=@yaseratiar/react-responsive-easy-next-plugin build",
     "test": "pnpm --filter=./packages/* test",
     "test:coverage": "pnpm --filter=./packages/* test:coverage",
     "test:e2e": "playwright test",

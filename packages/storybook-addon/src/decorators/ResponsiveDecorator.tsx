@@ -9,7 +9,18 @@ import React, { useEffect } from 'react';
 import type { DecoratorFunction } from '@storybook/types';
 import { useChannel, addons } from '@storybook/addons';
 import { EVENTS } from '../constants';
-import { PerformanceMonitor, PerformanceMetrics } from '@react-responsive-easy/performance-dashboard';
+// Optional performance monitoring - gracefully degrade if not available
+let PerformanceMonitor: any = null;
+let PerformanceMetrics: any = null;
+
+try {
+  const perfModule = require('@yaseratiar/react-responsive-easy-performance-dashboard');
+  PerformanceMonitor = perfModule.PerformanceMonitor;
+  PerformanceMetrics = perfModule.PerformanceMetrics;
+} catch {
+  // Performance dashboard not available - use fallback
+  console.warn('Performance dashboard not available - using fallback monitoring');
+}
 
 interface ResponsiveDecoratorProps {
   children: React.ReactNode;
@@ -34,32 +45,38 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
   
   // Initialize performance monitoring
   useEffect(() => {
-    if (parameters.performance?.enabled !== false) {
-      const monitor = new PerformanceMonitor({
-        collectionInterval: 1000,
-        maxHistorySize: 100,
-        thresholds: parameters.performance?.thresholds
-      });
+    if (parameters.performance?.enabled !== false && PerformanceMonitor) {
+      try {
+        const monitor = new PerformanceMonitor({
+          collectionInterval: 1000,
+          maxHistorySize: 100,
+          thresholds: parameters.performance?.thresholds
+        });
 
-      monitor.start(); // eslint-disable-line @typescript-eslint/no-floating-promises
+        monitor.start(); // eslint-disable-line @typescript-eslint/no-floating-promises
 
-      // Send performance data to addon panel
-      const unsubscribe = monitor.on('metrics-updated', (metrics: PerformanceMetrics) => {
-        const performanceData = {
-          renderTime: metrics.responsiveElements.averageRenderTime ?? 0,
-          memoryUsage: metrics.memory?.used ?? 0,
-          layoutShifts: metrics.layoutShift.current,
-          scalingOperations: metrics.custom?.scalingOperations ?? 0,
-          cacheHitRate: metrics.custom?.cacheHitRate ?? 0
+        // Send performance data to addon panel
+        const unsubscribe = monitor.on('metrics-updated', (metrics: any) => {
+          const performanceData = {
+            renderTime: metrics.responsiveElements?.averageRenderTime ?? 0,
+            memoryUsage: metrics.memory?.used ?? 0,
+            layoutShifts: metrics.layoutShift?.current ?? 0,
+            scalingOperations: metrics.custom?.scalingOperations ?? 0,
+            cacheHitRate: metrics.custom?.cacheHitRate ?? 0
+          };
+
+          emit(EVENTS.PERFORMANCE_DATA, performanceData);
+        });
+
+        return () => {
+          monitor.stop();
+          unsubscribe();
         };
-
-        emit(EVENTS.PERFORMANCE_DATA, performanceData);
-      });
-
-      return () => {
-        monitor.stop();
-        unsubscribe();
-      };
+      } catch (error) {
+        console.warn('Failed to initialize performance monitoring:', error);
+      }
+    } else if (parameters.performance?.enabled !== false) {
+      console.warn('Performance monitoring requested but PerformanceMonitor not available');
     }
   }, [emit, parameters.performance]);
 

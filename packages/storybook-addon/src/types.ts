@@ -3,7 +3,7 @@
  */
 
 /* eslint-disable no-unused-vars */
-import type { ResponsiveConfig } from '@react-responsive-easy/core';
+import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 export interface ResponsiveAddonConfig {
   /** Default responsive configuration */

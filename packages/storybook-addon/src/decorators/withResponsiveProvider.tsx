@@ -7,7 +7,7 @@
 
 import React from 'react';
 import type { DecoratorFunction } from '@storybook/types';
-import { ResponsiveProvider } from '@react-responsive-easy/core';
+import { ResponsiveProvider } from '@yaseratiar/react-responsive-easy-core';
 import { DEFAULT_BREAKPOINTS } from '../constants';
 
 export const withResponsiveProvider: DecoratorFunction = (Story, context) => {

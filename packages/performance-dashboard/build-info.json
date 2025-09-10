@@ -1,0 +1,531 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-performance-dashboard",
+  "version": "2.1.0",
+  "timestamp": "2025-09-10T21:25:18.105Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 17005,
+  "rollupTime": 7678,
+  "viteTime": 3850,
+  "mainPackage": {
+    "totalSize": 1542841,
+    "totalSizeFormatted": "1.47 MB",
+    "fileCount": 93,
+    "files": [
+      {
+        "name": "index.esm.js",
+        "size": 389845,
+        "sizeFormatted": "380.71 KB"
+      },
+      {
+        "name": "index.esm.js.map",
+        "size": 366678,
+        "sizeFormatted": "358.08 KB"
+      },
+      {
+        "name": "utils\\AnalyticsEngine.js",
+        "size": 35633,
+        "sizeFormatted": "34.8 KB"
+      },
+      {
+        "name": "utils\\AnalyticsEngine.js.map",
+        "size": 33666,
+        "sizeFormatted": "32.88 KB"
+      },
+      {
+        "name": "core\\PerformanceMonitor.js",
+        "size": 33050,
+        "sizeFormatted": "32.28 KB"
+      },
+      {
+        "name": "utils\\AlertingSystem.js",
+        "size": 28248,
+        "sizeFormatted": "27.59 KB"
+      },
+      {
+        "name": "core\\PerformanceMonitor.js.map",
+        "size": 25231,
+        "sizeFormatted": "24.64 KB"
+      },
+      {
+        "name": "plugins\\PluginManager.js",
+        "size": 23689,
+        "sizeFormatted": "23.13 KB"
+      },
+      {
+        "name": "utils\\AlertingSystem.js.map",
+        "size": 23495,
+        "sizeFormatted": "22.94 KB"
+      },
+      {
+        "name": "utils\\AIIntegration.js",
+        "size": 21177,
+        "sizeFormatted": "20.68 KB"
+      },
+      {
+        "name": "plugins\\PluginManager.js.map",
+        "size": 20260,
+        "sizeFormatted": "19.79 KB"
+      },
+      {
+        "name": "components\\visualizations\\CustomLayouts.js",
+        "size": 19943,
+        "sizeFormatted": "19.48 KB"
+      },
+      {
+        "name": "hooks\\useAdvancedML.js",
+        "size": 17997,
+        "sizeFormatted": "17.58 KB"
+      },
+      {
+        "name": "components\\ml\\MLDashboard.js",
+        "size": 17422,
+        "sizeFormatted": "17.01 KB"
+      },
+      {
+        "name": "utils\\AIIntegration.js.map",
+        "size": 16183,
+        "sizeFormatted": "15.8 KB"
+      },
+      {
+        "name": "hooks\\useRealTimeCollaboration.js",
+        "size": 15559,
+        "sizeFormatted": "15.19 KB"
+      },
+      {
+        "name": "hooks\\useAdvancedML.js.map",
+        "size": 15536,
+        "sizeFormatted": "15.17 KB"
+      },
+      {
+        "name": "components\\visualizations\\CustomLayouts.js.map",
+        "size": 14923,
+        "sizeFormatted": "14.57 KB"
+      },
+      {
+        "name": "components\\visualizations\\VisualizationManager.js",
+        "size": 14598,
+        "sizeFormatted": "14.26 KB"
+      },
+      {
+        "name": "components\\visualizations\\PerformanceHeatmap.js",
+        "size": 14082,
+        "sizeFormatted": "13.75 KB"
+      },
+      {
+        "name": "hooks\\useRealTimeCollaboration.js.map",
+        "size": 13784,
+        "sizeFormatted": "13.46 KB"
+      },
+      {
+        "name": "components\\ml\\MLDashboard.js.map",
+        "size": 13398,
+        "sizeFormatted": "13.08 KB"
+      },
+      {
+        "name": "components\\collaboration\\CollaborationPanel.js",
+        "size": 12953,
+        "sizeFormatted": "12.65 KB"
+      },
+      {
+        "name": "components\\visualizations\\PerformanceHeatmap.js.map",
+        "size": 12943,
+        "sizeFormatted": "12.64 KB"
+      },
+      {
+        "name": "components\\RecommendationsPanel.js",
+        "size": 12869,
+        "sizeFormatted": "12.57 KB"
+      },
+      {
+        "name": "components\\visualizations\\VirtualScrollingList.js",
+        "size": 11846,
+        "sizeFormatted": "11.57 KB"
+      },
+      {
+        "name": "hooks\\usePluginManager.js",
+        "size": 11683,
+        "sizeFormatted": "11.41 KB"
+      },
+      {
+        "name": "hooks\\usePluginManager.js.map",
+        "size": 11415,
+        "sizeFormatted": "11.15 KB"
+      },
+      {
+        "name": "components\\PerformanceDashboard.js",
+        "size": 11390,
+        "sizeFormatted": "11.12 KB"
+      },
+      {
+        "name": "index.esm.css.map",
+        "size": 10946,
+        "sizeFormatted": "10.69 KB"
+      },
+      {
+        "name": "index.css.map",
+        "size": 10942,
+        "sizeFormatted": "10.69 KB"
+      },
+      {
+        "name": "components\\MetricsOverview.js",
+        "size": 10689,
+        "sizeFormatted": "10.44 KB"
+      },
+      {
+        "name": "components\\visualizations\\VisualizationManager.js.map",
+        "size": 10414,
+        "sizeFormatted": "10.17 KB"
+      },
+      {
+        "name": "components\\RealTimeCharts.js.map",
+        "size": 10366,
+        "sizeFormatted": "10.12 KB"
+      },
+      {
+        "name": "components\\RecommendationsPanel.js.map",
+        "size": 10257,
+        "sizeFormatted": "10.02 KB"
+      },
+      {
+        "name": "components\\visualizations\\VirtualScrollingList.js.map",
+        "size": 10252,
+        "sizeFormatted": "10.01 KB"
+      },
+      {
+        "name": "hooks\\useVirtualScrolling.js.map",
+        "size": 10149,
+        "sizeFormatted": "9.91 KB"
+      },
+      {
+        "name": "hooks\\useVirtualScrolling.js",
+        "size": 10115,
+        "sizeFormatted": "9.88 KB"
+      },
+      {
+        "name": "components\\RealTimeCharts.js",
+        "size": 10046,
+        "sizeFormatted": "9.81 KB"
+      },
+      {
+        "name": "components\\collaboration\\CollaborationPanel.js.map",
+        "size": 9628,
+        "sizeFormatted": "9.4 KB"
+      },
+      {
+        "name": "components\\visualizations\\InteractiveCharts.js",
+        "size": 9462,
+        "sizeFormatted": "9.24 KB"
+      },
+      {
+        "name": "components\\PerformanceDashboard.js.map",
+        "size": 9424,
+        "sizeFormatted": "9.2 KB"
+      },
+      {
+        "name": "components\\visualizations\\InteractiveCharts.js.map",
+        "size": 9288,
+        "sizeFormatted": "9.07 KB"
+      },
+      {
+        "name": "components\\MetricsOverview.js.map",
+        "size": 8363,
+        "sizeFormatted": "8.17 KB"
+      },
+      {
+        "name": "__tests__\\setup.js",
+        "size": 8215,
+        "sizeFormatted": "8.02 KB"
+      },
+      {
+        "name": "components\\AlertsPanel.js",
+        "size": 7736,
+        "sizeFormatted": "7.55 KB"
+      },
+      {
+        "name": "plugins\\PluginManager.d.ts.map",
+        "size": 7027,
+        "sizeFormatted": "6.86 KB"
+      },
+      {
+        "name": "__tests__\\setup.js.map",
+        "size": 6940,
+        "sizeFormatted": "6.78 KB"
+      },
+      {
+        "name": "utils\\AnalyticsEngine.d.ts.map",
+        "size": 6650,
+        "sizeFormatted": "6.49 KB"
+      },
+      {
+        "name": "components\\AlertsPanel.js.map",
+        "size": 6633,
+        "sizeFormatted": "6.48 KB"
+      },
+      {
+        "name": "core\\PerformanceMonitor.d.ts.map",
+        "size": 6246,
+        "sizeFormatted": "6.1 KB"
+      },
+      {
+        "name": "utils\\AlertingSystem.d.ts.map",
+        "size": 5703,
+        "sizeFormatted": "5.57 KB"
+      },
+      {
+        "name": "components\\common\\LoadingSkeleton.js",
+        "size": 5671,
+        "sizeFormatted": "5.54 KB"
+      },
+      {
+        "name": "index.js",
+        "size": 5401,
+        "sizeFormatted": "5.27 KB"
+      },
+      {
+        "name": "index.esm.css",
+        "size": 5367,
+        "sizeFormatted": "5.24 KB"
+      },
+      {
+        "name": "index.css",
+        "size": 5363,
+        "sizeFormatted": "5.24 KB"
+      },
+      {
+        "name": "components\\common\\LoadingSkeleton.js.map",
+        "size": 5219,
+        "sizeFormatted": "5.1 KB"
+      },
+      {
+        "name": "hooks\\useErrorBoundary.js",
+        "size": 4761,
+        "sizeFormatted": "4.65 KB"
+      },
+      {
+        "name": "index.js.map",
+        "size": 3551,
+        "sizeFormatted": "3.47 KB"
+      },
+      {
+        "name": "utils\\AIIntegration.d.ts.map",
+        "size": 3541,
+        "sizeFormatted": "3.46 KB"
+      },
+      {
+        "name": "hooks\\useErrorBoundary.js.map",
+        "size": 3493,
+        "sizeFormatted": "3.41 KB"
+      },
+      {
+        "name": "index.d.ts.map",
+        "size": 3288,
+        "sizeFormatted": "3.21 KB"
+      },
+      {
+        "name": "hooks\\useAdvancedML.d.ts.map",
+        "size": 3085,
+        "sizeFormatted": "3.01 KB"
+      },
+      {
+        "name": "hooks\\useRealTimeCollaboration.d.ts.map",
+        "size": 3028,
+        "sizeFormatted": "2.96 KB"
+      },
+      {
+        "name": "hooks\\useDataCache.js.map",
+        "size": 2342,
+        "sizeFormatted": "2.29 KB"
+      },
+      {
+        "name": "components\\common\\LoadingSkeleton.d.ts.map",
+        "size": 2244,
+        "sizeFormatted": "2.19 KB"
+      },
+      {
+        "name": "hooks\\useDataCache.js",
+        "size": 2022,
+        "sizeFormatted": "1.97 KB"
+      },
+      {
+        "name": "hooks\\useVirtualScrolling.d.ts.map",
+        "size": 1964,
+        "sizeFormatted": "1.92 KB"
+      },
+      {
+        "name": "components\\visualizations\\VirtualScrollingList.d.ts.map",
+        "size": 1491,
+        "sizeFormatted": "1.46 KB"
+      },
+      {
+        "name": "components\\visualizations\\CustomLayouts.d.ts.map",
+        "size": 1471,
+        "sizeFormatted": "1.44 KB"
+      },
+      {
+        "name": "components\\PerformanceDashboard.d.ts.map",
+        "size": 1159,
+        "sizeFormatted": "1.13 KB"
+      },
+      {
+        "name": "components\\visualizations\\PerformanceHeatmap.d.ts.map",
+        "size": 1130,
+        "sizeFormatted": "1.1 KB"
+      },
+      {
+        "name": "components\\visualizations\\VisualizationManager.d.ts.map",
+        "size": 1089,
+        "sizeFormatted": "1.06 KB"
+      },
+      {
+        "name": "components\\ml\\MLDashboard.d.ts.map",
+        "size": 1020,
+        "sizeFormatted": "1020 B"
+      },
+      {
+        "name": "components\\collaboration\\CollaborationPanel.d.ts.map",
+        "size": 973,
+        "sizeFormatted": "973 B"
+      },
+      {
+        "name": "components\\ResponsiveElementsView.js",
+        "size": 810,
+        "sizeFormatted": "810 B"
+      },
+      {
+        "name": "components\\visualizations\\InteractiveCharts.d.ts.map",
+        "size": 773,
+        "sizeFormatted": "773 B"
+      },
+      {
+        "name": "hooks\\useErrorBoundary.d.ts.map",
+        "size": 678,
+        "sizeFormatted": "678 B"
+      },
+      {
+        "name": "__tests__\\setup.d.ts.map",
+        "size": 629,
+        "sizeFormatted": "629 B"
+      },
+      {
+        "name": "components\\HistoricalView.js",
+        "size": 625,
+        "sizeFormatted": "625 B"
+      },
+      {
+        "name": "hooks\\usePluginManager.d.ts.map",
+        "size": 594,
+        "sizeFormatted": "594 B"
+      },
+      {
+        "name": "components\\visualizations\\index.d.ts.map",
+        "size": 576,
+        "sizeFormatted": "576 B"
+      },
+      {
+        "name": "components\\ResponsiveElementsView.js.map",
+        "size": 523,
+        "sizeFormatted": "523 B"
+      },
+      {
+        "name": "components\\AlertsPanel.d.ts.map",
+        "size": 490,
+        "sizeFormatted": "490 B"
+      },
+      {
+        "name": "components\\RealTimeCharts.d.ts.map",
+        "size": 479,
+        "sizeFormatted": "479 B"
+      },
+      {
+        "name": "components\\RecommendationsPanel.d.ts.map",
+        "size": 426,
+        "sizeFormatted": "426 B"
+      },
+      {
+        "name": "components\\HistoricalView.js.map",
+        "size": 421,
+        "sizeFormatted": "421 B"
+      },
+      {
+        "name": "components\\HistoricalView.d.ts.map",
+        "size": 405,
+        "sizeFormatted": "405 B"
+      },
+      {
+        "name": "components\\MetricsOverview.d.ts.map",
+        "size": 403,
+        "sizeFormatted": "403 B"
+      },
+      {
+        "name": "hooks\\useDataCache.d.ts.map",
+        "size": 403,
+        "sizeFormatted": "403 B"
+      },
+      {
+        "name": "components\\ResponsiveElementsView.d.ts.map",
+        "size": 375,
+        "sizeFormatted": "375 B"
+      },
+      {
+        "name": "components\\visualizations\\index.js.map",
+        "size": 310,
+        "sizeFormatted": "310 B"
+      },
+      {
+        "name": "components\\visualizations\\index.js",
+        "size": 261,
+        "sizeFormatted": "261 B"
+      }
+    ]
+  },
+  "dashboard": {
+    "totalSize": 709280,
+    "totalSizeFormatted": "692.66 KB",
+    "fileCount": 8,
+    "files": [
+      {
+        "name": "assets\\chart-vendor-zRJ-c998.js",
+        "size": 405571,
+        "sizeFormatted": "396.07 KB"
+      },
+      {
+        "name": "assets\\react-vendor-B6Leb4VM.js",
+        "size": 169463,
+        "sizeFormatted": "165.49 KB"
+      },
+      {
+        "name": "assets\\index-DC8z6kkp.js",
+        "size": 83505,
+        "sizeFormatted": "81.55 KB"
+      },
+      {
+        "name": "assets\\AnalyticsEngine-B0laW6OB.js",
+        "size": 16931,
+        "sizeFormatted": "16.53 KB"
+      },
+      {
+        "name": "assets\\index-DAUlMT-T.css",
+        "size": 12278,
+        "sizeFormatted": "11.99 KB"
+      },
+      {
+        "name": "assets\\AlertingSystem-DJuR6MfR.js",
+        "size": 10688,
+        "sizeFormatted": "10.44 KB"
+      },
+      {
+        "name": "assets\\AIIntegration-CMNGtxaz.js",
+        "size": 9226,
+        "sizeFormatted": "9.01 KB"
+      },
+      {
+        "name": "index.html",
+        "size": 1618,
+        "sizeFormatted": "1.58 KB"
+      }
+    ]
+  },
+  "success": true
+}

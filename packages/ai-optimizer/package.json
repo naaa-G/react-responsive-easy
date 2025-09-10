@@ -11,7 +11,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "node scripts/build.js",
+    "build:legacy": "rollup -c",
     "dev": "rollup -c -w",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",

@@ -1,92 +1,102 @@
 /**
  * Performance Integration Service
  * 
- * Provides real-time performance monitoring and analytics using the performance dashboard package
+ * Provides real-time performance monitoring and analytics using independent performance monitoring
+ * with optional integration to the performance dashboard package when available.
  */
 
 import {
   PerformanceMonitor,
   createPerformanceMonitor,
   PERFORMANCE_PRESETS,
-  AIIntegrationManager,
-  AlertingSystem,
-  AnalyticsEngine,
-  PerformanceMetrics,
-  AlertEvent
-} from '@yaseratiar/react-responsive-easy-performance-dashboard';
+  type PerformanceConfig,
+  type PerformanceMetrics,
+  type PerformanceAlert
+} from '../core/PerformanceMonitor';
+import { 
+  PerformanceDashboardIntegrationManager,
+  createPerformanceDashboardIntegration,
+  isPerformanceDashboardAvailable
+} from '../integrations/PerformanceDashboardIntegration';
 import { EventEmitter } from 'events';
 import fs from 'fs-extra';
 import path from 'path';
 import winston from 'winston';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface PerformanceConfig {
-  preset: 'development' | 'production' | 'strict';
-  customThresholds?: Record<string, number>;
-  realTimeMonitoring: boolean;
-  alerting: boolean;
-  analytics: boolean;
-  dataRetention: number; // days
-}
-
 export interface PerformanceSnapshot {
-  id: string;
-  timestamp: Date;
+  timestamp: number;
   metrics: PerformanceMetrics;
-  alerts: AlertEvent[];
-  score: number;
-  trends: {
-    performance: 'improving' | 'stable' | 'degrading';
-    memory: 'stable' | 'increasing' | 'decreasing';
-    responsiveness: 'improving' | 'stable' | 'degrading';
-  };
 }
 
 export interface PerformanceReportData {
   id: string;
-  projectId: string;
-  generatedAt: Date;
-  period: {
-    start: Date;
-    end: Date;
-  };
+  timestamp: number;
+  metrics: PerformanceMetrics;
+  alerts: PerformanceAlert[];
   summary: {
-    averageScore: number;
     totalAlerts: number;
-    criticalIssues: number;
-    recommendations: number;
-  };
-  metrics: {
-    performance: PerformanceMetrics;
-    trends: any;
-    comparisons: any;
-  };
-  insights: {
-    topIssues: string[];
-    improvements: string[];
+    criticalAlerts: number;
+    averagePerformance: number;
     recommendations: string[];
   };
 }
 
+export interface PerformanceIntegrationConfig {
+  preset: 'development' | 'production' | 'strict';
+  customThresholds?: Partial<PerformanceConfig['thresholds']>;
+  realTimeMonitoring?: boolean;
+  analytics?: boolean;
+  alerting?: boolean;
+  reportGeneration?: boolean;
+  dataRetention?: number;
+}
+
+export interface PerformanceInsights {
+  topIssues: string[];
+  improvements: string[];
+  recommendations: string[];
+}
+
 export class PerformanceIntegrationService extends EventEmitter {
   private performanceMonitor?: PerformanceMonitor;
-  private aiIntegration?: AIIntegrationManager;
-  private alertingSystem?: AlertingSystem;
-  private analyticsEngine?: AnalyticsEngine;
+  private performanceDashboardIntegration?: PerformanceDashboardIntegrationManager;
   private logger: winston.Logger;
-  private config: PerformanceConfig;
+  private config: PerformanceIntegrationConfig;
   private isMonitoring = false;
   private snapshots: PerformanceSnapshot[] = [];
   private reports: PerformanceReportData[] = [];
 
-  constructor(config: PerformanceConfig, logger: winston.Logger) {
+  constructor(config: PerformanceIntegrationConfig) {
     super();
-    this.config = config;
-    this.logger = logger;
+    
+    this.config = {
+      realTimeMonitoring: false,
+      analytics: false,
+      alerting: false,
+      reportGeneration: false,
+      dataRetention: 30,
+      ...config,
+      preset: config.preset || 'production'
+    };
+
+    this.logger = winston.createLogger({
+      level: 'info',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+      ),
+      transports: [
+        new winston.transports.Console({
+          format: winston.format.simple()
+        })
+      ]
+    });
   }
 
   /**
-   * Initialize the performance service
+   * Initialize the performance integration service
    */
   async initialize(): Promise<void> {
     try {
@@ -100,74 +110,22 @@ export class PerformanceIntegrationService extends EventEmitter {
         collectionInterval: this.config.realTimeMonitoring ? 1000 : 5000
       });
 
-      // Initialize AI Integration Manager
-      if (this.config.analytics) {
-        this.aiIntegration = new AIIntegrationManager();
+      // Initialize Optional Performance Dashboard Integration
+      if (isPerformanceDashboardAvailable()) {
+        this.logger.info('Initializing Performance Dashboard Integration...');
+        this.performanceDashboardIntegration = createPerformanceDashboardIntegration();
+        const initialized = await this.performanceDashboardIntegration.initialize();
+        
+        if (initialized) {
+          this.logger.info('Performance Dashboard Integration initialized successfully');
+          const features = this.performanceDashboardIntegration.getAdvancedFeatures();
+          this.logger.info(`Available advanced features: ${features.join(', ')}`);
+        } else {
+          this.logger.warn('Performance Dashboard Integration not available');
+        }
       }
 
-      // Initialize Alerting System
-      if (this.config.alerting) {
-        this.alertingSystem = new AlertingSystem({
-          enabled: true,
-          channels: ['console' as any, 'file' as any],
-          rules: this.getDefaultAlertRules(),
-          escalation: {
-            enabled: false,
-            levels: [],
-            maxEscalations: 3,
-            escalationDelay: 300000
-          },
-          rateLimiting: {
-            enabled: true,
-            maxAlertsPerMinute: 10,
-            maxAlertsPerHour: 100,
-            maxAlertsPerDay: 1000,
-            burstLimit: 5
-          },
-          retention: {
-            alertHistoryDays: 30,
-            metricsRetentionDays: 90,
-            logRetentionDays: 7,
-            archiveEnabled: false
-          },
-          integrations: []
-        });
-      }
-
-      // Initialize Analytics Engine
-      if (this.config.analytics) {
-        this.analyticsEngine = new AnalyticsEngine({
-          enabled: true,
-          dataRetention: {
-            metrics: this.config.dataRetention,
-            reports: this.config.dataRetention,
-            insights: this.config.dataRetention
-          },
-          aggregation: {
-            intervals: [300000, 900000, 3600000],
-            methods: ['avg', 'max', 'min', 'sum', 'count', 'percentile']
-          },
-          reporting: {
-            autoGenerate: true,
-            schedule: '0 0 * * *',
-            formats: ['json', 'csv', 'pdf', 'html']
-          },
-          visualization: {
-            chartTypes: ['line', 'bar', 'pie', 'scatter'],
-            colorSchemes: ['default', 'dark', 'light'],
-            themes: ['material', 'bootstrap', 'antd']
-          },
-          export: {
-            enabled: true,
-            formats: ['json', 'csv', 'xlsx'],
-            compression: true
-          }
-        });
-      }
-
-      this.emit('initialized');
       this.logger.info('Performance Integration Service initialized successfully');
-
     } catch (error) {
       this.logger.error('Failed to initialize Performance Integration Service:', error);
       throw error;
@@ -175,614 +133,305 @@ export class PerformanceIntegrationService extends EventEmitter {
   }
 
   /**
-   * Start real-time performance monitoring
+   * Start performance monitoring
    */
-  async startMonitoring(projectPath: string): Promise<void> {
+  startMonitoring(): void {
     if (!this.performanceMonitor) {
-      throw new Error('Performance Monitor not initialized');
+      throw new Error('Performance Integration Service not initialized');
     }
 
-    this.logger.info(`Starting performance monitoring for project: ${projectPath}`);
-
-    try {
-      // Start performance monitoring
-      await this.performanceMonitor.start();
-
-      // Set up real-time data collection
-      if (this.config.realTimeMonitoring) {
-        this.setupRealTimeCollection();
-      }
-
-      // Start alerting system
-      if (this.alertingSystem) {
-        // this.alertingSystem.start(); // Method not available in current version
-      }
-
-      // Start analytics collection
-      if (this.analyticsEngine) {
-        // this.analyticsEngine.startCollection(); // Method not available in current version
-      }
-
-      this.isMonitoring = true;
-      this.emit('monitoring:started', { projectPath });
-      this.logger.info('Performance monitoring started successfully');
-
-    } catch (error) {
-      this.logger.error('Failed to start performance monitoring:', error);
-      throw error;
+    if (this.isMonitoring) {
+      this.logger.warn('Performance monitoring is already running');
+      return;
     }
+
+    this.performanceMonitor.start();
+    this.isMonitoring = true;
+    this.logger.info('Performance monitoring started');
+
+    // Set up event listeners
+    this.performanceMonitor.on('metrics', (data: unknown) => {
+      this.handleMetricsUpdate(data as PerformanceMetrics);
+    });
+
+    this.performanceMonitor.on('alerts', (data: unknown) => {
+      this.handleAlerts(data as PerformanceAlert[]);
+    });
   }
 
   /**
    * Stop performance monitoring
    */
-  async stopMonitoring(): Promise<void> {
-    this.logger.info('Stopping performance monitoring...');
-
-    try {
-      if (this.performanceMonitor) {
-        this.performanceMonitor.stop();
-      }
-
-      if (this.alertingSystem) {
-        // this.alertingSystem.stop(); // Method not available in current version
-      }
-
-      if (this.analyticsEngine) {
-        // this.analyticsEngine.stopCollection(); // Method not available in current version
-      }
-
-      this.isMonitoring = false;
-      this.emit('monitoring:stopped');
-      this.logger.info('Performance monitoring stopped successfully');
-
-    } catch (error) {
-      this.logger.error('Failed to stop performance monitoring:', error);
-      throw error;
+  stopMonitoring(): void {
+    if (!this.performanceMonitor || !this.isMonitoring) {
+      return;
     }
+
+    this.performanceMonitor.stop();
+    this.isMonitoring = false;
+    this.logger.info('Performance monitoring stopped');
   }
 
   /**
-   * Get current performance snapshot
+   * Get current performance metrics
    */
-  async getCurrentSnapshot(): Promise<PerformanceSnapshot> {
-    if (!this.performanceMonitor) {
-      throw new Error('Performance Monitor not initialized');
-    }
-
-    try {
-      const metrics = this.performanceMonitor.collectMetrics();
-      const alerts = this.performanceMonitor.getActiveAlerts();
-      
-      if (metrics === null || metrics === undefined || typeof metrics !== 'object') {
-        throw new Error('No metrics returned from performance monitor');
-      }
-      
-      const score = this.calculatePerformanceScore(metrics);
-      const trends = this.calculateTrends();
-
-      const snapshot: PerformanceSnapshot = {
-        id: uuidv4(),
-        timestamp: new Date(),
-        metrics,
-        alerts: alerts ?? [],
-        score,
-        trends
-      };
-
-      // Store snapshot
-      this.snapshots.push(snapshot);
-      
-      // Keep only recent snapshots
-      this.cleanupOldSnapshots();
-
-      this.emit('snapshot:created', snapshot);
-      return snapshot;
-
-    } catch (error) {
-      this.logger.error('Failed to get performance snapshot:', error);
-      throw error;
-    }
+  getMetrics(): PerformanceMetrics | null {
+    return this.performanceMonitor?.getMetrics() || null;
   }
 
   /**
-   * Generate comprehensive performance report
+   * Get performance history
    */
-  async generateReport(
-    projectId: string,
-    options: {
-      period?: { start: Date; end: Date };
-      includeTrends?: boolean;
-      includeComparisons?: boolean;
-      includeRecommendations?: boolean;
-    } = {}
-  ): Promise<PerformanceReportData> {
-    this.logger.info(`Generating performance report for project: ${projectId}`);
-
-    try {
-      const period = options.period ?? {
-        start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-        end: new Date()
-      };
-
-      // Get snapshots for the period
-      const periodSnapshots = this.snapshots.filter(
-        s => s.timestamp >= period.start && s.timestamp <= period.end
-      );
-
-      if (periodSnapshots.length === 0) {
-        throw new Error('No performance data available for the specified period');
-      }
-
-      // Calculate summary metrics
-      const averageScore = periodSnapshots.reduce((sum, s) => sum + s.score, 0) / periodSnapshots.length;
-      const totalAlerts = periodSnapshots.reduce((sum, s) => sum + s.alerts.length, 0);
-      const criticalIssues = periodSnapshots.reduce((sum, s) => 
-        sum + s.alerts.filter(a => a.severity === 'critical').length, 0
-      );
-
-      // Get latest metrics
-      const latestSnapshot = periodSnapshots[periodSnapshots.length - 1];
-      const metrics = latestSnapshot?.metrics;
-
-      // Generate insights
-      const insights = await this.generateInsights(periodSnapshots, options);
-
-      const report: PerformanceReportData = {
-        id: uuidv4(),
-        projectId,
-        generatedAt: new Date(),
-        period,
-        summary: {
-          averageScore: Math.round(averageScore),
-          totalAlerts,
-          criticalIssues,
-          recommendations: insights.recommendations.length
-        },
-        metrics: {
-          performance: metrics ?? {} as PerformanceMetrics,
-          trends: options.includeTrends ? this.calculateTrends() : null,
-          comparisons: options.includeComparisons ? this.calculateComparisons(periodSnapshots) : null
-        },
-        insights
-      };
-
-      // Store report
-      this.reports.push(report);
-      
-      this.emit('report:generated', report);
-      this.logger.info('Performance report generated successfully');
-      
-      return report;
-
-    } catch (error) {
-      this.logger.error('Failed to generate performance report:', error);
-      throw error;
-    }
+  getHistory(): PerformanceSnapshot[] {
+    return [...this.snapshots];
   }
 
   /**
-   * Get performance trends over time
+   * Get active alerts
    */
-  getPerformanceTrends(period: { start: Date; end: Date }): {
-    performance: number[];
-    memory: number[];
-    responsiveness: number[];
-    timestamps: Date[];
-  } {
-    const periodSnapshots = this.snapshots.filter(
-      (s: PerformanceSnapshot) => s.timestamp >= period.start && s.timestamp <= period.end
-    );
-
-    return {
-      performance: periodSnapshots.map(s => s.score),
-      memory: periodSnapshots.map(s => (s.metrics as any).memoryUsage * 100 || 0),
-      responsiveness: periodSnapshots.map(s => (s.metrics as any).renderTime ?? 0),
-      timestamps: periodSnapshots.map(s => s.timestamp)
-    };
+  getActiveAlerts(): PerformanceAlert[] {
+    return this.performanceMonitor?.getActiveAlerts() || [];
   }
 
   /**
-   * Get performance alerts
+   * Generate performance report
    */
-  async getAlerts(options: {
+  async generateReport(options: {
     severity?: 'info' | 'warning' | 'critical';
     limit?: number;
-  } = {}): Promise<AlertEvent[]> {
+    includeAdvanced?: boolean;
+  } = {}): Promise<PerformanceReportData> {
     if (!this.performanceMonitor) {
-      throw new Error('Performance Monitor not initialized');
+      throw new Error('Performance Integration Service not initialized');
     }
 
-    try {
-      const alerts = this.performanceMonitor.getActiveAlerts();
-      
-      let filteredAlerts = alerts;
-      
-      if (options.severity) {
-        filteredAlerts = alerts.filter(a => a.severity === options.severity);
+    const metrics = this.performanceMonitor.getMetrics();
+    const alerts = this.performanceMonitor.getActiveAlerts();
+    
+    let filteredAlerts = alerts;
+    
+    if (options.severity) {
+      filteredAlerts = alerts.filter((a: PerformanceAlert) => a.severity === options.severity);
+    }
+    
+    if (options.limit) {
+      filteredAlerts = filteredAlerts.slice(0, options.limit);
+    }
+
+    const insights = await this.generateInsights(this.snapshots, options);
+
+    const report: PerformanceReportData = {
+      id: uuidv4(),
+      timestamp: Date.now(),
+      metrics,
+      alerts: filteredAlerts,
+      summary: {
+        totalAlerts: alerts.length,
+        criticalAlerts: alerts.filter(a => a.severity === 'critical').length,
+        averagePerformance: this.calculateAveragePerformance(),
+        recommendations: insights.recommendations
       }
-      
-      if (options.limit) {
-        filteredAlerts = filteredAlerts.slice(0, options.limit);
-      }
+    };
 
-      return filteredAlerts;
+    this.reports.push(report);
+    this.emit('reportGenerated', report);
 
-    } catch (error) {
-      this.logger.error('Failed to get performance alerts:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Set custom performance thresholds
-   */
-  async setThresholds(thresholds: Record<string, number>): Promise<void> {
-    if (!this.performanceMonitor) {
-      throw new Error('Performance Monitor not initialized');
-    }
-
-    try {
-      // this.performanceMonitor.setThresholds(thresholds); // Method not available in current version
-      this.config.customThresholds = { ...this.config.customThresholds, ...thresholds };
-      
-      this.emit('thresholds:updated', thresholds);
-      this.logger.info('Performance thresholds updated successfully');
-
-    } catch (error) {
-      this.logger.error('Failed to set performance thresholds:', error);
-      throw error;
-    }
+    return report;
   }
 
   /**
    * Export performance data
    */
-  async exportData(
-    format: 'json' | 'csv' | 'xlsx',
-    options: {
-      period?: { start: Date; end: Date };
-      includeSnapshots?: boolean;
-      includeReports?: boolean;
-    } = {}
-  ): Promise<string> {
-    this.logger.info(`Exporting performance data in ${format} format...`);
-
-    try {
-      const period = options.period ?? {
-        start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-        end: new Date()
-      };
-
-      const exportData: any = {
-        metadata: {
-          exportedAt: new Date(),
-          period,
-          format,
-          version: '1.0.0'
-        }
-      };
-
-      if (options.includeSnapshots) {
-        exportData.snapshots = this.snapshots.filter(
-          s => s.timestamp >= period.start && s.timestamp <= period.end
-        );
-      }
-
-      if (options.includeReports) {
-        exportData.reports = this.reports.filter(
-          r => r.generatedAt >= period.start && r.generatedAt <= period.end
-        );
-      }
-
-      // Save export file
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `performance-export-${timestamp}.${format}`;
-      const exportPath = path.join(process.cwd(), filename);
-
-      if (format === 'json') {
-        await fs.writeJson(exportPath, exportData, { spaces: 2 });
-      } else {
-        // For CSV/XLSX formats, you would use appropriate libraries
-        await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2));
-      }
-
-      this.emit('data:exported', { format, path: exportPath });
-      this.logger.info(`Performance data exported to: ${exportPath}`);
-      
-      return exportPath;
-
-    } catch (error) {
-      this.logger.error('Failed to export performance data:', error);
-      throw error;
-    }
-  }
-
-  // Private helper methods
-  private setupRealTimeCollection(): void {
-    if (!this.performanceMonitor) return;
-
-    // Set up real-time data collection
-    const collectionInterval = setInterval(() => {
-      (async () => {
-        try {
-          const snapshot = await this.getCurrentSnapshot();
-        
-        // Check for alerts
-        if (snapshot.alerts.length > 0) {
-          this.emit('alerts:detected', snapshot.alerts);
-        }
-
-        // Check for performance degradation
-        if (snapshot.score < 70) {
-          this.emit('performance:degraded', { score: snapshot.score, snapshot });
-        }
-
-        } catch (error) {
-          this.logger.error('Real-time collection error:', error);
-        }
-      })().catch(() => undefined);
-    }, 5000); // Collect every 5 seconds
-
-    // Store interval ID for cleanup
-    (this as any).collectionInterval = collectionInterval;
-  }
-
-  private getDefaultAlertRules(): any[] {
-    return [
-      {
-        name: 'Performance Degradation',
-        condition: 'performance_score < 70',
-        severity: 'warning',
-        action: 'notify'
-      },
-      {
-        name: 'High Memory Usage',
-        condition: 'memory_usage > 0.8',
-        severity: 'critical',
-        action: 'alert'
-      },
-      {
-        name: 'Slow Render Time',
-        condition: 'render_time > 33',
-        severity: 'warning',
-        action: 'notify'
-      },
-      {
-        name: 'Layout Shift Detected',
-        condition: 'layout_shift > 0.1',
-        severity: 'warning',
-        action: 'notify'
-      }
-    ];
-  }
-
-  private calculatePerformanceScore(metrics: any): number {
-    // Simple scoring algorithm - in production this would be more sophisticated
-    const _weights = {
-      lcp: 0.3,
-      fcp: 0.2,
-      layoutShift: 0.2,
-      memoryUsage: 0.2,
-      renderTime: 0.1
+  async exportData(format: 'json' | 'csv' = 'json', filePath?: string): Promise<string> {
+    const data = {
+      snapshots: this.snapshots,
+      reports: this.reports,
+      metrics: this.getMetrics(),
+      alerts: this.getActiveAlerts(),
+      generatedAt: new Date().toISOString()
     };
 
-    let score = 100;
-    
-    // LCP scoring (lower is better)
-    const lcp = (metrics as any).lcp ?? 0;
-    if (lcp > 2500) score -= 20;
-    else if (lcp > 2000) score -= 10;
-    
-    // FCP scoring (lower is better)
-    const fcp = (metrics as any).fcp ?? 0;
-    if (fcp > 1800) score -= 15;
-    else if (fcp > 1500) score -= 8;
-    
-    // Layout Shift scoring (lower is better)
-    const layoutShift = (metrics as any).layoutShift ?? 0;
-    if (layoutShift > 0.1) score -= 15;
-    else if (layoutShift > 0.05) score -= 8;
-    
-    // Memory usage scoring (lower is better)
-    const memoryUsage = (metrics as any).memoryUsage ?? 0;
-    if (memoryUsage > 0.8) score -= 20;
-    else if (memoryUsage > 0.7) score -= 10;
-    
-    // Render time scoring (lower is better)
-    const renderTime = (metrics as any).renderTime ?? 0;
-    if (renderTime > 33) score -= 10;
-    else if (renderTime > 16.67) score -= 5;
+    const exportPath = filePath || path.join(process.cwd(), `performance-data-${Date.now()}.${format}`);
 
-    return Math.max(0, Math.min(100, score));
-  }
-
-  private calculateTrends(): PerformanceSnapshot['trends'] {
-    if (this.snapshots.length < 2) {
-      return {
-        performance: 'stable',
-        memory: 'stable',
-        responsiveness: 'stable'
-      };
+    if (format === 'json') {
+      await fs.writeJson(exportPath, data, { spaces: 2 });
+    } else if (format === 'csv') {
+      const csvData = this.convertToCSV(data);
+      await fs.writeFile(exportPath, csvData);
     }
 
-    const recent = this.snapshots.slice(-5); // Last 5 snapshots
-    const older = this.snapshots.slice(-10, -5); // Previous 5 snapshots
+    this.logger.info(`Performance data exported to: ${exportPath}`);
+    return exportPath;
+  }
 
-    if (recent.length === 0 || older.length === 0) {
-      return {
-        performance: 'stable',
-        memory: 'stable',
-        responsiveness: 'stable'
-      };
+  /**
+   * Handle metrics update
+   */
+  private handleMetricsUpdate(metrics: PerformanceMetrics): void {
+    const snapshot: PerformanceSnapshot = {
+      timestamp: Date.now(),
+      metrics
+    };
+
+    this.snapshots.push(snapshot);
+
+    // Maintain data retention
+    if (this.config.dataRetention) {
+      const cutoffTime = Date.now() - (this.config.dataRetention * 24 * 60 * 60 * 1000);
+      this.snapshots = this.snapshots.filter(s => s.timestamp > cutoffTime);
     }
 
-    const recentAvgScore = recent.reduce((sum, s) => sum + s.score, 0) / recent.length;
-    const olderAvgScore = older.reduce((sum, s) => sum + s.score, 0) / older.length;
-    
-    const recentAvgMemory = recent.reduce((sum, s) => {
-      const metrics = s.metrics as any;
-      const memoryValue = metrics?.memoryUsage ?? metrics?.memory?.used ?? metrics?.memory ?? 0;
-      return sum + (typeof memoryValue === 'number' ? memoryValue : 0);
-    }, 0) / recent.length;
-    
-    const olderAvgMemory = older.reduce((sum, s) => {
-      const metrics = s.metrics as any;
-      const memoryValue = metrics?.memoryUsage ?? metrics?.memory?.used ?? metrics?.memory ?? 0;
-      return sum + (typeof memoryValue === 'number' ? memoryValue : 0);
-    }, 0) / older.length;
-    
-    const recentAvgRender = recent.reduce((sum, s) => {
-      const metrics = s.metrics as any;
-      const renderValue = metrics?.renderTime ?? metrics?.paintTiming?.renderTime ?? metrics?.paintTiming ?? 0;
-      return sum + (typeof renderValue === 'number' ? renderValue : 0);
-    }, 0) / recent.length;
-    
-    const olderAvgRender = older.reduce((sum, s) => {
-      const metrics = s.metrics as any;
-      const renderValue = metrics?.renderTime ?? metrics?.paintTiming?.renderTime ?? metrics?.paintTiming ?? 0;
-      return sum + (typeof renderValue === 'number' ? renderValue : 0);
-    }, 0) / older.length;
-
-    return {
-      performance: recentAvgScore > olderAvgScore + 5 ? 'improving' : 
-                   recentAvgScore < olderAvgScore - 5 ? 'degrading' : 'stable',
-      memory: recentAvgMemory > olderAvgMemory + 0.05 ? 'increasing' :
-              recentAvgMemory < olderAvgMemory - 0.05 ? 'decreasing' : 'stable',
-      responsiveness: recentAvgRender < olderAvgRender - 2 ? 'improving' :
-                      recentAvgRender > olderAvgRender + 2 ? 'degrading' : 'stable'
-    };
+    this.emit('metricsUpdate', snapshot);
   }
 
-  private calculateComparisons(snapshots: PerformanceSnapshot[]): any {
-    if (snapshots.length < 2) return null;
+  /**
+   * Handle performance alerts
+   */
+  private handleAlerts(alerts: PerformanceAlert[]): void {
+    alerts.forEach(alert => {
+      this.logger.warn(`Performance Alert: ${alert.message}`, {
+        type: alert.type,
+        severity: alert.severity,
+        value: alert.value,
+        threshold: alert.threshold
+      });
+    });
 
-    const first = snapshots[0];
-    const last = snapshots[snapshots.length - 1];
-
-    return {
-      performance: {
-        change: (last?.score ?? 0) - (first?.score ?? 0),
-        percentage: first?.score ? (((last?.score ?? 0) - (first?.score ?? 0)) / first.score) * 100 : 0
-      },
-      memory: {
-        change: ((last?.metrics as any).memoryUsage ?? 0) - ((first?.metrics as any).memoryUsage ?? 0),
-        percentage: ((first?.metrics as any).memoryUsage ?? 1) ? ((((last?.metrics as any).memoryUsage ?? 0) - ((first?.metrics as any).memoryUsage ?? 0)) / ((first?.metrics as any).memoryUsage ?? 1)) * 100 : 0
-      },
-      responsiveness: {
-        change: ((last?.metrics as any).renderTime ?? 0) - ((first?.metrics as any).renderTime ?? 0),
-        percentage: ((first?.metrics as any).renderTime ?? 1) ? ((((last?.metrics as any).renderTime ?? 0) - ((first?.metrics as any).renderTime ?? 0)) / ((first?.metrics as any).renderTime ?? 1)) * 100 : 0
-      }
-    };
+    this.emit('alerts', alerts);
   }
 
+  /**
+   * Generate performance insights
+   */
   private async generateInsights(
     snapshots: PerformanceSnapshot[],
     _options: any
-  ): Promise<{
-    topIssues: string[];
-    improvements: string[];
-    recommendations: string[];
-  }> {
-    const insights = {
-      topIssues: [] as string[],
-      improvements: [] as string[],
-      recommendations: [] as string[]
+  ): Promise<PerformanceInsights> {
+    const insights: PerformanceInsights = {
+      topIssues: [],
+      improvements: [],
+      recommendations: []
     };
 
-    // Analyze top issues
-          const allAlerts = snapshots.flatMap(s => s.alerts);
-      const alertCounts = allAlerts.reduce((counts: Record<string, number>, alert: any) => {
-        counts[alert.type] = (counts[alert.type] ?? 0) + 1;
-        return counts;
-      }, {} as Record<string, number>);
+    if (snapshots.length === 0) {
+      return insights;
+    }
 
-    const topAlertTypes = Object.entries(alertCounts)
-      .sort(([,a], [,b]) => (b as number) - (a as number))
-      .slice(0, 3)
-      .map(([type]) => type);
+    // Analyze performance trends
+    const recentSnapshots = snapshots.slice(-10);
+    const avgLCP = this.calculateAverage(recentSnapshots, 'lcp');
+    const avgFCP = this.calculateAverage(recentSnapshots, 'fcp');
+    const avgLayoutShift = this.calculateAverage(recentSnapshots, 'layoutShift');
 
-    insights.topIssues = topAlertTypes.map(type => {
-      switch (type) {
-        case 'performance': return 'Performance degradation detected';
-        case 'memory': return 'High memory usage detected';
-        case 'render': return 'Slow render times detected';
-        default: return `${type} issues detected`;
+    // Generate insights based on metrics
+    if (avgLCP && avgLCP > 2500) {
+      insights.topIssues.push('Large Contentful Paint is too slow');
+      insights.recommendations.push('Optimize images and reduce render-blocking resources');
+    }
+
+    if (avgFCP && avgFCP > 1800) {
+      insights.topIssues.push('First Contentful Paint is too slow');
+      insights.recommendations.push('Optimize critical rendering path');
+    }
+
+    if (avgLayoutShift && avgLayoutShift > 0.1) {
+      insights.topIssues.push('Cumulative Layout Shift is too high');
+      insights.recommendations.push('Add size attributes to images and avoid dynamic content insertion');
+    }
+
+    // Add advanced insights if dashboard integration is available
+    if (this.performanceDashboardIntegration?.isAvailable) {
+      try {
+        const advancedMetrics = await this.performanceDashboardIntegration.getAdvancedMetrics();
+        if (advancedMetrics?.aiInsights) {
+          insights.recommendations.push('AI-powered optimization suggestions available');
+        }
+      } catch (error) {
+        this.logger.warn('Failed to get advanced insights:', error);
       }
-    });
-
-    // Analyze improvements
-    const avgScore = snapshots.reduce((sum, s) => sum + s.score, 0) / snapshots.length;
-    if (avgScore > 80) {
-      insights.improvements.push('Overall performance is good');
-    }
-    if (avgScore > 90) {
-      insights.improvements.push('Excellent performance maintained');
-    }
-
-    // Generate recommendations
-    if (avgScore < 70) {
-      insights.recommendations.push('Consider optimizing responsive scaling configuration');
-    }
-    if (allAlerts.some(a => a.type === 'performance' && a.description.toLowerCase().includes('memory'))) {
-      insights.recommendations.push('Implement memory optimization strategies');
-    }
-    if (allAlerts.some(a => a.type === 'performance' && a.description.toLowerCase().includes('render'))) {
-      insights.recommendations.push('Optimize rendering performance');
     }
 
     return insights;
   }
 
-  private cleanupOldSnapshots(): void {
-    const cutoffDate = new Date(Date.now() - this.config.dataRetention * 24 * 60 * 60 * 1000);
-    this.snapshots = this.snapshots.filter(s => s.timestamp > cutoffDate);
+  /**
+   * Calculate average performance score
+   */
+  private calculateAveragePerformance(): number {
+    if (this.snapshots.length === 0) return 0;
+
+    const recentSnapshots = this.snapshots.slice(-10);
+    let totalScore = 0;
+    let validMetrics = 0;
+
+    recentSnapshots.forEach(snapshot => {
+      const metrics = snapshot.metrics;
+      let score = 100;
+
+      // Deduct points for poor performance
+      if (metrics.lcp && metrics.lcp > 2500) score -= 20;
+      if (metrics.fcp && metrics.fcp > 1800) score -= 15;
+      if (metrics.layoutShift && metrics.layoutShift > 0.1) score -= 25;
+      if (metrics.memoryUsage && metrics.memoryUsage > 0.8) score -= 10;
+
+      totalScore += Math.max(0, score);
+      validMetrics++;
+    });
+
+    return validMetrics > 0 ? totalScore / validMetrics : 0;
   }
 
   /**
-   * Get service status
+   * Calculate average for a specific metric
    */
-  getStatus(): {
-    initialized: boolean;
-    monitoring: boolean;
-    snapshots: number;
-    reports: number;
-  } {
-    return {
-      initialized: !!this.performanceMonitor,
-      monitoring: this.isMonitoring,
-      snapshots: this.snapshots.length,
-      reports: this.reports.length
-    };
+  private calculateAverage(snapshots: PerformanceSnapshot[], metric: keyof PerformanceMetrics): number | null {
+    const values = snapshots
+      .map(s => s.metrics[metric])
+      .filter(v => v !== undefined && v !== null) as number[];
+
+    if (values.length === 0) return null;
+
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
   }
 
   /**
-   * Get configuration
+   * Convert data to CSV format
    */
-  getConfig(): PerformanceConfig {
-    return { ...this.config };
+  private convertToCSV(data: any): string {
+    const headers = ['timestamp', 'lcp', 'fcp', 'layoutShift', 'memoryUsage', 'renderTime', 'cacheHitRate'];
+    const rows = [headers.join(',')];
+
+    data.snapshots.forEach((snapshot: PerformanceSnapshot) => {
+      const row = headers.map(header => {
+        if (header === 'timestamp') {
+          return new Date(snapshot.timestamp).toISOString();
+        }
+        return snapshot.metrics[header as keyof PerformanceMetrics] || '';
+      });
+      rows.push(row.join(','));
+    });
+
+    return rows.join('\n');
   }
 
   /**
-   * Update configuration
+   * Get performance dashboard URL (if available)
    */
-  updateConfig(updates: Partial<PerformanceConfig>): void {
-    this.config = { ...this.config, ...updates };
-    this.emit('config:updated', this.config);
+  getDashboardUrl(): string | null {
+    return this.performanceDashboardIntegration?.getDashboardUrl() || null;
   }
 
   /**
-   * Cleanup resources
+   * Check if advanced features are available
    */
-  async cleanup(): Promise<void> {
-    await this.stopMonitoring();
-    
-    // Clear intervals
-    if ((this as any).collectionInterval) {
-      clearInterval((this as any).collectionInterval);
-    }
-    
-    this.removeAllListeners();
-    this.logger.info('Performance Integration Service cleanup completed');
+  hasAdvancedFeatures(): boolean {
+    return this.performanceDashboardIntegration?.isAvailable || false;
+  }
+
+  /**
+   * Get available advanced features
+   */
+  getAdvancedFeatures(): string[] {
+    return this.performanceDashboardIntegration?.getAdvancedFeatures() || [];
   }
 }

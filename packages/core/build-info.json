@@ -1,0 +1,37 @@
+{
+  "name": "@yaseratiar/react-responsive-easy-core",
+  "version": "1.0.2",
+  "timestamp": "2025-09-10T21:25:07.757Z",
+  "nodeVersion": "v20.19.0",
+  "platform": "win32",
+  "arch": "x64",
+  "buildTime": 3282,
+  "rollupTime": 3272,
+  "analysis": {
+    "totalSize": 417587,
+    "fileCount": 5,
+    "largestFiles": [
+      {
+        "name": "index.js.map",
+        "size": "104.43 KB"
+      },
+      {
+        "name": "index.esm.js.map",
+        "size": "104.29 KB"
+      },
+      {
+        "name": "index.js",
+        "size": "91.05 KB"
+      },
+      {
+        "name": "index.esm.js",
+        "size": "90.22 KB"
+      },
+      {
+        "name": "index.d.ts",
+        "size": "17.81 KB"
+      }
+    ]
+  },
+  "success": true
+}
