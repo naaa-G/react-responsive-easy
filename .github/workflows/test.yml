@@ -755,88 +755,47 @@ jobs:
     - name: Build packages
       run: pnpm build
     
-     - name: Analyze bundle sizes (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: |
-         echo "Bundle Size Analysis:" > bundle-analysis.txt
-         echo "====================" >> bundle-analysis.txt
-         
-         # Core package
-         if [ -f "packages/core/dist/index.js" ]; then
-           core_size=$(wc -c < packages/core/dist/index.js)
-           core_size_kb=$((core_size / 1024))
-           echo "Core Package: ${core_size_kb}KB" >> bundle-analysis.txt
-         fi
-         
-         # CLI package
-         if [ -f "packages/cli/dist/cli.js" ]; then
-           cli_size=$(wc -c < packages/cli/dist/cli.js)
-           cli_size_kb=$((cli_size / 1024))
-           echo "CLI Package: ${cli_size_kb}KB" >> bundle-analysis.txt
-         fi
-         
-         # Plugin packages
-         for plugin in babel-plugin postcss-plugin vite-plugin next-plugin; do
-           if [ -f "packages/${plugin}/dist/index.js" ]; then
-             plugin_size=$(wc -c < packages/${plugin}/dist/index.js)
-             plugin_size_kb=$((plugin_size / 1024))
-             echo "${plugin}: ${plugin_size_kb}KB" >> bundle-analysis.txt
-           fi
-         done
-         
-         # Check size limits
-         if [ $core_size_kb -gt 50 ]; then
-           echo "WARNING: Core package exceeds 50KB limit" >> bundle-analysis.txt
-           exit 1
-         fi
-         
-         if [ $cli_size_kb -gt 100 ]; then
-           echo "WARNING: CLI package exceeds 100KB limit" >> bundle-analysis.txt
-           exit 1
-         fi
-     
-     - name: Analyze bundle sizes (Windows)
-       if: matrix.os == 'windows-latest'
-       run: |
-         "Bundle Size Analysis:" | Out-File -FilePath "bundle-analysis.txt" -Encoding UTF8
-         "====================" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
-         
-         # Core package
-         if (Test-Path "packages/core/dist/index.js") {
-           $coreSize = (Get-Item "packages/core/dist/index.js").Length
-           $coreSizeKb = [math]::Floor($coreSize / 1024)
-           "Core Package: ${coreSizeKb}KB" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
-         }
-         
-         # CLI package
-         if (Test-Path "packages/cli/dist/cli.js") {
-           $cliSize = (Get-Item "packages/cli/dist/cli.js").Length
-           $cliSizeKb = [math]::Floor($cliSize / 1024)
-           "CLI Package: ${cliSizeKb}KB" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
-         }
-         
-         # Plugin packages
-         $plugins = @("babel-plugin", "postcss-plugin", "vite-plugin", "next-plugin")
-         foreach ($plugin in $plugins) {
-           $pluginPath = "packages/$plugin/dist/index.js"
-           if (Test-Path $pluginPath) {
-             $pluginSize = (Get-Item $pluginPath).Length
-             $pluginSizeKb = [math]::Floor($pluginSize / 1024)
-             "$plugin`: ${pluginSizeKb}KB" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
-           }
-         }
-         
-         # Check size limits
-         if ($coreSizeKb -gt 50) {
-           "WARNING: Core package exceeds 50KB limit" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
-           exit 1
-         }
-         
-         if ($cliSizeKb -gt 100) {
-           "WARNING: CLI package exceeds 100KB limit" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
-           exit 1
-         }
-       shell: pwsh
+    - name: Analyze bundle sizes
+      run: |
+        "Bundle Size Analysis:" | Out-File -FilePath "bundle-analysis.txt" -Encoding UTF8
+        "====================" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
+        
+        # Core package
+        if (Test-Path "packages/core/dist/index.js") {
+          $coreSize = (Get-Item "packages/core/dist/index.js").Length
+          $coreSizeKb = [math]::Floor($coreSize / 1024)
+          "Core Package: ${coreSizeKb}KB" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
+        }
+        
+        # CLI package
+        if (Test-Path "packages/cli/dist/cli.js") {
+          $cliSize = (Get-Item "packages/cli/dist/cli.js").Length
+          $cliSizeKb = [math]::Floor($cliSize / 1024)
+          "CLI Package: ${cliSizeKb}KB" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
+        }
+        
+        # Plugin packages
+        $plugins = @("babel-plugin", "postcss-plugin", "vite-plugin", "next-plugin")
+        foreach ($plugin in $plugins) {
+          $pluginPath = "packages/$plugin/dist/index.js"
+          if (Test-Path $pluginPath) {
+            $pluginSize = (Get-Item $pluginPath).Length
+            $pluginSizeKb = [math]::Floor($pluginSize / 1024)
+            "$plugin`: ${pluginSizeKb}KB" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
+          }
+        }
+        
+        # Check size limits
+        if ($coreSizeKb -gt 50) {
+          "WARNING: Core package exceeds 50KB limit" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
+          exit 1
+        }
+        
+        if ($cliSizeKb -gt 100) {
+          "WARNING: CLI package exceeds 100KB limit" | Out-File -FilePath "bundle-analysis.txt" -Append -Encoding UTF8
+          exit 1
+        }
+      shell: pwsh
     
     - name: Upload bundle analysis
       uses: actions/upload-artifact@v4
@@ -974,14 +933,9 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-     - name: Run tests with coverage (Linux)
-       if: matrix.os == 'ubuntu-latest'
-       run: pnpm test:coverage
-     
-     - name: Run tests with coverage (Windows)
-       if: matrix.os == 'windows-latest'
-       run: pnpm test:coverage
-       shell: pwsh
+    - name: Run tests with coverage
+      run: pnpm test:coverage
+      shell: pwsh
     
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
