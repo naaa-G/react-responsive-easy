@@ -971,7 +971,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "This test suite focuses on functionality and basic quality checks." >> $GITHUB_STEP_SUMMARY
         echo "For comprehensive error analysis, check the Error Collection workflow." >> $GITHUB_STEP_SUMMARY
-       shell: bash
+      shell: bash
 
   # Final Status
   status:
@@ -1033,7 +1033,7 @@ jobs:
           echo "🚫 Build not ready for production - please fix failing tests"
           exit 1
         fi
-       shell: bash
+      shell: bash
     
     - name: Generate Test Report
       run: |
@@ -1057,7 +1057,7 @@ jobs:
         echo "| Security Audit (Windows) | ${{ needs.security-audit-windows.result }} |" >> test-summary.md
         echo "| Coverage (Linux) | ${{ needs.coverage-linux.result }} |" >> test-summary.md
         echo "| Coverage (Windows) | ${{ needs.coverage-windows.result }} |" >> test-summary.md
-       shell: bash
+      shell: bash
     
     - name: Upload Test Summary
       uses: actions/upload-artifact@v4
