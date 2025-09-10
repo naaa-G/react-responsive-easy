@@ -1,15 +1,15 @@
 {
   "name": "@yaseratiar/react-responsive-easy-ai-optimizer",
   "version": "2.0.0",
-  "timestamp": "2025-09-10T22:08:02.458Z",
+  "timestamp": "2025-09-10T23:45:56.985Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 9632,
-  "rollupTime": 9622,
+  "buildTime": 13554,
+  "rollupTime": 13541,
   "analysis": {
-    "totalSize": 1649802,
-    "fileCount": 5,
+    "totalSize": 1673232,
+    "fileCount": 12,
     "largestFiles": [
       {
         "name": "index.js",

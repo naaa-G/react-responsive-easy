@@ -10,15 +10,15 @@ import type { DecoratorFunction } from '@storybook/types';
 import { useChannel, addons } from '@storybook/addons';
 import { EVENTS } from '../constants';
 // Optional performance monitoring - gracefully degrade if not available
-let PerformanceMonitor: any = null;
-let PerformanceMetrics: any = null;
+let PerformanceMonitor: unknown = null;
 
 try {
   const perfModule = require('@yaseratiar/react-responsive-easy-performance-dashboard');
   PerformanceMonitor = perfModule.PerformanceMonitor;
-  PerformanceMetrics = perfModule.PerformanceMetrics;
+  // PerformanceMetrics = perfModule.PerformanceMetrics; // Not used in this component
 } catch {
   // Performance dashboard not available - use fallback
+  // eslint-disable-next-line no-console
   console.warn('Performance dashboard not available - using fallback monitoring');
 }
 
@@ -36,10 +36,10 @@ interface ResponsiveDecoratorProps {
   };
 }
 
-const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({ 
+const ResponsiveDecoratorComponent = ({ 
   children, 
   context 
-}) => {
+}: ResponsiveDecoratorProps): React.ReactElement => {
   const emit = useChannel({});
   const parameters = context.parameters?.responsiveEasy ?? {};
   
@@ -47,13 +47,13 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
   useEffect(() => {
     if (parameters.performance?.enabled !== false && PerformanceMonitor) {
       try {
-        const monitor = new PerformanceMonitor({
+        const monitor = new (PerformanceMonitor as any)({
           collectionInterval: 1000,
           maxHistorySize: 100,
           thresholds: parameters.performance?.thresholds
         });
 
-        monitor.start(); // eslint-disable-line @typescript-eslint/no-floating-promises
+        monitor.start();
 
         // Send performance data to addon panel
         const unsubscribe = monitor.on('metrics-updated', (metrics: any) => {
@@ -73,9 +73,11 @@ const ResponsiveDecoratorComponent: React.FC<ResponsiveDecoratorProps> = ({
           unsubscribe();
         };
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.warn('Failed to initialize performance monitoring:', error);
       }
     } else if (parameters.performance?.enabled !== false) {
+      // eslint-disable-next-line no-console
       console.warn('Performance monitoring requested but PerformanceMonitor not available');
     }
   }, [emit, parameters.performance]);

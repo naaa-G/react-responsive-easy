@@ -1,9 +1,14 @@
-const globals = require('globals');
-const pluginJs = require('@eslint/js');
-const typescript = require('@typescript-eslint/eslint-plugin');
-const parser = require('@typescript-eslint/parser');
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import typescript from '@typescript-eslint/eslint-plugin';
+import parser from '@typescript-eslint/parser';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-module.exports = [
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export default [
   pluginJs.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],

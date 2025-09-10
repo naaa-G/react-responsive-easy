@@ -1,13 +1,13 @@
 {
   "name": "@yaseratiar/react-responsive-easy-cli",
   "version": "2.0.0",
-  "timestamp": "2025-09-10T22:08:41.455Z",
+  "timestamp": "2025-09-10T23:46:43.308Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 25858,
-  "prebuildTime": 4585,
-  "rollupTime": 21266,
+  "buildTime": 29848,
+  "prebuildTime": 4849,
+  "rollupTime": 24992,
   "analysis": {
     "totalSize": 6806854,
     "fileCount": 7,

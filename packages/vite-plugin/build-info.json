@@ -1,12 +1,12 @@
 {
   "name": "@yaseratiar/react-responsive-easy-vite-plugin",
   "version": "1.0.1",
-  "timestamp": "2025-09-10T22:09:21.324Z",
+  "timestamp": "2025-09-10T23:47:28.536Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 2053,
-  "tscTime": 2044,
+  "buildTime": 2198,
+  "tscTime": 2187,
   "analysis": {
     "totalSize": 22940,
     "fileCount": 4,

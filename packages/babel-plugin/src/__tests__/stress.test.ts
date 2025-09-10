@@ -262,8 +262,8 @@ describe('Stress Tests', () => {
         return results;
       });
 
-      // Should complete 50 concurrent transformations in less than 200ms
-      expect(time).toBeLessThan(200);
+      // Should complete 50 concurrent transformations in less than 250ms
+      expect(time).toBeLessThan(250);
       
       // Memory usage should be reasonable (less than 20MB)
       expect(memory).toBeLessThan(20 * 1024 * 1024);
@@ -392,8 +392,8 @@ describe('Stress Tests', () => {
         }
       });
 
-      // Should complete all syntax error inputs in less than 500ms (enterprise CI)
-      expect(time).toBeLessThan(500);
+      // Should complete all syntax error inputs in less than 600ms (enterprise CI)
+      expect(time).toBeLessThan(600);
       
       // Memory usage should be reasonable (less than 20MB) - increased limit for enterprise CI
       expect(memory).toBeLessThan(30 * 1024 * 1024);

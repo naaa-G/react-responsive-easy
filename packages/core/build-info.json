@@ -1,12 +1,12 @@
 {
   "name": "@yaseratiar/react-responsive-easy-core",
   "version": "1.0.2",
-  "timestamp": "2025-09-10T22:07:57.236Z",
+  "timestamp": "2025-09-10T23:45:51.252Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 4634,
-  "rollupTime": 4624,
+  "buildTime": 5053,
+  "rollupTime": 5042,
   "analysis": {
     "totalSize": 417587,
     "fileCount": 5,
