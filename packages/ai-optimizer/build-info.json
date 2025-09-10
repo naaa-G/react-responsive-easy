@@ -1,12 +1,12 @@
 {
   "name": "@yaseratiar/react-responsive-easy-ai-optimizer",
   "version": "2.0.0",
-  "timestamp": "2025-09-10T21:25:11.753Z",
+  "timestamp": "2025-09-10T21:56:02.924Z",
   "nodeVersion": "v20.19.0",
   "platform": "win32",
   "arch": "x64",
-  "buildTime": 5687,
-  "rollupTime": 5666,
+  "buildTime": 10583,
+  "rollupTime": 10562,
   "analysis": {
     "totalSize": 1649802,
     "fileCount": 5,

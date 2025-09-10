@@ -220,9 +220,9 @@ export class MLIntegrationService extends EventEmitter {
         version: '1.0.0',
         description: config.description,
         tags: [],
-        framework: 'tensorflow',
-        language: 'python',
-        dependencies: ['tensorflow', 'scikit-learn', 'pandas', 'numpy'],
+        framework: 'tensorflow-js',
+        language: 'javascript',
+        dependencies: ['@tensorflow/tfjs-node', 'ml-kmeans', 'ml-matrix'],
         documentation: '',
         license: 'MIT'
       },
