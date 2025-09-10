@@ -401,7 +401,7 @@ class InjectedScript {
             // Try to identify which elements caused the shift
             entry.sources?.forEach((source: any) => {
               const element = source.node;
-              if (element && element.hasAttribute('data-responsive')) {
+              if (element?.hasAttribute('data-responsive')) {
                 console.warn('🔍 Layout shift from responsive element:', element);
               }
             });

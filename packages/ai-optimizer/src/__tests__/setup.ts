@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants';
 
 /**
  * Enterprise-grade test setup for AI Optimizer
@@ -7,74 +8,142 @@ import { vi } from 'vitest';
  * and proper test environment configuration for enterprise-grade testing.
  */
 
+// Constants for magic numbers
+const DEFAULT_TENSOR_VALUE = AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_ALPHA;
+const DEFAULT_LOSS_VALUES = [
+  AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_ALPHA,
+  AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_ALPHA,
+  AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD
+];
+const DEFAULT_PREDICTION_VALUE = AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_CONFIDENCE;
+const CONFIDENCE_OFFSET = 0.12;
+const DEFAULT_EVALUATION_VALUES = [
+  AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_CONFIDENCE,
+  AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_CONFIDENCE + CONFIDENCE_OFFSET
+];
+const DEFAULT_PARAM_COUNT = 1000;
+const DEFAULT_LAYER_COUNT = 3;
+const DEFAULT_FEATURE_DIMENSION = 128;
+const DEFAULT_OUTPUT_DIMENSION = 64;
+const DEFAULT_LOSS_VALUE = 0.1;
+const DEFAULT_ABSOLUTE_DIFFERENCE = 0.05;
+const ACCURACY_VALUE_1 = 0.85;
+const ACCURACY_VALUE_2 = 0.92;
+const DEFAULT_ACCURACY_VALUES = [ACCURACY_VALUE_1, ACCURACY_VALUE_2];
+const DEFAULT_RANDOM_FACTOR = 0.1;
+const DEFAULT_GRADIENT_FACTOR = 0.05;
+const DEFAULT_MEMORY_VALUES = { numTensors: 0, numDataBuffers: 0, numBytes: 0 };
+const DEFAULT_MEAN_SQUARED_ERROR = 0.1;
+const DEFAULT_ABSOLUTE_DIFFERENCE_VALUE = 0.05;
+const DEFAULT_RANDOM_NORMAL_VALUE = 0.5;
+const DEFAULT_PREDICTION_RESULT = 0.8;
+const DEFAULT_MEAN_RESULT = 0.5;
+const PREDICTION_VALUE_1 = 0.9;
+const PREDICTION_VALUE_2 = 0.7;
+
+// Helper function to create mathematical operations
+const createMathOperations = (flatData: number[], tensorShape: number[]) => ({
+  sub: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [0];
+    return createMockTensor(
+      flatData.map((val, i) => val - (otherData[i] || 0)), 
+      tensorShape
+    );
+  }),
+  add: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [0];
+    return createMockTensor(
+      flatData.map((val, i) => val + (otherData[i] || 0)), 
+      tensorShape
+    );
+  }),
+  div: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [1];
+    return createMockTensor(
+      flatData.map((val, i) => val / (otherData[i] || 1)), 
+      tensorShape
+    );
+  }),
+  mul: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [1];
+    return createMockTensor(
+      flatData.map((val, i) => val * (otherData[i] || 1)), 
+      tensorShape
+    );
+  }),
+  square: vi.fn(() => createMockTensor(flatData.map(val => val * val), tensorShape)),
+  sqrt: vi.fn(() => createMockTensor(flatData.map(val => Math.sqrt(Math.abs(val))), tensorShape)),
+  abs: vi.fn(() => createMockTensor(flatData.map(val => Math.abs(val)), tensorShape)),
+});
+
+// Helper function to create statistical operations
+const createStatisticalOperations = (flatData: number[]) => ({
+  mean: vi.fn((_axis?: number, keepDims?: boolean) => {
+    const meanValue = flatData.reduce((sum, val) => sum + val, 0) / flatData.length;
+    return createMockTensor([meanValue], keepDims ? [1, 1] : [1]);
+  }),
+  min: vi.fn((_axis?: number, keepDims?: boolean) => {
+    const minValue = Math.min(...flatData);
+    return createMockTensor([minValue], keepDims ? [1, 1] : [1]);
+  }),
+  max: vi.fn((_axis?: number, keepDims?: boolean) => {
+    const maxValue = Math.max(...flatData);
+    return createMockTensor([maxValue], keepDims ? [1, 1] : [1]);
+  }),
+  sum: vi.fn((_axis?: number, keepDims?: boolean) => {
+    const sumValue = flatData.reduce((sum, val) => sum + val, 0);
+    return createMockTensor([sumValue], keepDims ? [1, 1] : [1]);
+  }),
+});
+
+// Helper function to create comparison operations
+const createComparisonOperations = (flatData: number[], tensorShape: number[]) => ({
+  lessEqual: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [0];
+    return createMockTensor(
+      flatData.map((val, i) => val <= (otherData[i] || 0) ? 1 : 0), 
+      tensorShape
+    );
+  }),
+  greater: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [0];
+    return createMockTensor(
+      flatData.map((val, i) => val > (otherData[i] || 0) ? 1 : 0), 
+      tensorShape
+    );
+  }),
+  equal: vi.fn((other: Record<string, unknown>) => {
+    const otherData = (other?.dataSync as (() => number[]) | undefined)?.() ?? [0];
+    return createMockTensor(
+      flatData.map((val, i) => val === (otherData[i] || 0) ? 1 : 0), 
+      tensorShape
+    );
+  }),
+});
+
 // Enhanced mock tensor factory with realistic behavior
 const createMockTensor = (data?: number[][] | number[], shape?: number[]) => {
   const flatData: number[] = Array.isArray(data) 
     ? (Array.isArray(data[0]) ? (data as number[][]).flat() : data as number[])
-    : [0.5];
+    : [DEFAULT_TENSOR_VALUE];
   
-  const tensorShape: number[] = shape || (
+  const tensorShape: number[] = shape ?? (
     Array.isArray(data) && Array.isArray(data[0]) 
       ? [(data as number[][]).length, (data as number[][])[0].length] 
       : [1, flatData.length]
   );
   
-  const mockTensor: any = {
+  const mockTensor: Record<string, unknown> = {
     shape: tensorShape,
     data: vi.fn(() => Promise.resolve(new Float32Array(flatData))),
     dataSync: vi.fn(() => new Float32Array(flatData)),
     dispose: vi.fn(),
     
     // Mathematical operations with realistic chaining
-    sub: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [0];
-      return createMockTensor(
-        flatData.map((val, i) => val - (otherData[i] || 0)), 
-        tensorShape
-      );
-    }),
-    add: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [0];
-      return createMockTensor(
-        flatData.map((val, i) => val + (otherData[i] || 0)), 
-        tensorShape
-      );
-    }),
-    div: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [1];
-      return createMockTensor(
-        flatData.map((val, i) => val / (otherData[i] || 1)), 
-        tensorShape
-      );
-    }),
-    mul: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [1];
-      return createMockTensor(
-        flatData.map((val, i) => val * (otherData[i] || 1)), 
-        tensorShape
-      );
-    }),
-    square: vi.fn(() => createMockTensor(flatData.map(val => val * val), tensorShape)),
-    sqrt: vi.fn(() => createMockTensor(flatData.map(val => Math.sqrt(Math.abs(val))), tensorShape)),
-    abs: vi.fn(() => createMockTensor(flatData.map(val => Math.abs(val)), tensorShape)),
+    ...createMathOperations(flatData, tensorShape),
     
     // Statistical operations
-    mean: vi.fn((axis?: number, keepDims?: boolean) => {
-      const meanValue = flatData.reduce((sum, val) => sum + val, 0) / flatData.length;
-      return createMockTensor([meanValue], keepDims ? [1, 1] : [1]);
-    }),
-    min: vi.fn((axis?: number, keepDims?: boolean) => {
-      const minValue = Math.min(...flatData);
-      return createMockTensor([minValue], keepDims ? [1, 1] : [1]);
-    }),
-    max: vi.fn((axis?: number, keepDims?: boolean) => {
-      const maxValue = Math.max(...flatData);
-      return createMockTensor([maxValue], keepDims ? [1, 1] : [1]);
-    }),
-    sum: vi.fn((axis?: number, keepDims?: boolean) => {
-      const sumValue = flatData.reduce((sum, val) => sum + val, 0);
-      return createMockTensor([sumValue], keepDims ? [1, 1] : [1]);
-    }),
+    ...createStatisticalOperations(flatData),
     
     // Tensor manipulation
     slice: vi.fn((begin: number[], size?: number[]) => {
@@ -82,27 +151,9 @@ const createMockTensor = (data?: number[][] | number[], shape?: number[]) => {
       const end = size ? start + size[0] : flatData.length;
       return createMockTensor(flatData.slice(start, end));
     }),
-    lessEqual: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [0];
-      return createMockTensor(
-        flatData.map((val, i) => val <= (otherData[i] || 0) ? 1 : 0), 
-        tensorShape
-      );
-    }),
-    greater: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [0];
-      return createMockTensor(
-        flatData.map((val, i) => val > (otherData[i] || 0) ? 1 : 0), 
-        tensorShape
-      );
-    }),
-    equal: vi.fn((other: any) => {
-      const otherData = other?.dataSync?.() || [0];
-      return createMockTensor(
-        flatData.map((val, i) => val === (otherData[i] || 0) ? 1 : 0), 
-        tensorShape
-      );
-    }),
+    
+    // Comparison operations
+    ...createComparisonOperations(flatData, tensorShape),
     cast: vi.fn(() => createMockTensor(flatData, tensorShape)),
     reshape: vi.fn((newShape: number[]) => createMockTensor(flatData, newShape)),
     transpose: vi.fn(() => createMockTensor(flatData, tensorShape.slice().reverse())),
@@ -114,7 +165,7 @@ const createMockTensor = (data?: number[][] | number[], shape?: number[]) => {
     squeeze: vi.fn(() => createMockTensor(flatData, tensorShape.filter(dim => dim !== 1))),
     
     // Advanced operations
-    grad: vi.fn(() => createMockTensor(flatData.map(() => Math.random() * 0.1 - 0.05), tensorShape)),
+    grad: vi.fn(() => createMockTensor(flatData.map(() => Math.random() * DEFAULT_RANDOM_FACTOR - DEFAULT_GRADIENT_FACTOR), tensorShape)),
     async: vi.fn(() => Promise.resolve(createMockTensor(flatData, tensorShape)))
   };
   
@@ -130,14 +181,14 @@ vi.mock('@tensorflow/tfjs', () => {
     sequential: vi.fn(() => ({
       add: vi.fn().mockReturnThis(),
       compile: vi.fn().mockReturnThis(),
-      fit: vi.fn().mockResolvedValue({ history: { loss: [0.5, 0.3, 0.1] } }),
-      predict: vi.fn().mockReturnValue(mockTensor([[0.8]])),
-      evaluate: vi.fn().mockResolvedValue([0.85, 0.92]),
+      fit: vi.fn().mockResolvedValue({ history: { loss: DEFAULT_LOSS_VALUES } }),
+      predict: vi.fn().mockReturnValue(mockTensor([[DEFAULT_PREDICTION_VALUE]])),
+      evaluate: vi.fn().mockResolvedValue(DEFAULT_EVALUATION_VALUES),
       save: vi.fn().mockResolvedValue('model-saved'),
-      countParams: vi.fn(() => 1000),
-      layers: { length: 3 },
-      inputs: [{ shape: [null, 128] }],
-      outputs: [{ shape: [null, 64] }],
+      countParams: vi.fn(() => DEFAULT_PARAM_COUNT),
+      layers: { length: DEFAULT_LAYER_COUNT },
+      inputs: [{ shape: [null, DEFAULT_FEATURE_DIMENSION] }],
+      outputs: [{ shape: [null, DEFAULT_OUTPUT_DIMENSION] }],
       optimizer: { applyGradients: vi.fn() },
       loss: 'meanSquaredError',
       metrics: ['accuracy']
@@ -152,7 +203,7 @@ vi.mock('@tensorflow/tfjs', () => {
       maxPooling2d: vi.fn(() => ({})),
       globalAveragePooling2d: vi.fn(() => ({})),
       batchNormalization: vi.fn(() => ({
-        apply: vi.fn((tensor: any) => tensor)
+        apply: vi.fn((tensor: Record<string, unknown>) => tensor)
       }))
     },
 
@@ -165,42 +216,42 @@ vi.mock('@tensorflow/tfjs', () => {
 
     // Regularizers
     regularizers: {
-      l2: vi.fn((config: { l2: number }) => ({})),
-      l1: vi.fn((config: { l1: number }) => ({})),
-      l1l2: vi.fn((config: { l1: number; l2: number }) => ({}))
+      l2: vi.fn((_config: { l2: number }) => ({})),
+      l1: vi.fn((_config: { l1: number }) => ({})),
+      l1l2: vi.fn((_config: { l1: number; l2: number }) => ({}))
     },
 
     // Losses
     losses: {
-      meanSquaredError: vi.fn(() => mockTensor([[0.1]])),
-      absoluteDifference: vi.fn(() => mockTensor([[0.05]]))
+      meanSquaredError: vi.fn(() => mockTensor([[DEFAULT_MEAN_SQUARED_ERROR]])),
+      absoluteDifference: vi.fn(() => mockTensor([[DEFAULT_ABSOLUTE_DIFFERENCE_VALUE]]))
     },
 
     // Tensor operations - CRITICAL: These must be at the top level
     scalar: vi.fn((value: number) => mockTensor([value])),
-    tensor: vi.fn((data: number[], shape?: number[]) => mockTensor([data])),
+    tensor: vi.fn((data: number[], _shape?: number[]) => mockTensor([data])),
     tensor2d: vi.fn((data: number[][]) => mockTensor(data)),
     zeros: vi.fn(() => mockTensor([[0]])),
     ones: vi.fn(() => mockTensor([[1]])),
-    randomNormal: vi.fn(() => mockTensor([[0.5]])),
+    randomNormal: vi.fn(() => mockTensor([[DEFAULT_TENSOR_VALUE]])),
 
     loadLayersModel: vi.fn().mockResolvedValue({
-      predict: vi.fn().mockReturnValue(mockTensor([[0.8]])),
-      layers: { length: 3 },
-      inputs: [{ shape: [null, 128] }],
-      outputs: [{ shape: [null, 64] }],
+      predict: vi.fn().mockReturnValue(mockTensor([[DEFAULT_PREDICTION_VALUE]])),
+      layers: { length: DEFAULT_LAYER_COUNT },
+      inputs: [{ shape: [null, DEFAULT_FEATURE_DIMENSION] }],
+      outputs: [{ shape: [null, DEFAULT_OUTPUT_DIMENSION] }],
       optimizer: { applyGradients: vi.fn() }
     }),
 
-    grad: vi.fn((fn: Function) => vi.fn(() => mockTensor())),
+    grad: vi.fn((_fn: () => Record<string, unknown>) => vi.fn(() => mockTensor())),
 
-    linspace: vi.fn((start: number, end: number, steps: number) => ({
+    linspace: vi.fn((_start: number, _end: number, _steps: number) => ({
       slice: vi.fn(() => mockTensor()),
       dispose: vi.fn()
     })),
 
-    stack: vi.fn((tensors: any[]) => ({
-      mean: vi.fn(() => Promise.resolve(0.5)),
+    stack: vi.fn((_tensors: Record<string, unknown>[]) => ({
+      mean: vi.fn(() => Promise.resolve(DEFAULT_MEAN_RESULT)),
       dispose: vi.fn()
     }))
   };
@@ -211,13 +262,13 @@ vi.mock('@tensorflow/tfjs-node', () => ({
   sequential: vi.fn(() => ({
     add: vi.fn().mockReturnThis(),
     compile: vi.fn().mockReturnThis(),
-    fit: vi.fn().mockResolvedValue({ history: { loss: [0.5, 0.3, 0.1] } }),
-    predict: vi.fn().mockReturnValue({ dataSync: () => [0.8, 0.9, 0.7] }),
-    evaluate: vi.fn().mockResolvedValue([0.85, 0.92]),
+    fit: vi.fn().mockResolvedValue({ history: { loss: DEFAULT_LOSS_VALUES } }),
+    predict: vi.fn().mockReturnValue({ dataSync: () => [DEFAULT_PREDICTION_VALUE, PREDICTION_VALUE_1, PREDICTION_VALUE_2] }),
+    evaluate: vi.fn().mockResolvedValue(DEFAULT_EVALUATION_VALUES),
     save: vi.fn().mockResolvedValue('model-saved'),
     loadLayersModel: vi.fn().mockResolvedValue({}),
-    countParams: vi.fn(() => 1000),
-    layers: { length: 3 }
+    countParams: vi.fn(() => DEFAULT_PARAM_COUNT),
+    layers: { length: DEFAULT_LAYER_COUNT }
   })),
   layers: {
     dense: vi.fn(() => ({})),
@@ -227,7 +278,7 @@ vi.mock('@tensorflow/tfjs-node', () => ({
     maxPooling2d: vi.fn(() => ({})),
     globalAveragePooling2d: vi.fn(() => ({})),
     batchNormalization: vi.fn(() => ({
-      apply: vi.fn((tensor: any) => tensor)
+      apply: vi.fn((tensor: Record<string, unknown>) => tensor)
     }))
   },
   train: {
@@ -236,33 +287,33 @@ vi.mock('@tensorflow/tfjs-node', () => ({
     rmsprop: vi.fn(() => ({}))
   },
   regularizers: {
-    l2: vi.fn((config: { l2: number }) => ({})),
-    l1: vi.fn((config: { l1: number }) => ({})),
-    l1l2: vi.fn((config: { l1: number; l2: number }) => ({}))
+    l2: vi.fn((_config: { l2: number }) => ({})),
+    l1: vi.fn((_config: { l1: number }) => ({})),
+    l1l2: vi.fn((_config: { l1: number; l2: number }) => ({}))
   },
   losses: {
-    meanSquaredError: vi.fn(() => createMockTensor([[0.1]])),
-    absoluteDifference: vi.fn(() => createMockTensor([[0.05]]))
+    meanSquaredError: vi.fn(() => createMockTensor([[DEFAULT_MEAN_SQUARED_ERROR]])),
+    absoluteDifference: vi.fn(() => createMockTensor([[DEFAULT_ABSOLUTE_DIFFERENCE_VALUE]]))
   },
   scalar: vi.fn((value: number) => ({
     data: vi.fn(() => [value]),
     dispose: vi.fn()
   })),
-  tensor: vi.fn((data: number[], shape?: number[]) => createMockTensor([data])),
+  tensor: vi.fn((data: number[], _shape?: number[]) => createMockTensor([data])),
   tensor2d: vi.fn((data: number[][]) => createMockTensor(data)),
   zeros: vi.fn(() => createMockTensor([[0]])),
   ones: vi.fn(() => createMockTensor([[1]])),
-  randomNormal: vi.fn(() => createMockTensor([[0.5]])),
+  randomNormal: vi.fn(() => createMockTensor([[DEFAULT_RANDOM_NORMAL_VALUE]])),
   loadLayersModel: vi.fn().mockResolvedValue({
-    predict: vi.fn().mockReturnValue(createMockTensor([[0.8]]))
+    predict: vi.fn().mockReturnValue(createMockTensor([[DEFAULT_PREDICTION_RESULT]]))
   }),
-  grad: vi.fn((fn: Function) => vi.fn(() => createMockTensor())),
-  linspace: vi.fn((start: number, end: number, steps: number) => ({
+  grad: vi.fn((_fn: Function) => vi.fn(() => createMockTensor())),
+  linspace: vi.fn((_start: number, _end: number, _steps: number) => ({
     slice: vi.fn(() => createMockTensor()),
     dispose: vi.fn()
   })),
-  stack: vi.fn((tensors: any[]) => ({
-    mean: vi.fn(() => Promise.resolve(0.5)),
+  stack: vi.fn((_tensors: Record<string, unknown>[]) => ({
+    mean: vi.fn(() => Promise.resolve(DEFAULT_MEAN_RESULT)),
     dispose: vi.fn()
   })),
 
@@ -283,14 +334,14 @@ vi.mock('@tensorflow/tfjs', () => {
     sequential: vi.fn(() => ({
       add: vi.fn().mockReturnThis(),
       compile: vi.fn().mockReturnThis(),
-      fit: vi.fn().mockResolvedValue({ history: { loss: [0.5, 0.3, 0.1] } }),
-      predict: vi.fn().mockReturnValue(mockTensor([[0.8]])),
-      evaluate: vi.fn().mockResolvedValue([0.85, 0.92]),
+      fit: vi.fn().mockResolvedValue({ history: { loss: DEFAULT_LOSS_VALUES } }),
+      predict: vi.fn().mockReturnValue(mockTensor([[DEFAULT_PREDICTION_VALUE]])),
+      evaluate: vi.fn().mockResolvedValue(DEFAULT_EVALUATION_VALUES),
       save: vi.fn().mockResolvedValue('model-saved'),
-      countParams: vi.fn(() => 1000),
-      layers: { length: 3 },
-      inputs: [{ shape: [null, 128] }],
-      outputs: [{ shape: [null, 64] }],
+      countParams: vi.fn(() => DEFAULT_PARAM_COUNT),
+      layers: { length: DEFAULT_LAYER_COUNT },
+      inputs: [{ shape: [null, DEFAULT_FEATURE_DIMENSION] }],
+      outputs: [{ shape: [null, DEFAULT_OUTPUT_DIMENSION] }],
       optimizer: { applyGradients: vi.fn() },
       loss: 'meanSquaredError',
       metrics: ['accuracy']
@@ -305,7 +356,7 @@ vi.mock('@tensorflow/tfjs', () => {
       maxPooling2d: vi.fn(() => ({})),
       globalAveragePooling2d: vi.fn(() => ({})),
       batchNormalization: vi.fn(() => ({
-        apply: vi.fn((tensor: any) => tensor)
+        apply: vi.fn((tensor: Record<string, unknown>) => tensor)
       }))
     },
 
@@ -318,20 +369,20 @@ vi.mock('@tensorflow/tfjs', () => {
 
     // Regularizers
     regularizers: {
-      l2: vi.fn((config: { l2: number }) => ({})),
-      l1: vi.fn((config: { l1: number }) => ({}))
+      l2: vi.fn((_config: { l2: number }) => ({})),
+      l1: vi.fn((_config: { l1: number }) => ({}))
     },
 
     // Losses
     losses: {
-      meanSquaredError: vi.fn(() => mockTensor([[0.1]])),
-      absoluteDifference: vi.fn(() => mockTensor([[0.05]]))
+      meanSquaredError: vi.fn(() => mockTensor([[DEFAULT_LOSS_VALUE]])),
+      absoluteDifference: vi.fn(() => mockTensor([[DEFAULT_ABSOLUTE_DIFFERENCE]]))
     },
 
     // Metrics
     metrics: {
-      binaryAccuracy: vi.fn(() => mockTensor([[0.85]])),
-      categoricalAccuracy: vi.fn(() => mockTensor([[0.92]]))
+      binaryAccuracy: vi.fn(() => mockTensor([[DEFAULT_ACCURACY_VALUES[0]]])),
+      categoricalAccuracy: vi.fn(() => mockTensor([[DEFAULT_ACCURACY_VALUES[1]]]))
     },
 
     // Callbacks
@@ -342,30 +393,26 @@ vi.mock('@tensorflow/tfjs', () => {
 
     // Tensor operations
     scalar: vi.fn((value: number) => createMockTensor([value])),
-    tensor: vi.fn((data: number[], shape?: number[]) => createMockTensor([data])),
+    tensor: vi.fn((data: number[], _shape?: number[]) => createMockTensor([data])),
     tensor2d: vi.fn((data: number[][]) => createMockTensor(data)),
     zeros: vi.fn(() => createMockTensor([[0]])),
     ones: vi.fn(() => createMockTensor([[1]])),
-    randomNormal: vi.fn(() => createMockTensor([[0.5]])),
+    randomNormal: vi.fn(() => createMockTensor([[DEFAULT_TENSOR_VALUE]])),
     loadLayersModel: vi.fn().mockResolvedValue({
-      predict: vi.fn().mockReturnValue(createMockTensor([[0.8]]))
+      predict: vi.fn().mockReturnValue(createMockTensor([[DEFAULT_PREDICTION_VALUE]]))
     }),
-    grad: vi.fn((fn: Function) => vi.fn(() => createMockTensor())),
-    linspace: vi.fn((start: number, end: number, steps: number) => ({
+    grad: vi.fn((_fn: Function) => vi.fn(() => createMockTensor())),
+    linspace: vi.fn((_start: number, _end: number, _steps: number) => ({
       slice: vi.fn(() => createMockTensor()),
       dispose: vi.fn()
     })),
-    stack: vi.fn((tensors: any[]) => ({
-      mean: vi.fn(() => Promise.resolve(0.5)),
+    stack: vi.fn((_tensors: Record<string, unknown>[]) => ({
+      mean: vi.fn(() => Promise.resolve(DEFAULT_TENSOR_VALUE)),
       dispose: vi.fn()
     })),
 
     // Memory management
-    memory: vi.fn(() => ({
-      numTensors: 0,
-      numDataBuffers: 0,
-      numBytes: 0
-    }))
+    memory: vi.fn(() => DEFAULT_MEMORY_VALUES)
   };
 
   return {

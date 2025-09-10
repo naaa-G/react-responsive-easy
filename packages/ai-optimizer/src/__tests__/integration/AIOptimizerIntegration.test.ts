@@ -81,10 +81,13 @@ describe('AI Optimizer Integration Tests', () => {
         })
       ];
 
-      for (const config of configs) {
-        const suggestions = await optimizer.optimizeScaling(config, mockUsageData);
-        expect(suggestions).toBeDefined();
-        expect(suggestions.confidenceScore).toBeGreaterThan(0);
+      const suggestions = await Promise.all(
+        configs.map(config => optimizer.optimizeScaling(config, mockUsageData))
+      );
+      
+      for (const suggestion of suggestions) {
+        expect(suggestion).toBeDefined();
+        expect(suggestion.confidenceScore).toBeGreaterThan(0);
       }
     });
 
@@ -96,10 +99,13 @@ describe('AI Optimizer Integration Tests', () => {
         testDataFactory.createComponentUsageDataArray(100) // Large dataset
       ];
 
-      for (const usageData of usageDataPatterns) {
-        const suggestions = await optimizer.optimizeScaling(mockResponsiveConfig, usageData);
-        expect(suggestions).toBeDefined();
-        expect(suggestions.confidenceScore).toBeGreaterThan(0);
+      const suggestions = await Promise.all(
+        usageDataPatterns.map(usageData => optimizer.optimizeScaling(mockResponsiveConfig, usageData))
+      );
+      
+      for (const suggestion of suggestions) {
+        expect(suggestion).toBeDefined();
+        expect(suggestion.confidenceScore).toBeGreaterThan(0);
       }
     });
   });
@@ -289,10 +295,12 @@ describe('AI Optimizer Integration Tests', () => {
       const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
       
       // Run multiple optimizations
-      for (let i = 0; i < 10; i++) {
-        const testData = testDataFactory.createComponentUsageDataArray(10);
-        await optimizer.optimizeScaling(mockResponsiveConfig, testData);
-      }
+      await Promise.all(
+        Array.from({ length: 10 }, () => {
+          const testData = testDataFactory.createComponentUsageDataArray(10);
+          return optimizer.optimizeScaling(mockResponsiveConfig, testData);
+        })
+      );
       
       const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
       const memoryIncrease = finalMemory - initialMemory;

@@ -5,7 +5,7 @@
  * Combines Babel and PostCSS plugins for seamless development experience.
  */
 
-import type { Plugin } from 'vite';
+import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 
@@ -28,6 +28,48 @@ interface VitePluginOptions {
   exclude?: string | RegExp | (string | RegExp)[];
 }
 
+// Type definitions for better type safety
+interface BabelTransformOptions {
+  configPath: string;
+  precompute: boolean;
+  development: boolean;
+}
+
+interface PostCSSTransformOptions {
+  generateCustomProperties: boolean;
+  generateCustomMedia: boolean;
+  customPropertyPrefix: string;
+  development: boolean;
+}
+
+interface RREConfig {
+  base: {
+    name: string;
+    width: number;
+    height: number;
+    alias: string;
+  };
+  breakpoints: Array<{
+    name: string;
+    width: number;
+    height: number;
+    alias: string;
+  }>;
+  strategy: {
+    origin: string;
+    tokens: Record<string, unknown>;
+    rounding: {
+      mode: string;
+      precision: number;
+    };
+  };
+}
+
+interface Logger {
+  warn: (message: string) => void;
+  error: (message: string, error?: unknown) => void;
+}
+
 // Default configuration
 const defaultConfig = {
   configPath: 'rre.config.ts',
@@ -40,6 +82,184 @@ const defaultConfig = {
   exclude: /node_modules/
 };
 
+// Logger utility for consistent error handling
+const logger: Logger = {
+  warn: (message: string): void => {
+    // eslint-disable-next-line no-console
+    console.warn(message);
+  },
+  error: (message: string, error?: unknown): void => {
+    // eslint-disable-next-line no-console
+    console.error(message, error);
+  }
+};
+
+// Helper function to create JS processing plugin
+function createJSPlugin(
+  config: Required<VitePluginOptions>,
+  configPath: string,
+  hasConfig: boolean
+): Plugin {
+  return {
+    name: 'react-responsive-easy:js',
+    enforce: 'pre',
+    
+    configResolved(resolvedConfig: ResolvedConfig) {
+      // Update development mode based on Vite's mode
+      config.development = resolvedConfig.command === 'serve' || resolvedConfig.mode === 'development';
+    },
+    
+    transform(code: string, id: string) {
+      // Check if file should be processed
+      if (!shouldProcessFile(id, config.include, config.exclude)) {
+        return null;
+      }
+      
+      // Only process files that contain RRE hooks
+      if (!containsRREHooks(code)) {
+        return null;
+      }
+      
+      try {
+        // Apply Babel transformations
+        const transformedCode = transformWithBabel(code, {
+          configPath: config.configPath,
+          precompute: config.precompute,
+          development: config.development
+        });
+        
+        return {
+          code: transformedCode,
+          map: null // TODO: Generate source maps
+        };
+      } catch (error) {
+        if (config.development) {
+          logger.error('[react-responsive-easy] Transform error:', error);
+        }
+        return null;
+      }
+    },
+    
+    // Add virtual modules for configuration
+    resolveId(id: string) {
+      if (id === 'virtual:rre-config') {
+        return id;
+      }
+      return null;
+    },
+    
+    load(id: string) {
+      if (id === 'virtual:rre-config') {
+        // Load and return configuration
+        try {
+          if (hasConfig) {
+            const configContent = fs.readFileSync(configPath, 'utf-8');
+            return `export default ${extractConfigFromFile(configContent)};`;
+          } else {
+            return `export default ${JSON.stringify(getMockConfig())};`;
+          }
+        } catch (error) {
+          logger.error('[react-responsive-easy] Config load error:', error);
+          return `export default ${JSON.stringify(getMockConfig())};`;
+        }
+      }
+      return null;
+    }
+  };
+}
+
+// Helper function to create CSS processing plugin
+function createCSSPlugin(config: Required<VitePluginOptions>): Plugin {
+  return {
+    name: 'react-responsive-easy:css',
+    enforce: 'pre',
+    
+    transform(code: string, id: string) {
+      // Only process CSS files
+      if (!id.endsWith('.css') && !id.endsWith('.scss') && !id.endsWith('.less')) {
+        return null;
+      }
+      
+      // Only process CSS that contains rre() functions
+      if (!code.includes('rre(')) {
+        return null;
+      }
+      
+      try {
+        const transformedCSS = transformWithPostCSS(code, {
+          generateCustomProperties: config.generateCustomProperties,
+          generateCustomMedia: config.generateCustomMedia,
+          customPropertyPrefix: config.customPropertyPrefix,
+          development: config.development
+        });
+        
+        return {
+          code: transformedCSS,
+          map: null // TODO: Generate source maps
+        };
+      } catch (error) {
+        if (config.development) {
+          logger.error('[react-responsive-easy] CSS transform error:', error);
+        }
+        return null;
+      }
+    }
+  };
+}
+
+// Helper function to create development server plugin
+function createDevPlugin(
+  config: Required<VitePluginOptions>,
+  configPath: string,
+  hasConfig: boolean
+): Plugin {
+  return {
+    name: 'react-responsive-easy:dev',
+    apply: 'serve',
+    
+    configureServer(server: ViteDevServer) {
+      // Add middleware for development features
+      server.middlewares.use('/rre-dev', (req, res, next) => {
+        if (req.url === '/config') {
+          // Serve current configuration
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(hasConfig ? loadConfig(configPath) : getMockConfig()));
+        } else if (req.url === '/breakpoints') {
+          // Serve breakpoint information
+          const configData = hasConfig ? loadConfig(configPath) : getMockConfig();
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(configData.breakpoints));
+        } else {
+          next();
+        }
+      });
+      
+      // Watch config file for changes
+      if (hasConfig) {
+        server.watcher.add(configPath);
+        server.ws.on('rre:config-changed', () => {
+          server.ws.send({
+            type: 'full-reload',
+            path: '*'
+          });
+        });
+      }
+    },
+    
+    handleHotUpdate({ file, server }: { file: string; server: ViteDevServer }) {
+      // Reload on config file changes
+      if (file === configPath) {
+        server.ws.send({
+          type: 'full-reload',
+          path: '*'
+        });
+        return [];
+      }
+      return undefined;
+    }
+  };
+}
+
 /**
  * Main Vite plugin function
  */
@@ -51,161 +271,13 @@ export function reactResponsiveEasy(options: VitePluginOptions = {}): Plugin[] {
   const hasConfig = fs.existsSync(configPath);
   
   if (!hasConfig && config.development) {
-    console.warn(`[react-responsive-easy] Configuration file not found: ${configPath}`);
+    logger.warn(`[react-responsive-easy] Configuration file not found: ${configPath}`);
   }
 
   return [
-    // Main plugin for JavaScript/TypeScript processing
-    {
-      name: 'react-responsive-easy:js',
-      enforce: 'pre',
-      
-      configResolved(resolvedConfig) {
-        // Update development mode based on Vite's mode
-        config.development = resolvedConfig.command === 'serve' || resolvedConfig.mode === 'development';
-      },
-      
-      transform(code, id) {
-        // Check if file should be processed
-        if (!shouldProcessFile(id, config.include, config.exclude)) {
-          return null;
-        }
-        
-        // Only process files that contain RRE hooks
-        if (!containsRREHooks(code)) {
-          return null;
-        }
-        
-        try {
-          // Apply Babel transformations
-          const transformedCode = transformWithBabel(code, {
-            configPath: config.configPath,
-            precompute: config.precompute,
-            development: config.development
-          });
-          
-          return {
-            code: transformedCode,
-            map: null // TODO: Generate source maps
-          };
-        } catch (error) {
-          if (config.development) {
-            console.error('[react-responsive-easy] Transform error:', error);
-          }
-          return null;
-        }
-      },
-      
-      // Add virtual modules for configuration
-      resolveId(id) {
-        if (id === 'virtual:rre-config') {
-          return id;
-        }
-        return null;
-      },
-      
-      load(id) {
-        if (id === 'virtual:rre-config') {
-          // Load and return configuration
-          try {
-            if (hasConfig) {
-              const configContent = fs.readFileSync(configPath, 'utf-8');
-              return `export default ${extractConfigFromFile(configContent)};`;
-            } else {
-              return `export default ${JSON.stringify(getMockConfig())};`;
-            }
-          } catch (error) {
-            console.error('[react-responsive-easy] Config load error:', error);
-            return `export default ${JSON.stringify(getMockConfig())};`;
-          }
-        }
-        return null;
-      }
-    },
-    
-    // CSS processing plugin
-    {
-      name: 'react-responsive-easy:css',
-      enforce: 'pre',
-      
-      async transform(code, id) {
-        // Only process CSS files
-        if (!id.endsWith('.css') && !id.endsWith('.scss') && !id.endsWith('.less')) {
-          return null;
-        }
-        
-        // Only process CSS that contains rre() functions
-        if (!code.includes('rre(')) {
-          return null;
-        }
-        
-        try {
-          const transformedCSS = await transformWithPostCSS(code, {
-            generateCustomProperties: config.generateCustomProperties,
-            generateCustomMedia: config.generateCustomMedia,
-            customPropertyPrefix: config.customPropertyPrefix,
-            development: config.development
-          });
-          
-          return {
-            code: transformedCSS,
-            map: null // TODO: Generate source maps
-          };
-        } catch (error) {
-          if (config.development) {
-            console.error('[react-responsive-easy] CSS transform error:', error);
-          }
-          return null;
-        }
-      }
-    },
-    
-    // Development server enhancements
-    {
-      name: 'react-responsive-easy:dev',
-      apply: 'serve',
-      
-      configureServer(server) {
-        // Add middleware for development features
-        server.middlewares.use('/rre-dev', (req, res, next) => {
-          if (req.url === '/config') {
-            // Serve current configuration
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(hasConfig ? loadConfig(configPath) : getMockConfig()));
-          } else if (req.url === '/breakpoints') {
-            // Serve breakpoint information
-            const config = hasConfig ? loadConfig(configPath) : getMockConfig();
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(config.breakpoints));
-          } else {
-            next();
-          }
-        });
-        
-        // Watch config file for changes
-        if (hasConfig) {
-          server.watcher.add(configPath);
-          server.ws.on('rre:config-changed', () => {
-            server.ws.send({
-              type: 'full-reload',
-              path: '*'
-            });
-          });
-        }
-      },
-      
-      handleHotUpdate({ file, server }) {
-        // Reload on config file changes
-        if (file === configPath) {
-          server.ws.send({
-            type: 'full-reload',
-            path: '*'
-          });
-          return [];
-        }
-        return undefined;
-      }
-    }
+    createJSPlugin(config, configPath, hasConfig),
+    createCSSPlugin(config),
+    createDevPlugin(config, configPath, hasConfig)
   ];
 }
 
@@ -248,7 +320,7 @@ function containsRREHooks(code: string): boolean {
   return rreHookPatterns.some(pattern => pattern.test(code));
 }
 
-function transformWithBabel(code: string, _options: any): string {
+function transformWithBabel(code: string, _options: BabelTransformOptions): string {
   // Mock Babel transformation for now
   // In a real implementation, this would use @react-responsive-easy/babel-plugin
   
@@ -278,7 +350,7 @@ function transformWithBabel(code: string, _options: any): string {
   return transformedCode;
 }
 
-async function transformWithPostCSS(css: string, options: any): Promise<string> {
+function transformWithPostCSS(css: string, options: PostCSSTransformOptions): string {
   // Mock PostCSS transformation for now
   // In a real implementation, this would use @react-responsive-easy/postcss-plugin
   
@@ -319,7 +391,7 @@ function extractConfigFromFile(content: string): string {
   return match ? match[1] : JSON.stringify(getMockConfig());
 }
 
-function loadConfig(configPath: string): any {
+function loadConfig(configPath: string): RREConfig {
   try {
     const content = fs.readFileSync(configPath, 'utf-8');
     return JSON.parse(extractConfigFromFile(content));
@@ -328,7 +400,7 @@ function loadConfig(configPath: string): any {
   }
 }
 
-function getMockConfig() {
+function getMockConfig(): RREConfig {
   return {
     base: { name: 'desktop', width: 1920, height: 1080, alias: 'base' },
     breakpoints: [

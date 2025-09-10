@@ -7,6 +7,8 @@ import {
   PerformanceFeatures,
   ContextFeatures
 } from '../types/index.js';
+import { ADDITIONAL_CONSTANTS } from '../constants.js';
+import { Logger } from '../utils/Logger.js';
 
 /**
  * Feature extraction engine for AI optimization
@@ -15,6 +17,12 @@ import {
  * that can be used by machine learning models.
  */
 export class FeatureExtractor {
+  private logger: Logger;
+
+  constructor() {
+    this.logger = new Logger('FeatureExtractor');
+  }
+
   /**
    * Extract comprehensive features from configuration and usage data
    */
@@ -38,43 +46,88 @@ export class FeatureExtractor {
     
     // Defensive null checks
     if (!features) {
-      console.warn('⚠️ Features object is null/undefined, returning empty vector');
+      this.logger.warn('Features object is null/undefined, returning empty vector');
       return [];
     }
     
-    // Configuration features (20 values) - with null checks
-    const config = features.config || {};
-    vector.push(config.breakpointCount || 0);
-    vector.push(...(config.breakpointRatios || []));
-    vector.push(config.tokenComplexity || 0);
-    vector.push(...Object.values(config.originDistribution || {}));
+    // Add different feature types to vector
+    vector.push(...this.extractConfigVector(features.config));
+    vector.push(...this.extractUsageVector(features.usage));
+    vector.push(...this.extractPerformanceVector(features.performance));
+    vector.push(...this.extractContextVector(features.context));
     
-    // Usage features (30 values) - with null checks
-    const usage = features.usage || {};
-    vector.push(...(usage.commonValues || []));
-    vector.push(...Object.values(usage.componentFrequencies || {}).slice(0, 10));
-    vector.push(...Object.values(usage.propertyPatterns || {}).slice(0, 10));
+    // Pad or truncate to exactly FEATURE_DIMENSION features
+    return this.normalizeVectorLength(vector);
+  }
+
+  /**
+   * Extract configuration features vector
+   */
+  private extractConfigVector(config: ConfigurationFeatures | undefined): number[] {
+    const configData = config ?? this.getDefaultConfigurationFeatures();
+    const vector: number[] = [];
     
-    // Performance features (25 values) - with null checks
-    const performance = features.performance || {};
-    vector.push(...(performance.avgRenderTimes || []));
-    vector.push(...(performance.bundleSizes || []));
-    vector.push(...(performance.memoryPatterns || []));
-    vector.push(...(performance.layoutShiftFreq || []));
+    vector.push(configData.breakpointCount ?? 0);
+    vector.push(...(configData.breakpointRatios ?? []));
+    vector.push(configData.tokenComplexity ?? 0);
+    vector.push(...Object.values(configData.originDistribution ?? {}));
     
-    // Context features (53 values) - with null checks
-    const context = features.context || {};
-    vector.push(this.encodeApplicationType(context.applicationType));
-    vector.push(...Object.values(context.deviceDistribution || {}));
-    vector.push(...Object.values(context.userBehavior || {}));
-    vector.push(this.encodeIndustry(context.industry));
+    return vector;
+  }
+
+  /**
+   * Extract usage features vector
+   */
+  private extractUsageVector(usage: UsageFeatures | undefined): number[] {
+    const usageData = usage ?? this.getDefaultUsageFeatures();
+    const vector: number[] = [];
     
-    // Pad or truncate to exactly 128 features
-    while (vector.length < 128) {
+    vector.push(...(usageData.commonValues ?? []));
+    vector.push(...Object.values(usageData.componentFrequencies ?? {}).slice(0, ADDITIONAL_CONSTANTS.DEFAULT_STEP));
+    vector.push(...Object.values(usageData.propertyPatterns ?? {}).slice(0, ADDITIONAL_CONSTANTS.DEFAULT_STEP));
+    
+    return vector;
+  }
+
+  /**
+   * Extract performance features vector
+   */
+  private extractPerformanceVector(performance: PerformanceFeatures | undefined): number[] {
+    const perfData = performance ?? this.getDefaultPerformanceFeatures();
+    const vector: number[] = [];
+    
+    vector.push(...(perfData.avgRenderTimes ?? []));
+    vector.push(...(perfData.bundleSizes ?? []));
+    vector.push(...(perfData.memoryPatterns ?? []));
+    vector.push(...(perfData.layoutShiftFreq ?? []));
+    
+    return vector;
+  }
+
+  /**
+   * Extract context features vector
+   */
+  private extractContextVector(context: ContextFeatures | undefined): number[] {
+    const contextData = context ?? this.getDefaultContextFeatures();
+    const vector: number[] = [];
+    
+    vector.push(this.encodeApplicationType(contextData.applicationType));
+    vector.push(...Object.values(contextData.deviceDistribution ?? {}));
+    vector.push(...Object.values(contextData.userBehavior ?? {}));
+    vector.push(this.encodeIndustry(contextData.industry));
+    
+    return vector;
+  }
+
+  /**
+   * Normalize vector to exact feature dimension
+   */
+  private normalizeVectorLength(vector: number[]): number[] {
+    while (vector.length < ADDITIONAL_CONSTANTS.FEATURE_DIMENSION) {
       vector.push(0);
     }
     
-    return vector.slice(0, 128);
+    return vector.slice(0, ADDITIONAL_CONSTANTS.FEATURE_DIMENSION);
   }
 
   /**
@@ -82,48 +135,70 @@ export class FeatureExtractor {
    */
   private extractConfigurationFeatures(config: ResponsiveConfig): ConfigurationFeatures {
     // Defensive programming - handle missing config properties
-    if (!config || !config.breakpoints || !config.base || !config.strategy) {
+    if (!config?.breakpoints || !config.base || !config.strategy) {
       return this.getDefaultConfigurationFeatures();
     }
 
     const breakpoints = config.breakpoints;
-    
-    // Calculate breakpoint ratios with null safety
-    const baseWidth = config.base?.width || 375; // Default mobile width
-    const breakpointRatios = breakpoints.map(bp => {
-      if (!bp || typeof bp.width !== 'number') {
-        return baseWidth / baseWidth; // Default to 1
-      }
-      return bp.width / baseWidth;
-    });
-    
-    // Calculate token complexity with null safety
-    const tokens = config.strategy?.tokens || {};
-    let tokenComplexity = 0;
-    Object.values(tokens).forEach(token => {
-      if (!token) return;
-      tokenComplexity += (token.min !== undefined ? 1 : 0);
-      tokenComplexity += (token.max !== undefined ? 1 : 0);
-      tokenComplexity += (token.step !== undefined ? 1 : 0);
-      tokenComplexity += (token.responsive !== false ? 1 : 0);
-    });
-    
-    // Origin distribution with null safety
-    const origin = config.strategy?.origin || 'width';
-    const originDistribution: Record<string, number> = {
-      width: origin === 'width' ? 1 : 0,
-      height: origin === 'height' ? 1 : 0,
-      min: origin === 'min' ? 1 : 0,
-      max: origin === 'max' ? 1 : 0,
-      diagonal: origin === 'diagonal' ? 1 : 0,
-      area: origin === 'area' ? 1 : 0
-    };
+    const breakpointRatios = this.calculateBreakpointRatios(breakpoints, config.base?.width);
+    const tokenComplexity = this.calculateTokenComplexity(config.strategy?.tokens);
+    const originDistribution = this.calculateOriginDistribution(config.strategy?.origin);
     
     return {
       breakpointCount: breakpoints?.length || 0,
-      breakpointRatios: this.padArray(breakpointRatios, 8, 1),
+      breakpointRatios: this.padArray(breakpointRatios, ADDITIONAL_CONSTANTS.DEFAULT_STEP - 2, 1),
       tokenComplexity,
       originDistribution
+    };
+  }
+
+  /**
+   * Calculate breakpoint ratios
+   */
+  private calculateBreakpointRatios(breakpoints: Array<{ width?: number }>, baseWidth?: number): number[] {
+    const defaultBaseWidth = ADDITIONAL_CONSTANTS.MOBILE_BASE_WIDTH;
+    const actualBaseWidth = baseWidth ?? defaultBaseWidth;
+    
+    return breakpoints.map(bp => {
+      if (!bp || typeof bp.width !== 'number') {
+        return actualBaseWidth / actualBaseWidth; // Default to 1
+      }
+      return bp.width / actualBaseWidth;
+    });
+  }
+
+  /**
+   * Calculate token complexity
+   */
+  private calculateTokenComplexity(tokens: Record<string, unknown> | undefined): number {
+    const tokenData = tokens ?? {};
+    let complexity = 0;
+    
+    Object.values(tokenData).forEach(token => {
+      if (!token) return;
+      const tokenObj = token as { min?: number; max?: number; step?: number; responsive?: boolean };
+      complexity += (tokenObj.min !== undefined ? 1 : 0);
+      complexity += (tokenObj.max !== undefined ? 1 : 0);
+      complexity += (tokenObj.step !== undefined ? 1 : 0);
+      complexity += (tokenObj.responsive !== false ? 1 : 0);
+    });
+    
+    return complexity;
+  }
+
+  /**
+   * Calculate origin distribution
+   */
+  private calculateOriginDistribution(origin: string | undefined): Record<string, number> {
+    const actualOrigin = origin ?? 'width';
+    
+    return {
+      width: actualOrigin === 'width' ? 1 : 0,
+      height: actualOrigin === 'height' ? 1 : 0,
+      min: actualOrigin === 'min' ? 1 : 0,
+      max: actualOrigin === 'max' ? 1 : 0,
+      diagonal: actualOrigin === 'diagonal' ? 1 : 0,
+      area: actualOrigin === 'area' ? 1 : 0
     };
   }
 
@@ -143,10 +218,10 @@ export class FeatureExtractor {
     const valueDistributions: Record<string, number[]> = {};
     
     usageData.forEach(data => {
-      if (!data || !data.componentType) return;
+      if (!data?.componentType) return;
       
       // Count component types
-      componentTypes[data.componentType] = (componentTypes[data.componentType] || 0) + 1;
+      componentTypes[data.componentType] = (componentTypes[data.componentType] ?? 0) + 1;
       
       // Handle null/undefined responsiveValues
       if (!data.responsiveValues || !Array.isArray(data.responsiveValues)) return;
@@ -169,7 +244,7 @@ export class FeatureExtractor {
     // Find most common values
     const valueFrequency: Record<number, number> = {};
     allValues.forEach(val => {
-      valueFrequency[val] = (valueFrequency[val] || 0) + 1;
+      valueFrequency[val] = (valueFrequency[val] ?? 0) + 1;
     });
     
     const commonValues = Object.entries(valueFrequency)
@@ -212,10 +287,10 @@ export class FeatureExtractor {
     });
     
     return {
-      avgRenderTimes: this.calculateStatistics(renderTimes, 5),
-      bundleSizes: this.calculateStatistics(bundleSizes, 5),
-      memoryPatterns: this.calculateStatistics(memoryUsages, 5),
-      layoutShiftFreq: this.calculateStatistics(layoutShifts, 5)
+      avgRenderTimes: this.calculateStatistics(renderTimes, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2),
+      bundleSizes: this.calculateStatistics(bundleSizes, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2),
+      memoryPatterns: this.calculateStatistics(memoryUsages, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2),
+      layoutShiftFreq: this.calculateStatistics(layoutShifts, ADDITIONAL_CONSTANTS.DEFAULT_STEP / 2)
     };
   }
 
@@ -230,14 +305,14 @@ export class FeatureExtractor {
 
     // Infer application type from component patterns
     const componentTypes = usageData
-      .filter(d => d && d.componentType)
+      .filter(d => d?.componentType)
       .map(d => d.componentType);
     const applicationType = this.inferApplicationType(componentTypes);
     
     // Calculate device distribution from context data
     const positions = usageData
-      .filter(d => d && d.context && d.context.position)
-      .map(d => d.context.position);
+      .filter(d => d?.context?.position)
+      .map(d => d.context!.position);
     const deviceDistribution = this.calculateDeviceDistribution(positions);
     
     // Analyze user behavior patterns
@@ -341,13 +416,17 @@ export class FeatureExtractor {
   /**
    * Analyze user behavior patterns
    */
-  private analyzeUserBehavior(interactions: any[]): Record<string, number> {
+  private analyzeUserBehavior(interactions: unknown[]): Record<string, number> {
     if (!interactions || interactions.length === 0) {
       return { engagement: 0, accessibility: 0, performance: 0 };
     }
     
     try {
-      const validInteractions = interactions.filter(i => i && typeof i === 'object');
+      const validInteractions = interactions.filter(i => i && typeof i === 'object') as Array<{
+        interactionRate?: number;
+        accessibilityScore?: number;
+        viewTime?: number;
+      }>;
       if (validInteractions.length === 0) {
         return { engagement: 0, accessibility: 0, performance: 0 };
       }
@@ -367,10 +446,10 @@ export class FeatureExtractor {
       return {
         engagement: Math.max(0, Math.min(1, avgInteractionRate)), // Clamp between 0 and 1
         accessibility: Math.max(0, Math.min(100, avgAccessibilityScore)), // Clamp between 0 and 100
-        performance: avgViewTime > 5000 ? 1 : 0 // Long view times indicate performance issues
+        performance: avgViewTime > ADDITIONAL_CONSTANTS.PERFORMANCE_THRESHOLD_MS ? 1 : 0 // Long view times indicate performance issues
       };
     } catch (error) {
-      console.warn('⚠️ Error analyzing user behavior:', error);
+      this.logger.error('Error analyzing user behavior', error instanceof Error ? error : new Error(String(error)));
       return { engagement: 0, accessibility: 0, performance: 0 };
     }
   }
@@ -413,9 +492,9 @@ export class FeatureExtractor {
       'finance': 5,
       'healthcare': 6,
       'education': 7,
-      'general': 8
+      'general': ADDITIONAL_CONSTANTS.DEFAULT_INDUSTRY_CODE
     };
-    return mapping[industry] || 8;
+    return mapping[industry] || ADDITIONAL_CONSTANTS.DEFAULT_INDUSTRY_CODE;
   }
 
   /**
@@ -435,7 +514,7 @@ export class FeatureExtractor {
   private getDefaultConfigurationFeatures(): ConfigurationFeatures {
     return {
       breakpointCount: 3,
-      breakpointRatios: [1, 1.5, 2],
+      breakpointRatios: [1, ADDITIONAL_CONSTANTS.DEFAULT_BREAKPOINT_RATIO, 2],
       tokenComplexity: 0,
       originDistribution: {
         width: 1,
@@ -453,10 +532,22 @@ export class FeatureExtractor {
    */
   private getDefaultUsageFeatures(): UsageFeatures {
     return {
-      commonValues: new Array(10).fill(0),
+      commonValues: new Array(ADDITIONAL_CONSTANTS.DEFAULT_STEP).fill(0),
       valueDistributions: {},
       componentFrequencies: {},
       propertyPatterns: {}
+    };
+  }
+
+  /**
+   * Get default performance features for error cases
+   */
+  private getDefaultPerformanceFeatures(): PerformanceFeatures {
+    return {
+      avgRenderTimes: new Array(ADDITIONAL_CONSTANTS.DEFAULT_STEP).fill(0),
+      bundleSizes: new Array(ADDITIONAL_CONSTANTS.DEFAULT_STEP).fill(0),
+      memoryPatterns: new Array(ADDITIONAL_CONSTANTS.DEFAULT_STEP).fill(0),
+      layoutShiftFreq: new Array(ADDITIONAL_CONSTANTS.DEFAULT_STEP).fill(0)
     };
   }
 

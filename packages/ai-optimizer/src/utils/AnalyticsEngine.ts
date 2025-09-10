@@ -9,12 +9,14 @@ import { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 import { ComponentUsageData, OptimizationSuggestions } from '../types/index.js';
 import { MemoryStats } from './MemoryManager.js';
 import { PerformanceMetrics } from './PerformanceOptimizer.js';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants.js';
+import { Logger } from './Logger.js';
 
 export interface AnalyticsEvent {
   id: string;
   timestamp: number;
   type: 'optimization' | 'training' | 'error' | 'performance' | 'memory';
-  data: any;
+  data: Record<string, unknown>;
   metadata: {
     version: string;
     environment: string;
@@ -63,13 +65,15 @@ export interface AlertConfig {
  */
 export class AnalyticsTracker {
   private events: AnalyticsEvent[] = [];
-  private maxEvents = 10000;
+  private maxEvents = AI_OPTIMIZER_CONSTANTS.ANALYTICS.MAX_METRICS;
   private sessionId: string;
   private startTime: number;
+  private logger: Logger;
 
   constructor() {
     this.sessionId = this.generateSessionId();
     this.startTime = Date.now();
+    this.logger = new Logger('AnalyticsTracker');
   }
 
   /**
@@ -100,7 +104,7 @@ export class AnalyticsTracker {
       },
       metadata: {
         version: '1.0.1',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV ?? 'development',
         sessionId: this.sessionId
       }
     };
@@ -113,7 +117,7 @@ export class AnalyticsTracker {
    */
   trackTraining(
     trainingDataCount: number,
-    metrics: any,
+    metrics: Record<string, unknown>,
     duration: number,
     success: boolean
   ): void {
@@ -129,7 +133,7 @@ export class AnalyticsTracker {
       },
       metadata: {
         version: '1.0.1',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV ?? 'development',
         sessionId: this.sessionId
       }
     };
@@ -140,7 +144,7 @@ export class AnalyticsTracker {
   /**
    * Track an error event
    */
-  trackError(error: Error, context: any): void {
+  trackError(error: Error, context: Record<string, unknown>): void {
     const event: AnalyticsEvent = {
       id: this.generateEventId(),
       timestamp: Date.now(),
@@ -155,7 +159,7 @@ export class AnalyticsTracker {
       },
       metadata: {
         version: '1.0.1',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV ?? 'development',
         sessionId: this.sessionId
       }
     };
@@ -171,10 +175,10 @@ export class AnalyticsTracker {
       id: this.generateEventId(),
       timestamp: Date.now(),
       type: 'performance',
-      data: metrics,
+      data: metrics as unknown as Record<string, unknown>,
       metadata: {
         version: '1.0.1',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV ?? 'development',
         sessionId: this.sessionId
       }
     };
@@ -190,10 +194,10 @@ export class AnalyticsTracker {
       id: this.generateEventId(),
       timestamp: Date.now(),
       type: 'memory',
-      data: memoryStats,
+      data: memoryStats as unknown as Record<string, unknown>,
       metadata: {
         version: '1.0.1',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV ?? 'development',
         sessionId: this.sessionId
       }
     };
@@ -222,15 +226,15 @@ export class AnalyticsTracker {
     const successful = optimizationEvents.filter(e => e.data.success);
     const failed = optimizationEvents.filter(e => !e.data.success);
     
-    const averageConfidence = successful.reduce((sum, e) => sum + e.data.result.confidenceScore, 0) / successful.length;
-    const averageOptimizationTime = optimizationEvents.reduce((sum, e) => sum + e.data.duration, 0) / optimizationEvents.length;
+    const averageConfidence = successful.reduce((sum, e) => sum + ((e.data.result as Record<string, unknown>).confidenceScore as number), 0) / successful.length;
+    const averageOptimizationTime = optimizationEvents.reduce((sum, e) => sum + (e.data.duration as number), 0) / optimizationEvents.length;
     const successRate = successful.length / optimizationEvents.length;
 
     // Top component types
     const componentTypeCounts = new Map<string, number>();
     optimizationEvents.forEach(e => {
-      e.data.componentTypes.forEach((type: string) => {
-        componentTypeCounts.set(type, (componentTypeCounts.get(type) || 0) + 1);
+      (e.data.componentTypes as string[]).forEach((type: string) => {
+        componentTypeCounts.set(type, (componentTypeCounts.get(type) ?? 0) + 1);
       });
     });
     const topComponentTypes = Array.from(componentTypeCounts.entries())
@@ -239,14 +243,20 @@ export class AnalyticsTracker {
       .slice(0, 10);
 
     // Performance impact distribution
-    const performanceImpacts = successful.map(e => e.data.result.confidenceScore);
-    const distribution = this.calculateDistribution(performanceImpacts, [0, 0.3, 0.6, 0.8, 1.0]);
+    const performanceImpacts = successful.map(e => (e.data.result as Record<string, unknown>).confidenceScore as number);
+    const distribution = this.calculateDistribution(performanceImpacts, [
+      AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD,
+      AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.FAIR_THRESHOLD,
+      AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.GOOD_THRESHOLD,
+      AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD,
+      AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.MAX_SCORE
+    ]);
 
     // Error breakdown
     const errorCounts = new Map<string, number>();
     failed.forEach(e => {
-      const errorType = e.data.error?.name || 'Unknown';
-      errorCounts.set(errorType, (errorCounts.get(errorType) || 0) + 1);
+      const errorType = (e.data.error as Record<string, unknown>)?.name as string ?? 'Unknown';
+      errorCounts.set(errorType, (errorCounts.get(errorType) ?? 0) + 1);
     });
     const errorBreakdown = Array.from(errorCounts.entries())
       .map(([error, count]) => ({ error, count }))
@@ -278,7 +288,7 @@ export class AnalyticsTracker {
   /**
    * Clear old events
    */
-  clearOldEvents(maxAge: number = 24 * 60 * 60 * 1000): void { // 24 hours
+  clearOldEvents(maxAge: number = AI_OPTIMIZER_CONSTANTS.TIME.DAY): void { // 24 hours
     const cutoff = Date.now() - maxAge;
     this.events = this.events.filter(e => e.timestamp > cutoff);
   }
@@ -292,14 +302,14 @@ export class AnalyticsTracker {
     }
   }
 
-  private sanitizeConfig(config: ResponsiveConfig): any {
+  private sanitizeConfig(config: ResponsiveConfig): Record<string, unknown> {
     return {
-      breakpointCount: config?.breakpoints?.length || 0,
+      breakpointCount: config?.breakpoints?.length ?? 0,
       strategy: {
-        origin: config?.strategy?.origin || 'unknown',
-        mode: config?.strategy?.mode || 'unknown'
+        origin: config?.strategy?.origin ?? 'unknown',
+        mode: config?.strategy?.mode ?? 'unknown'
       },
-      tokenCount: Object.keys(config?.strategy?.tokens || {}).length
+      tokenCount: Object.keys(config?.strategy?.tokens ?? {}).length
     };
   }
 
@@ -322,11 +332,11 @@ export class AnalyticsTracker {
   }
 
   private generateEventId(): string {
-    return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `evt_${Date.now()}_${Math.random().toString(AnalyticsEngine.RADIX_36).substr(2, AnalyticsEngine.RANDOM_LENGTH)}`;
   }
 
   private generateSessionId(): string {
-    return `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `sess_${Date.now()}_${Math.random().toString(AnalyticsEngine.RADIX_36).substr(2, AnalyticsEngine.RANDOM_LENGTH)}`;
   }
 }
 
@@ -341,16 +351,18 @@ export class SystemHealthMonitor {
   }> = [];
   private config: AlertConfig;
   private startTime: number;
+  private logger: Logger;
 
   constructor(config: Partial<AlertConfig> = {}) {
     this.config = {
-      memoryThreshold: 200 * 1024 * 1024, // 200MB
+      memoryThreshold: AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MEMORY_200MB, // 200MB
       performanceThreshold: 5000, // 5 seconds
-      errorRateThreshold: 0.1, // 10%
+      errorRateThreshold: AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_ALPHA, // 10%
       enabled: true,
       ...config
     };
     this.startTime = Date.now();
+    this.logger = new Logger('SystemHealthMonitor');
   }
 
   /**
@@ -371,13 +383,13 @@ export class SystemHealthMonitor {
     if (memoryStats.memoryPressure === 'critical') {
       alerts.push({
         level: 'critical',
-        message: `Critical memory usage: ${Math.round(memoryStats.usedJSHeapSize / 1024 / 1024)}MB`,
+        message: `Critical memory usage: ${Math.round(memoryStats.usedJSHeapSize / AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MB_TO_BYTES)}MB`,
         timestamp: Date.now()
       });
     } else if (memoryStats.memoryPressure === 'high') {
       alerts.push({
         level: 'warning',
-        message: `High memory usage: ${Math.round(memoryStats.usedJSHeapSize / 1024 / 1024)}MB`,
+        message: `High memory usage: ${Math.round(memoryStats.usedJSHeapSize / AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MB_TO_BYTES)}MB`,
         timestamp: Date.now()
       });
     }
@@ -394,7 +406,7 @@ export class SystemHealthMonitor {
     // Check error rate
     if (errorRate > this.config.errorRateThreshold) {
       alerts.push({
-        level: errorRate > 0.2 ? 'critical' : 'error',
+        level: errorRate > AnalyticsEngine.CONFIDENCE_THRESHOLD ? 'critical' : 'error',
         message: `High error rate: ${Math.round(errorRate * 100)}%`,
         timestamp: Date.now()
       });
@@ -404,7 +416,7 @@ export class SystemHealthMonitor {
     this.alerts.push(...alerts);
 
     // Keep only recent alerts
-    const maxAge = 60 * 60 * 1000; // 1 hour
+    const maxAge = AI_OPTIMIZER_CONSTANTS.TIME.HOUR; // 1 hour
     this.alerts = this.alerts.filter(alert => Date.now() - alert.timestamp < maxAge);
 
     // Determine overall status
@@ -429,7 +441,7 @@ export class SystemHealthMonitor {
         uptime: Date.now() - this.startTime,
         errorRate
       },
-      alerts: this.alerts.slice(-20) // Last 20 alerts
+      alerts: this.alerts.slice(-AnalyticsEngine.MAX_ALERTS) // Last 20 alerts
     };
   }
 
@@ -455,13 +467,24 @@ export class SystemHealthMonitor {
  * Main analytics engine
  */
 export class AnalyticsEngine {
+  // Constants for magic numbers
+  public static readonly RADIX_36 = 36;
+  public static readonly RANDOM_LENGTH = 9;
+  public static readonly CONFIDENCE_THRESHOLD = 0.2;
+  public static readonly PERFORMANCE_THRESHOLD = 50;
+  public static readonly MAX_ALERTS = 20;
+  public static readonly RECENT_EVENTS_LIMIT = 50;
+  public static readonly METRICS_DIVISOR = 10;
+
   private tracker: AnalyticsTracker;
   private healthMonitor: SystemHealthMonitor;
-  private reportCallbacks: Array<(report: any) => void> = [];
+  private reportCallbacks: Array<(_report: Record<string, unknown>) => void> = [];
+  private logger: Logger;
 
   constructor() {
     this.tracker = new AnalyticsTracker();
     this.healthMonitor = new SystemHealthMonitor();
+    this.logger = new Logger('AnalyticsEngine');
   }
 
   /**
@@ -482,7 +505,7 @@ export class AnalyticsEngine {
    */
   trackTraining(
     trainingDataCount: number,
-    metrics: any,
+    metrics: Record<string, unknown>,
     duration: number,
     success: boolean
   ): void {
@@ -492,7 +515,7 @@ export class AnalyticsEngine {
   /**
    * Track error
    */
-  trackError(error: Error, context: any): void {
+  trackError(error: Error, context: Record<string, unknown>): void {
     this.tracker.trackError(error, context);
   }
 
@@ -511,7 +534,7 @@ export class AnalyticsEngine {
     };
   } {
     const optimization = this.tracker.getOptimizationAnalytics();
-    const recentEvents = this.tracker.getRecentEvents(50);
+    const recentEvents = this.tracker.getRecentEvents(AnalyticsEngine.RECENT_EVENTS_LIMIT);
     
     // Calculate system health
     const memoryStats = { usedJSHeapSize: 0, totalJSHeapSize: 0, jsHeapSizeLimit: 0, tensorCount: 0, memoryPressure: 'low' as const };
@@ -541,7 +564,7 @@ export class AnalyticsEngine {
   /**
    * Register report callback
    */
-  onReport(callback: (report: any) => void): void {
+  onReport(callback: (_report: Record<string, unknown>) => void): void {
     this.reportCallbacks.push(callback);
   }
 
@@ -551,7 +574,7 @@ export class AnalyticsEngine {
   exportData(): string {
     return JSON.stringify({
       optimization: this.tracker.getOptimizationAnalytics(),
-      recentEvents: this.tracker.getRecentEvents(1000),
+      recentEvents: this.tracker.getRecentEvents(AI_OPTIMIZER_CONSTANTS.ANALYTICS.MAX_METRICS / AnalyticsEngine.METRICS_DIVISOR),
       timestamp: Date.now()
     }, null, 2);
   }

@@ -10,9 +10,10 @@
  * - Performance monitoring and analytics
  */
 
-import { vi } from 'vitest';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants';
+import { Logger } from './Logger';
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   key: string;
   value: T;
   timestamp: number;
@@ -22,7 +23,7 @@ export interface CacheEntry<T = any> {
   lastAccessed: number;
   size: number;
   compressed?: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CacheConfig {
@@ -60,6 +61,12 @@ export interface CacheDependency {
  * Advanced Multi-Level Cache System
  */
 export class AdvancedCache {
+  // Constants for magic numbers
+  private static readonly L1_SIZE_DIVISOR = 20;
+  private static readonly L2_SIZE_DIVISOR = 10;
+  private static readonly KB_TO_BYTES = 1024;
+  private static readonly CLEANUP_INTERVAL_MS = 60000;
+
   private l1Cache: Map<string, CacheEntry> = new Map();
   private l2Cache: Map<string, CacheEntry> = new Map();
   private l3Cache: Map<string, CacheEntry> = new Map();
@@ -71,18 +78,20 @@ export class AdvancedCache {
   private compressionWorker?: Worker;
   private warmingQueue: string[] = [];
   private isWarming = false;
+  private logger: Logger;
 
   constructor(config: Partial<CacheConfig> = {}) {
+    this.logger = new Logger('AdvancedCache');
     this.config = {
-      maxSize: 100 * 1024 * 1024, // 100MB
-      defaultTtl: 30 * 60 * 1000, // 30 minutes
+      maxSize: AI_OPTIMIZER_CONSTANTS.MEMORY_LIMITS.CRITICAL_THRESHOLD,
+      defaultTtl: AI_OPTIMIZER_CONSTANTS.TIME.MINUTE * 30,
       compressionEnabled: true,
       warmingEnabled: true,
       invalidationStrategy: 'hybrid',
       levels: {
-        l1: { enabled: true, maxSize: 10 * 1024 * 1024 }, // 10MB
-        l2: { enabled: true, maxSize: 50 * 1024 * 1024 }, // 50MB
-        l3: { enabled: true, maxSize: 100 * 1024 * 1024 } // 100MB
+        l1: { enabled: true, maxSize: AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MEMORY_200MB / 2 },
+        l2: { enabled: true, maxSize: AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MEMORY_200MB },
+        l3: { enabled: true, maxSize: AI_OPTIMIZER_CONSTANTS.MEMORY_LIMITS.CRITICAL_THRESHOLD }
       },
       ...config
     };
@@ -105,77 +114,95 @@ export class AdvancedCache {
   /**
    * Get value from cache with intelligent multi-level lookup
    */
-  async get<T>(key: string): Promise<T | null> {
+  get<T>(key: string): T | null {
     const startTime = performance.now();
     
     try {
-      // L1 Cache (Memory) - Fastest
-      let entry = this.l1Cache.get(key);
-      if (entry && this.isValid(entry)) {
-        this.updateAccessStats(entry);
-        this.stats.hits++;
-        this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
-        return this.decompressValue(entry.value);
-      }
+      // Try L1 cache first
+      const l1Result = this.tryL1Cache<T>(key, startTime);
+      if (l1Result !== null) return l1Result;
 
-      // L2 Cache (IndexedDB) - Medium speed
+      // Try L2 cache if enabled
       if (this.config.levels.l2.enabled) {
-        entry = await this.getFromL2(key);
-        if (entry && this.isValid(entry)) {
-          // Promote to L1
-          this.setInL1(key, entry);
-          this.updateAccessStats(entry);
-          this.stats.hits++;
-          this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
-          return this.decompressValue(entry.value);
-        }
+        const l2Result = this.tryL2Cache<T>(key, startTime);
+        if (l2Result !== null) return l2Result;
       }
 
-      // L3 Cache (LocalStorage) - Slowest
+      // Try L3 cache if enabled
       if (this.config.levels.l3.enabled) {
-        entry = await this.getFromL3(key);
-        if (entry && this.isValid(entry)) {
-          // Promote to L2 and L1
-          this.setInL2(key, entry);
-          this.setInL1(key, entry);
-          this.updateAccessStats(entry);
-          this.stats.hits++;
-          this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
-          return this.decompressValue(entry.value);
-        }
+        const l3Result = this.tryL3Cache<T>(key, startTime);
+        if (l3Result !== null) return l3Result;
       }
 
       this.stats.misses++;
       this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
       return null;
     } catch (error) {
-      console.error('Cache get error:', error);
+      this.logger.error('Cache get error:', error instanceof Error ? error : new Error(String(error)));
       this.stats.misses++;
       return null;
     }
   }
 
+  private tryL1Cache<T>(key: string, startTime: number): T | null {
+    const entry = this.l1Cache.get(key);
+    if (entry && this.isValid(entry)) {
+      this.updateAccessStats(entry);
+      this.stats.hits++;
+      this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
+      return this.decompressValue(entry.value) as T | null;
+    }
+    return null;
+  }
+
+  private tryL2Cache<T>(key: string, startTime: number): T | null {
+    const entry = this.getFromL2(key);
+    if (entry && this.isValid(entry)) {
+      // Promote to L1
+      this.setInL1(key, entry);
+      this.updateAccessStats(entry);
+      this.stats.hits++;
+      this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
+      return this.decompressValue(entry.value) as T | null;
+    }
+    return null;
+  }
+
+  private tryL3Cache<T>(key: string, startTime: number): T | null {
+    const entry = this.getFromL3(key);
+    if (entry && this.isValid(entry)) {
+      // Promote to L2 and L1
+      this.setInL2(key, entry);
+      this.setInL1(key, entry);
+      this.updateAccessStats(entry);
+      this.stats.hits++;
+      this.stats.averageAccessTime = (this.stats.averageAccessTime + (performance.now() - startTime)) / 2;
+      return this.decompressValue(entry.value) as T | null;
+    }
+    return null;
+  }
+
   /**
    * Set value in cache with intelligent placement and compression
    */
-  async set<T>(
+  set<T>(
     key: string, 
     value: T, 
     options: {
       ttl?: number;
       dependencies?: string[];
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
       level?: 'l1' | 'l2' | 'l3' | 'auto';
     } = {}
-  ): Promise<void> {
+  ): void {
     try {
-      const ttl = options.ttl || this.config.defaultTtl;
-      const dependencies = options.dependencies || [];
-      const metadata = options.metadata || {};
+      const ttl = options.ttl ?? this.config.defaultTtl;
+      const dependencies = options.dependencies ?? [];
+      const metadata = options.metadata ?? {};
       
       // Compress value if enabled
       const processedValue = this.config.compressionEnabled 
-        ? await this.compressValue(value)
+        ? this.compressValue(value)
         : value;
 
       const entry: CacheEntry<T> = {
@@ -195,7 +222,7 @@ export class AdvancedCache {
       this.updateDependencyGraph(key, dependencies);
 
       // Determine cache level
-      const level = options.level || this.determineOptimalLevel(entry.size);
+      const level = options.level ?? this.determineOptimalLevel(entry.size);
       
       switch (level) {
         case 'l1':
@@ -221,14 +248,14 @@ export class AdvancedCache {
 
       this.updateStats();
     } catch (error) {
-      console.error('Cache set error:', error);
+      this.logger.error('Cache set error:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 
   /**
    * Invalidate cache entries based on dependencies
    */
-  async invalidate(pattern: string | RegExp | string[]): Promise<void> {
+  invalidate(pattern: string | RegExp | string[]): void {
     try {
       const keysToInvalidate = new Set<string>();
 
@@ -253,8 +280,8 @@ export class AdvancedCache {
       // Remove from all cache levels
       for (const key of keysToInvalidate) {
         this.l1Cache.delete(key);
-        await this.removeFromL2(key);
-        await this.removeFromL3(key);
+        this.removeFromL2(key);
+        this.removeFromL3(key);
         this.dependencyGraph.delete(key);
         this.removeFromAccessOrder(key);
         this.accessCounts.delete(key);
@@ -262,14 +289,14 @@ export class AdvancedCache {
 
       this.updateStats();
     } catch (error) {
-      console.error('Cache invalidation error:', error);
+      this.logger.error('Cache invalidation error:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 
   /**
    * Warm cache with frequently accessed data
    */
-  async warmCache(keys: string[], dataProvider: (key: string) => Promise<any>): Promise<void> {
+  async warmCache(keys: string[], dataProvider: (_key: string) => Promise<unknown>): Promise<void> {
     if (this.isWarming) return;
     
     this.isWarming = true;
@@ -279,9 +306,9 @@ export class AdvancedCache {
       const warmPromises = keys.map(async (key) => {
         try {
           const value = await dataProvider(key);
-          await this.set(key, value, { level: 'auto' });
+          this.set(key, value, { level: 'auto' });
         } catch (error) {
-          console.warn(`Failed to warm cache for key: ${key}`, error);
+          this.logger.warn(`Failed to warm cache for key: ${key}`, { error: error instanceof Error ? error.message : String(error) });
         }
       });
 
@@ -303,7 +330,7 @@ export class AdvancedCache {
   /**
    * Clear all cache levels
    */
-  async clear(): Promise<void> {
+  clear(): void {
     this.l1Cache.clear();
     this.l2Cache.clear();
     this.l3Cache.clear();
@@ -316,27 +343,27 @@ export class AdvancedCache {
   /**
    * Optimize cache based on usage patterns
    */
-  async optimize(): Promise<void> {
+  optimize(): void {
     // Remove expired entries
-    await this.cleanupExpired();
+    this.cleanupExpired();
     
     // Rebalance cache levels based on access patterns
-    await this.rebalanceLevels();
+    this.rebalanceLevels();
     
     // Compress large entries
     if (this.config.compressionEnabled) {
-      await this.compressLargeEntries();
+      this.compressLargeEntries();
     }
   }
 
   // Private methods
 
-  private async getFromL2(key: string): Promise<CacheEntry | undefined> {
+  private getFromL2(key: string): CacheEntry | undefined {
     // Mock IndexedDB implementation
     return this.l2Cache.get(key);
   }
 
-  private async getFromL3(key: string): Promise<CacheEntry | undefined> {
+  private getFromL3(key: string): CacheEntry | undefined {
     // Mock LocalStorage implementation
     return this.l3Cache.get(key);
   }
@@ -367,11 +394,11 @@ export class AdvancedCache {
     this.l3Cache.set(key, entry);
   }
 
-  private async removeFromL2(key: string): Promise<void> {
+  private removeFromL2(key: string): void {
     this.l2Cache.delete(key);
   }
 
-  private async removeFromL3(key: string): Promise<void> {
+  private removeFromL3(key: string): void {
     this.l3Cache.delete(key);
   }
 
@@ -387,8 +414,8 @@ export class AdvancedCache {
   }
 
   private determineOptimalLevel(size: number): 'l1' | 'l2' | 'l3' {
-    if (size < this.config.levels.l1.maxSize / 20) return 'l1';
-    if (size < this.config.levels.l2.maxSize / 10) return 'l2';
+    if (size < this.config.levels.l1.maxSize / AdvancedCache.L1_SIZE_DIVISOR) return 'l1';
+    if (size < this.config.levels.l2.maxSize / AdvancedCache.L2_SIZE_DIVISOR) return 'l2';
     return 'l3';
   }
 
@@ -396,11 +423,11 @@ export class AdvancedCache {
     this.dependencyGraph.set(key, new Set(dependencies));
   }
 
-  private calculateSize(value: any): number {
+  private calculateSize(value: unknown): number {
     return JSON.stringify(value).length * 2; // Rough estimate
   }
 
-  private async compressValue<T>(value: T): Promise<T> {
+  private compressValue<T>(value: T): T {
     if (!this.config.compressionEnabled) return value;
     
     // Mock compression - in real implementation, use actual compression
@@ -441,8 +468,8 @@ export class AdvancedCache {
     
     switch (this.config.invalidationStrategy) {
       case 'lru':
-        return this.accessOrder[0] || null;
-      case 'lfu':
+        return this.accessOrder[0] ?? null;
+      case 'lfu': {
         let minAccess = Infinity;
         let keyToEvict = null;
         for (const [key, count] of this.accessCounts.entries()) {
@@ -452,7 +479,8 @@ export class AdvancedCache {
           }
         }
         return keyToEvict;
-      case 'ttl':
+      }
+      case 'ttl': {
         let oldestTime = Infinity;
         let oldestKey = null;
         for (const [key, entry] of cache.entries()) {
@@ -462,11 +490,13 @@ export class AdvancedCache {
           }
         }
         return oldestKey;
-      case 'hybrid':
+      }
+      case 'hybrid': {
         // Combine LRU and LFU
         const lruKey = this.accessOrder[0];
         const lfuKey = this.getKeyToEvict('l2');
-        return lruKey || lfuKey;
+        return lruKey ?? lfuKey;
+      }
       default:
         return null;
     }
@@ -499,25 +529,31 @@ export class AdvancedCache {
 
   private getL1Size(): number {
     let size = 0;
-    this.l1Cache.forEach(entry => size += entry.size);
+    this.l1Cache.forEach(entry => {
+      size += entry.size;
+    });
     return size;
   }
 
   private getL2Size(): number {
     let size = 0;
-    this.l2Cache.forEach(entry => size += entry.size);
+    this.l2Cache.forEach(entry => {
+      size += entry.size;
+    });
     return size;
   }
 
   private getL3Size(): number {
     let size = 0;
-    this.l3Cache.forEach(entry => size += entry.size);
+    this.l3Cache.forEach(entry => {
+      size += entry.size;
+    });
     return size;
   }
 
   private updateStats(): void {
     this.stats.size = this.getL1Size() + this.getL2Size() + this.getL3Size();
-    this.stats.hitRate = this.stats.hits / (this.stats.hits + this.stats.misses) || 0;
+    this.stats.hitRate = this.stats.hits / (this.stats.hits + this.stats.misses) || AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.MIN_SCORE;
     this.stats.memoryUsage = this.getL1Size();
   }
 
@@ -534,11 +570,10 @@ export class AdvancedCache {
       if (!this.isWarming && this.warmingQueue.length > 0) {
         // Process warming queue
       }
-    }, 60000); // Check every minute
+    }, AdvancedCache.CLEANUP_INTERVAL_MS); // Check every minute
   }
 
-  private async cleanupExpired(): Promise<void> {
-    const now = Date.now();
+  private cleanupExpired(): void {
     
     // Clean L1
     for (const [key, entry] of this.l1Cache.entries()) {
@@ -563,7 +598,7 @@ export class AdvancedCache {
     }
   }
 
-  private async rebalanceLevels(): Promise<void> {
+  private rebalanceLevels(): void {
     // Move frequently accessed items to higher levels
     const l2Entries = Array.from(this.l2Cache.entries());
     const l3Entries = Array.from(this.l3Cache.entries());
@@ -585,7 +620,7 @@ export class AdvancedCache {
     }
   }
 
-  private async compressLargeEntries(): Promise<void> {
+  private compressLargeEntries(): void {
     // Compress large entries to save space
     const allEntries = [
       ...Array.from(this.l1Cache.entries()),
@@ -593,9 +628,10 @@ export class AdvancedCache {
       ...Array.from(this.l3Cache.entries())
     ];
     
-    for (const [key, entry] of allEntries) {
-      if (entry.size > 1024 * 1024 && !entry.compressed) { // 1MB threshold
-        const compressedValue = await this.compressValue(entry.value);
+    // Process all entries
+    for (const [, entry] of allEntries) {
+      if (entry.size > AdvancedCache.KB_TO_BYTES * AdvancedCache.KB_TO_BYTES && !entry.compressed) { // 1MB threshold
+        const compressedValue = this.compressValue(entry.value);
         entry.value = compressedValue;
         entry.compressed = true;
         entry.size = this.calculateSize(compressedValue);
@@ -608,7 +644,7 @@ export class AdvancedCache {
  * Intelligent Memoization System
  */
 export class IntelligentMemoizer {
-  private cache: Map<string, any> = new Map();
+  private cache: Map<string, { value: unknown; timestamp: number; dependencies: string[] }> = new Map();
   private dependencyTracker: Map<string, Set<string>> = new Map();
   private functionHashes: Map<Function, string> = new Map();
   private config: {
@@ -629,17 +665,17 @@ export class IntelligentMemoizer {
   /**
    * Memoize a function with intelligent dependency tracking
    */
-  memoize<T extends (...args: any[]) => any>(
+  memoize<T extends (..._args: unknown[]) => unknown>(
     fn: T,
     options: {
-      keyGenerator?: (...args: Parameters<T>) => string;
+      keyGenerator?: (..._args: Parameters<T>) => string;
       ttl?: number;
       dependencies?: string[];
     } = {}
   ): T {
-    const keyGenerator = options.keyGenerator || this.defaultKeyGenerator;
-    const ttl = options.ttl || this.config.defaultTtl;
-    const dependencies = options.dependencies || [];
+    const keyGenerator = options.keyGenerator ?? this.defaultKeyGenerator;
+    const ttl = options.ttl ?? this.config.defaultTtl;
+    const dependencies = options.dependencies ?? [];
 
     const memoizedFn = ((...args: Parameters<T>) => {
       const key = keyGenerator(...args);
@@ -647,7 +683,7 @@ export class IntelligentMemoizer {
       // Check cache
       if (this.cache.has(key)) {
         const entry = this.cache.get(key);
-        if (Date.now() - entry.timestamp < ttl) {
+        if (entry && Date.now() - entry.timestamp < ttl) {
           return entry.value;
         } else {
           this.cache.delete(key);
@@ -724,7 +760,7 @@ export class IntelligentMemoizer {
     };
   }
 
-  private defaultKeyGenerator(...args: any[]): string {
+  private defaultKeyGenerator(...args: unknown[]): string {
     return JSON.stringify(args);
   }
 
@@ -733,7 +769,7 @@ export class IntelligentMemoizer {
     const entries = Array.from(this.cache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
     
-    const toRemove = entries.slice(0, Math.floor(this.config.maxSize * 0.2));
+    const toRemove = entries.slice(0, Math.floor(this.config.maxSize * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD));
     toRemove.forEach(([key]) => {
       this.cache.delete(key);
       this.dependencyTracker.delete(key);

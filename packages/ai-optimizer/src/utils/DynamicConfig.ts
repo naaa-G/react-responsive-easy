@@ -12,18 +12,20 @@
  */
 
 import { EventEmitter } from 'events';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants.js';
+import { Logger } from './Logger.js';
 
 export interface ConfigSchema {
   [key: string]: {
-    type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+    type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
     required?: boolean;
-    default?: any;
+    default?: unknown;
     min?: number;
     max?: number;
     pattern?: RegExp;
-    enum?: any[];
+    enum?: unknown[];
     description?: string;
-    validation?: (value: any) => boolean | string;
+    validation?: (_value: unknown) => boolean | string;
   };
 }
 
@@ -40,11 +42,11 @@ export interface ConfigSource {
 export interface ConfigVersion {
   version: string;
   timestamp: number;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   changes: Array<{
     path: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
     type: 'add' | 'update' | 'delete';
   }>;
   author?: string;
@@ -56,20 +58,20 @@ export interface ConfigValidationResult {
   errors: Array<{
     path: string;
     message: string;
-    value: any;
+    value: unknown;
   }>;
   warnings: Array<{
     path: string;
     message: string;
-    value: any;
+    value: unknown;
   }>;
 }
 
 export interface ConfigUpdateEvent {
   type: 'update' | 'rollback' | 'validation_error' | 'source_error';
   path?: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
   source: string;
   timestamp: number;
   error?: Error;
@@ -79,22 +81,23 @@ export interface ConfigUpdateEvent {
  * Dynamic Configuration Manager with hot-reloading and validation
  */
 export class DynamicConfigManager extends EventEmitter {
-  private config: Record<string, any> = {};
+  private config: Record<string, unknown> = {};
   private schema: ConfigSchema = {};
   private sources: ConfigSource[] = [];
   private versions: ConfigVersion[] = [];
   private currentVersion = '1.0.0';
-  private watchers: Map<string, any> = new Map();
+  private watchers: Map<string, unknown> = new Map();
   private validationCache: Map<string, ConfigValidationResult> = new Map();
   private updateQueue: Array<{
     path: string;
-    value: any;
+    value: unknown;
     source: string;
     timestamp: number;
   }> = [];
   private isUpdating = false;
   private encryptionKey?: string;
   private performanceMonitor: ConfigPerformanceMonitor;
+  private logger: Logger;
 
   constructor(options: {
     schema?: ConfigSchema;
@@ -104,10 +107,11 @@ export class DynamicConfigManager extends EventEmitter {
   } = {}) {
     super();
     
-    this.schema = options.schema || {};
-    this.sources = options.sources || [];
+    this.schema = options.schema ?? {};
+    this.sources = options.sources ?? [];
     this.encryptionKey = options.encryptionKey;
     this.performanceMonitor = new ConfigPerformanceMonitor();
+    this.logger = new Logger('DynamicConfigManager');
     
     if (options.enableVersioning !== false) {
       this.initializeVersioning();
@@ -120,7 +124,7 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Get configuration value by path
    */
-  get<T = any>(path: string, defaultValue?: T): T {
+  get<T = unknown>(path: string, defaultValue?: T): T {
     const startTime = performance.now();
     
     try {
@@ -136,12 +140,12 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Set configuration value by path
    */
-  async set(path: string, value: any, source = 'manual'): Promise<ConfigValidationResult> {
+  set(path: string, value: unknown, source = 'manual'): ConfigValidationResult {
     const startTime = performance.now();
     
     try {
       // Validate the value
-      const validation = await this.validateValue(path, value);
+      const validation = this.validateValue(path, value);
       if (!validation.valid) {
         this.emit('validationError', {
           type: 'validation_error',
@@ -183,15 +187,17 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Update multiple configuration values
    */
-  async update(updates: Record<string, any>, source = 'bulk'): Promise<ConfigValidationResult> {
+  update(updates: Record<string, unknown>, source = 'bulk'): ConfigValidationResult {
     const startTime = performance.now();
-    const allErrors: Array<{ path: string; message: string; value: any }> = [];
-    const allWarnings: Array<{ path: string; message: string; value: any }> = [];
+    const allErrors: Array<{ path: string; message: string; value: unknown }> = [];
+    const allWarnings: Array<{ path: string; message: string; value: unknown }> = [];
     
     try {
-      // Validate all updates first
-      for (const [path, value] of Object.entries(updates)) {
-        const validation = await this.validateValue(path, value);
+      // Validate all updates
+      const validationResults = Object.entries(updates).map(([path, value]) => {
+        return this.validateValue(path, value);
+      });
+      for (const validation of validationResults) {
         allErrors.push(...validation.errors);
         allWarnings.push(...validation.warnings);
       }
@@ -207,8 +213,8 @@ export class DynamicConfigManager extends EventEmitter {
       // Apply all updates
       const changes: Array<{
         path: string;
-        oldValue: any;
-        newValue: any;
+        oldValue: unknown;
+        newValue: unknown;
         type: 'add' | 'update' | 'delete';
       }> = [];
 
@@ -251,24 +257,24 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Load configuration from source
    */
-  async loadFromSource(sourceId: string): Promise<void> {
+  loadFromSource(sourceId: string): void {
     const source = this.sources.find(s => s.type === sourceId);
-    if (!source || !source.enabled) {
+    if (!source?.enabled) {
       throw new Error(`Source ${sourceId} not found or disabled`);
     }
 
     try {
-      let configData: Record<string, any>;
+      let configData: Record<string, unknown>;
       
       switch (source.type) {
         case 'file':
-          configData = await this.loadFromFile(source.path!);
+          configData = this.loadFromFile(source.path!);
           break;
         case 'api':
-          configData = await this.loadFromAPI(source.url!);
+          configData = this.loadFromAPI(source.url!);
           break;
         case 'database':
-          configData = await this.loadFromDatabase(source.connectionString!);
+          configData = this.loadFromDatabase(source.connectionString!);
           break;
         case 'environment':
           configData = this.loadFromEnvironment();
@@ -286,9 +292,9 @@ export class DynamicConfigManager extends EventEmitter {
       }
 
       // Validate and apply
-      const validation = await this.validateConfig(configData);
+      const validation = this.validateConfig(configData);
       if (validation.valid) {
-        await this.update(configData, sourceId);
+        this.update(configData, sourceId);
       } else {
         throw new Error(`Configuration validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
       }
@@ -306,8 +312,8 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Rollback to previous version
    */
-  async rollback(version?: string): Promise<void> {
-    const targetVersion = version || this.getPreviousVersion();
+  rollback(version?: string): void {
+    const targetVersion = version ?? this.getPreviousVersion();
     if (!targetVersion) {
       throw new Error('No previous version available for rollback');
     }
@@ -360,7 +366,7 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Get current configuration
    */
-  getConfig(): Record<string, any> {
+  getConfig(): Record<string, unknown> {
     return { ...this.config };
   }
 
@@ -383,8 +389,8 @@ export class DynamicConfigManager extends EventEmitter {
   /**
    * Import configuration
    */
-  async import(configData: string, format: 'json' | 'yaml' | 'env' = 'json'): Promise<void> {
-    let parsed: Record<string, any>;
+  import(configData: string, format: 'json' | 'yaml' | 'env' = 'json'): void {
+    let parsed: Record<string, unknown>;
     
     switch (format) {
       case 'json':
@@ -400,9 +406,9 @@ export class DynamicConfigManager extends EventEmitter {
         throw new Error(`Unsupported import format: ${format}`);
     }
 
-    const validation = await this.validateConfig(parsed);
+    const validation = this.validateConfig(parsed);
     if (validation.valid) {
-      await this.update(parsed, 'import');
+      this.update(parsed, 'import');
     } else {
       throw new Error(`Import validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
     }
@@ -417,85 +423,36 @@ export class DynamicConfigManager extends EventEmitter {
 
   // Private methods
 
-  private async validateValue(path: string, value: any): Promise<ConfigValidationResult> {
+  private validateValue(path: string, value: unknown): ConfigValidationResult {
     const cacheKey = `${path}:${JSON.stringify(value)}`;
     
     if (this.validationCache.has(cacheKey)) {
       return this.validationCache.get(cacheKey)!;
     }
 
-    const errors: Array<{ path: string; message: string; value: any }> = [];
-    const warnings: Array<{ path: string; message: string; value: any }> = [];
+    const errors: Array<{ path: string; message: string; value: unknown }> = [];
+    const warnings: Array<{ path: string; message: string; value: unknown }> = [];
 
     const schemaPath = this.getSchemaPath(path);
-    const schema = this.getNestedValue(this.schema, schemaPath);
+    const schema = this.getNestedValue(this.schema, schemaPath) as {
+      type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
+      required?: boolean;
+      default?: unknown;
+      min?: number;
+      max?: number;
+      pattern?: RegExp;
+      enum?: unknown[];
+      description?: string;
+      validation?: (_value: unknown) => boolean | string;
+    };
 
     if (schema) {
-      // Type validation
-      if (schema.type && typeof value !== schema.type) {
-        errors.push({
-          path,
-          message: `Expected ${schema.type}, got ${typeof value}`,
-          value
-        });
-      }
-
-      // Required validation
-      if (schema.required && (value === undefined || value === null)) {
-        errors.push({
-          path,
-          message: 'Required field is missing',
-          value
-        });
-      }
-
-      // Range validation for numbers
-      if (schema.type === 'number' && typeof value === 'number') {
-        if (schema.min !== undefined && value < schema.min) {
-          errors.push({
-            path,
-            message: `Value must be >= ${schema.min}`,
-            value
-          });
-        }
-        if (schema.max !== undefined && value > schema.max) {
-          errors.push({
-            path,
-            message: `Value must be <= ${schema.max}`,
-            value
-          });
-        }
-      }
-
-      // Pattern validation for strings
-      if (schema.type === 'string' && schema.pattern && !schema.pattern.test(value)) {
-        errors.push({
-          path,
-          message: `Value does not match required pattern: ${schema.pattern}`,
-          value
-        });
-      }
-
-      // Enum validation
-      if (schema.enum && !schema.enum.includes(value)) {
-        errors.push({
-          path,
-          message: `Value must be one of: ${schema.enum.join(', ')}`,
-          value
-        });
-      }
-
-      // Custom validation
-      if (schema.validation) {
-        const customResult = schema.validation(value);
-        if (customResult !== true) {
-          errors.push({
-            path,
-            message: typeof customResult === 'string' ? customResult : 'Custom validation failed',
-            value
-          });
-        }
-      }
+      this.validateType(schema, path, value, errors);
+      this.validateRequired(schema, path, value, errors);
+      this.validateRange(schema, path, value, errors);
+      this.validatePattern(schema, path, value, errors);
+      this.validateEnum(schema, path, value, errors);
+      this.validateCustom(schema, path, value, errors);
     }
 
     const result: ConfigValidationResult = {
@@ -508,12 +465,87 @@ export class DynamicConfigManager extends EventEmitter {
     return result;
   }
 
-  private async validateConfig(config: Record<string, any>): Promise<ConfigValidationResult> {
-    const errors: Array<{ path: string; message: string; value: any }> = [];
-    const warnings: Array<{ path: string; message: string; value: any }> = [];
+  private validateType(schema: { type?: string }, path: string, value: unknown, errors: Array<{ path: string; message: string; value: unknown }>): void {
+    if (schema.type && typeof value !== schema.type) {
+      errors.push({
+        path,
+        message: `Expected ${schema.type}, got ${typeof value}`,
+        value
+      });
+    }
+  }
 
-    for (const [path, value] of this.flattenConfig(config)) {
-      const validation = await this.validateValue(path, value);
+  private validateRequired(schema: { required?: boolean }, path: string, value: unknown, errors: Array<{ path: string; message: string; value: unknown }>): void {
+    if (schema.required && (value === undefined || value === null)) {
+      errors.push({
+        path,
+        message: 'Required field is missing',
+        value
+      });
+    }
+  }
+
+  private validateRange(schema: { type?: string; min?: number; max?: number }, path: string, value: unknown, errors: Array<{ path: string; message: string; value: unknown }>): void {
+    if (schema.type === 'number' && typeof value === 'number') {
+      if (schema.min !== undefined && value < schema.min) {
+        errors.push({
+          path,
+          message: `Value must be >= ${schema.min}`,
+          value
+        });
+      }
+      if (schema.max !== undefined && value > schema.max) {
+        errors.push({
+          path,
+          message: `Value must be <= ${schema.max}`,
+          value
+        });
+      }
+    }
+  }
+
+  private validatePattern(schema: { type?: string; pattern?: RegExp }, path: string, value: unknown, errors: Array<{ path: string; message: string; value: unknown }>): void {
+    if (schema.type === 'string' && schema.pattern && typeof value === 'string' && !schema.pattern.test(value)) {
+      errors.push({
+        path,
+        message: `Value does not match required pattern: ${schema.pattern}`,
+        value
+      });
+    }
+  }
+
+  private validateEnum(schema: { enum?: unknown[] }, path: string, value: unknown, errors: Array<{ path: string; message: string; value: unknown }>): void {
+    if (schema.enum && !schema.enum.includes(value)) {
+      errors.push({
+        path,
+        message: `Value must be one of: ${schema.enum.join(', ')}`,
+        value
+      });
+    }
+  }
+
+  private validateCustom(schema: { validation?: (_value: unknown) => boolean | string }, path: string, value: unknown, errors: Array<{ path: string; message: string; value: unknown }>): void {
+    if (schema.validation) {
+      const customResult = schema.validation(value);
+      if (customResult !== true) {
+        errors.push({
+          path,
+          message: typeof customResult === 'string' ? customResult : 'Custom validation failed',
+          value
+        });
+      }
+    }
+  }
+
+  private validateConfig(config: Record<string, unknown>): ConfigValidationResult {
+    const errors: Array<{ path: string; message: string; value: unknown }> = [];
+    const warnings: Array<{ path: string; message: string; value: unknown }> = [];
+
+    // Validate all config values
+    const validationResults = Array.from(this.flattenConfig(config)).map(([path, value]) => {
+      return this.validateValue(path, value);
+    });
+    for (const validation of validationResults) {
       errors.push(...validation.errors);
       warnings.push(...validation.warnings);
     }
@@ -525,16 +557,21 @@ export class DynamicConfigManager extends EventEmitter {
     };
   }
 
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+    return path.split('.').reduce((current, key) => {
+      if (current && typeof current === 'object' && key in current) {
+        return (current as Record<string, unknown>)[key];
+      }
+      return undefined;
+    }, obj as unknown);
   }
 
-  private setNestedValue(obj: any, path: string, value: any): void {
+  private setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
     const keys = path.split('.');
     const lastKey = keys.pop()!;
     const target = keys.reduce((current, key) => {
       if (!current[key]) current[key] = {};
-      return current[key];
+      return current[key] as Record<string, unknown>;
     }, obj);
     target[lastKey] = value;
   }
@@ -544,14 +581,14 @@ export class DynamicConfigManager extends EventEmitter {
     return path;
   }
 
-  private flattenConfig(config: Record<string, any>, prefix = ''): Array<[string, any]> {
-    const result: Array<[string, any]> = [];
+  private flattenConfig(config: Record<string, unknown>, prefix = ''): Array<[string, unknown]> {
+    const result: Array<[string, unknown]> = [];
     
     for (const [key, value] of Object.entries(config)) {
       const fullPath = prefix ? `${prefix}.${key}` : key;
       
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        result.push(...this.flattenConfig(value, fullPath));
+        result.push(...this.flattenConfig(value as Record<string, unknown>, fullPath));
       } else {
         result.push([fullPath, value]);
       }
@@ -560,7 +597,7 @@ export class DynamicConfigManager extends EventEmitter {
     return result;
   }
 
-  private recordChange(path: string, oldValue: any, newValue: any, source: string): void {
+  private recordChange(path: string, oldValue: unknown, newValue: unknown, source: string): void {
     this.updateQueue.push({
       path,
       value: newValue,
@@ -571,8 +608,8 @@ export class DynamicConfigManager extends EventEmitter {
 
   private recordVersion(changes: Array<{
     path: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
     type: 'add' | 'update' | 'delete';
   }>, source: string): void {
     const version: ConfigVersion = {
@@ -588,15 +625,17 @@ export class DynamicConfigManager extends EventEmitter {
     this.currentVersion = version.version;
 
     // Keep only last 50 versions
-    if (this.versions.length > 50) {
-      this.versions = this.versions.slice(-50);
+    if (this.versions.length > AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * 5) {
+      this.versions = this.versions.slice(-AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * 5);
     }
   }
 
   private generateVersion(): string {
     const now = new Date();
     const timestamp = now.getTime();
-    const random = Math.random().toString(36).substr(2, 4);
+    const RANDOM_STRING_LENGTH = 4;
+    const BASE_36 = 36;
+    const random = Math.random().toString(BASE_36).substr(2, RANDOM_STRING_LENGTH);
     return `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()}-${timestamp}-${random}`;
   }
 
@@ -635,9 +674,11 @@ export class DynamicConfigManager extends EventEmitter {
     this.sources.forEach(source => {
       if (source.refreshInterval && source.enabled) {
         const interval = setInterval(() => {
-          this.loadFromSource(source.type).catch(error => {
-            console.warn(`Failed to load from source ${source.type}:`, error);
-          });
+          try {
+            this.loadFromSource(source.type);
+          } catch (error) {
+            this.logger.warn(`Failed to load from source ${source.type}:`, { error: error instanceof Error ? error : new Error(String(error)) });
+          }
         }, source.refreshInterval);
 
         this.watchers.set(source.type, interval);
@@ -645,51 +686,51 @@ export class DynamicConfigManager extends EventEmitter {
     });
   }
 
-  private async loadFromFile(path: string): Promise<Record<string, any>> {
+  private loadFromFile(_path: string): Record<string, unknown> {
     // Mock file loading - in real implementation, use fs or fetch
     return {};
   }
 
-  private async loadFromAPI(url: string): Promise<Record<string, any>> {
+  private loadFromAPI(_url: string): Record<string, unknown> {
     // Mock API loading - in real implementation, use fetch
     return {};
   }
 
-  private async loadFromDatabase(connectionString: string): Promise<Record<string, any>> {
+  private loadFromDatabase(_connectionString: string): Record<string, unknown> {
     // Mock database loading - in real implementation, use database client
     return {};
   }
 
-  private loadFromEnvironment(): Record<string, any> {
+  private loadFromEnvironment(): Record<string, unknown> {
     // Mock environment loading - in real implementation, use process.env
     return {};
   }
 
-  private loadFromMemory(): Record<string, any> {
+  private loadFromMemory(): Record<string, unknown> {
     return { ...this.config };
   }
 
-  private encryptConfig(config: Record<string, any>): Record<string, any> {
+  private encryptConfig(config: Record<string, unknown>): Record<string, unknown> {
     // Mock encryption - in real implementation, use crypto
     return config;
   }
 
-  private decryptConfig(config: Record<string, any>): Record<string, any> {
+  private decryptConfig(config: Record<string, unknown>): Record<string, unknown> {
     // Mock decryption - in real implementation, use crypto
     return config;
   }
 
-  private toYAML(obj: any): string {
+  private toYAML(obj: Record<string, unknown>): string {
     // Mock YAML conversion - in real implementation, use yaml library
     return JSON.stringify(obj, null, 2);
   }
 
-  private fromYAML(yaml: string): Record<string, any> {
+  private fromYAML(yaml: string): Record<string, unknown> {
     // Mock YAML parsing - in real implementation, use yaml library
     return JSON.parse(yaml);
   }
 
-  private toEnv(obj: any): string {
+  private toEnv(obj: Record<string, unknown>): string {
     const lines: string[] = [];
     for (const [key, value] of this.flattenConfig(obj)) {
       lines.push(`${key.toUpperCase()}=${value}`);
@@ -697,8 +738,8 @@ export class DynamicConfigManager extends EventEmitter {
     return lines.join('\n');
   }
 
-  private fromEnv(env: string): Record<string, any> {
-    const config: Record<string, any> = {};
+  private fromEnv(env: string): Record<string, unknown> {
+    const config: Record<string, unknown> = {};
     const lines = env.split('\n');
     
     for (const line of lines) {
@@ -756,7 +797,7 @@ class ConfigPerformanceMonitor {
       this.updateTimes.reduce((sum, t) => sum + t, 0) / this.updateTimes.length;
   }
 
-  recordError(path: string, error: Error): void {
+  recordError(_path: string, _error: Error): void {
     this.metrics.errors++;
   }
 

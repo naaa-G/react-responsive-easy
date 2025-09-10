@@ -6,7 +6,7 @@
  */
 
 import { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
-import { ComponentUsageData, ModelFeatures, OptimizationSuggestions } from '../types/index.js';
+import { ComponentUsageData, OptimizationSuggestions } from '../types/index.js';
 import { MemoryMonitor } from './MemoryManager.js';
 
 export interface CacheConfig {
@@ -33,7 +33,25 @@ export interface PerformanceMetrics {
  * Intelligent caching system with LRU eviction and TTL
  */
 export class IntelligentCache {
-  private cache = new Map<string, { value: any; timestamp: number; accessCount: number }>();
+  // Constants for magic numbers
+  public static readonly DEFAULT_MAX_SIZE = 1000;
+  public static readonly DEFAULT_TTL_MINUTES = 5;
+  public static readonly DEFAULT_CLEANUP_INTERVAL_MINUTES = 1;
+  public static readonly MS_PER_MINUTE = 60 * 1000;
+  // Performance thresholds for optimization decisions
+  public static readonly PERFORMANCE_THRESHOLD_IMPROVING = 0.9; // 90% of baseline performance
+  public static readonly PERFORMANCE_THRESHOLD_DEGRADING = 1.1; // 110% of baseline performance
+  
+  // Negative performance thresholds for error detection
+  public static readonly NEGATIVE_PERFORMANCE_THRESHOLD = -100; // -100% performance (complete failure)
+  public static readonly NEGATIVE_MEMORY_THRESHOLD = -50; // -50% memory efficiency (severe degradation)
+  
+  // Metrics collection and analysis constants
+  public static readonly RECENT_METRICS_COUNT = 100; // Number of recent operations to analyze
+  public static readonly TREND_ANALYSIS_COUNT = 50; // Number of operations for trend analysis
+  public static readonly MIN_TREND_SAMPLES = 10; // Minimum samples required for trend analysis
+
+  private cache = new Map<string, { value: unknown; timestamp: number; accessCount: number }>();
   private config: CacheConfig;
   private stats = {
     hits: 0,
@@ -43,9 +61,9 @@ export class IntelligentCache {
 
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = {
-      maxSize: 1000,
-      ttl: 5 * 60 * 1000, // 5 minutes
-      cleanupInterval: 60 * 1000, // 1 minute
+      maxSize: IntelligentCache.DEFAULT_MAX_SIZE,
+      ttl: IntelligentCache.DEFAULT_TTL_MINUTES * IntelligentCache.MS_PER_MINUTE, // 5 minutes
+      cleanupInterval: IntelligentCache.DEFAULT_CLEANUP_INTERVAL_MINUTES * IntelligentCache.MS_PER_MINUTE, // 1 minute
       ...config
     };
 
@@ -74,7 +92,7 @@ export class IntelligentCache {
     // Update access count for LRU
     entry.accessCount++;
     this.stats.hits++;
-    return entry.value;
+    return entry.value as T;
   }
 
   /**
@@ -167,8 +185,8 @@ export class IntelligentCache {
     }
   }
 
-  private hashObject(obj: any): string {
-    return JSON.stringify(obj, Object.keys(obj).sort());
+  private hashObject(obj: unknown): string {
+    return JSON.stringify(obj, Object.keys(obj as Record<string, unknown>).sort());
   }
 }
 
@@ -178,19 +196,24 @@ export class IntelligentCache {
 export class BatchProcessor {
   private batches = new Map<string, Array<{
     request: { config: ResponsiveConfig; usageData: ComponentUsageData[] };
-    resolve: (value: OptimizationSuggestions) => void;
-    reject: (error: Error) => void;
+    resolve: (_value: OptimizationSuggestions) => void;
+    reject: (_error: Error) => void;
     timestamp: number;
   }>>();
   
   private config: BatchConfig;
   private processing = false;
 
+  // Constants for magic numbers
+  private static readonly DEFAULT_MAX_BATCH_SIZE = 10;
+  private static readonly DEFAULT_TIMEOUT_MS = 100;
+  private static readonly DEFAULT_CONCURRENCY = 3;
+
   constructor(config: Partial<BatchConfig> = {}) {
     this.config = {
-      maxBatchSize: 10,
-      timeout: 100, // 100ms
-      concurrency: 3,
+      maxBatchSize: BatchProcessor.DEFAULT_MAX_BATCH_SIZE,
+      timeout: BatchProcessor.DEFAULT_TIMEOUT_MS,
+      concurrency: BatchProcessor.DEFAULT_CONCURRENCY,
       ...config
     };
   }
@@ -201,7 +224,7 @@ export class BatchProcessor {
   async addToBatch(
     config: ResponsiveConfig,
     usageData: ComponentUsageData[],
-    processor: (requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>) => Promise<OptimizationSuggestions[]>
+    processor: (_requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>) => Promise<OptimizationSuggestions[]>
   ): Promise<OptimizationSuggestions> {
     const batchKey = this.generateBatchKey(config);
     
@@ -225,43 +248,51 @@ export class BatchProcessor {
     });
   }
 
-  private async scheduleBatchProcessing(
+  private scheduleBatchProcessing(
     batchKey: string,
-    processor: (requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>) => Promise<OptimizationSuggestions[]>
-  ): Promise<void> {
+    processor: (_requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>) => Promise<OptimizationSuggestions[]>
+  ): void {
     if (this.processing) return;
     
     this.processing = true;
     
     // Wait for timeout or batch to fill
-    setTimeout(async () => {
-      const batch = this.batches.get(batchKey);
-      if (!batch || batch.length === 0) {
-        this.processing = false;
-        return;
-      }
-
-      try {
-        const requests = batch.map(item => item.request);
-        const results = await processor(requests);
-        
-        // Resolve all promises
-        batch.forEach((item, index) => {
-          if (results[index]) {
-            item.resolve(results[index]);
-          } else {
-            item.reject(new Error('Batch processing failed'));
+    setTimeout(() => {
+      (async () => {
+        try {
+          const batch = this.batches.get(batchKey);
+          if (!batch || batch.length === 0) {
+            this.processing = false;
+            return;
           }
-        });
-      } catch (error) {
-        // Reject all promises
-        batch.forEach(item => {
-          item.reject(error as Error);
-        });
-      } finally {
-        this.batches.delete(batchKey);
+
+          const requests = batch.map(item => item.request);
+          const results = await processor(requests);
+          
+          // Resolve all promises
+          batch.forEach((item, index) => {
+            if (results[index]) {
+              item.resolve(results[index]);
+            } else {
+              item.reject(new Error('Batch processing failed'));
+            }
+          });
+        } catch (error) {
+          // Reject all promises
+          const batch = this.batches.get(batchKey);
+          if (batch) {
+            batch.forEach(item => {
+              item.reject(error as Error);
+            });
+          }
+        } finally {
+          this.batches.delete(batchKey);
+          this.processing = false;
+        }
+      })().catch(() => {
+        // Handle any unhandled promise rejections
         this.processing = false;
-      }
+      });
     }, this.config.timeout);
   }
 
@@ -314,7 +345,7 @@ export class PerformanceMonitor {
    * Get performance statistics
    */
   getPerformanceStats(): PerformanceMetrics {
-    const recent = this.metrics.slice(-100); // Last 100 operations
+    const recent = this.metrics.slice(-IntelligentCache.RECENT_METRICS_COUNT); // Last 100 operations
     if (recent.length === 0) {
       return {
         cacheHitRate: 0,
@@ -355,8 +386,8 @@ export class PerformanceMonitor {
     memoryUsage: 'stable' | 'increasing' | 'decreasing';
     errorRate: 'stable' | 'increasing' | 'decreasing';
   } {
-    const recent = this.metrics.slice(-50);
-    if (recent.length < 10) {
+    const recent = this.metrics.slice(-IntelligentCache.TREND_ANALYSIS_COUNT);
+    if (recent.length < IntelligentCache.MIN_TREND_SAMPLES) {
       return {
         optimizationTime: 'stable',
         memoryUsage: 'stable',
@@ -377,12 +408,12 @@ export class PerformanceMonitor {
     const secondErrorRate = secondHalf.filter(m => !m.success).length / secondHalf.length;
 
     return {
-      optimizationTime: secondAvgTime < firstAvgTime * 0.9 ? 'improving' : 
-                       secondAvgTime > firstAvgTime * 1.1 ? 'degrading' : 'stable',
-      memoryUsage: secondAvgMemory > firstAvgMemory * 1.1 ? 'increasing' :
-                   secondAvgMemory < firstAvgMemory * 0.9 ? 'decreasing' : 'stable',
-      errorRate: secondErrorRate > firstErrorRate * 1.1 ? 'increasing' :
-                 secondErrorRate < firstErrorRate * 0.9 ? 'decreasing' : 'stable'
+      optimizationTime: secondAvgTime < firstAvgTime * IntelligentCache.PERFORMANCE_THRESHOLD_IMPROVING ? 'improving' : 
+                       secondAvgTime > firstAvgTime * IntelligentCache.PERFORMANCE_THRESHOLD_DEGRADING ? 'degrading' : 'stable',
+      memoryUsage: secondAvgMemory > firstAvgMemory * IntelligentCache.PERFORMANCE_THRESHOLD_DEGRADING ? 'increasing' :
+                   secondAvgMemory < firstAvgMemory * IntelligentCache.PERFORMANCE_THRESHOLD_IMPROVING ? 'decreasing' : 'stable',
+      errorRate: secondErrorRate > firstErrorRate * IntelligentCache.PERFORMANCE_THRESHOLD_DEGRADING ? 'increasing' :
+                 secondErrorRate < firstErrorRate * IntelligentCache.PERFORMANCE_THRESHOLD_IMPROVING ? 'decreasing' : 'stable'
     };
   }
 }
@@ -409,7 +440,7 @@ export class PerformanceOptimizer {
   async optimizeWithCaching(
     config: ResponsiveConfig,
     usageData: ComponentUsageData[],
-    optimizer: (config: ResponsiveConfig, usageData: ComponentUsageData[]) => Promise<OptimizationSuggestions>
+    optimizer: (_config: ResponsiveConfig, _usageData: ComponentUsageData[]) => Promise<OptimizationSuggestions>
   ): Promise<OptimizationSuggestions> {
     const startTime = performance.now();
     const cacheKey = this.cache.generateOptimizationKey(config, usageData);
@@ -444,7 +475,7 @@ export class PerformanceOptimizer {
    */
   async batchOptimize(
     requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>,
-    optimizer: (requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>) => Promise<OptimizationSuggestions[]>
+    optimizer: (_requests: Array<{ config: ResponsiveConfig; usageData: ComponentUsageData[] }>) => Promise<OptimizationSuggestions[]>
   ): Promise<OptimizationSuggestions[]> {
     const startTime = performance.now();
     
@@ -464,9 +495,9 @@ export class PerformanceOptimizer {
    * Get comprehensive performance metrics
    */
   getPerformanceMetrics(): PerformanceMetrics & {
-    cacheStats: any;
-    memoryStats: any;
-    trends: any;
+    cacheStats: unknown;
+    memoryStats: unknown;
+    trends: unknown;
   } {
     const performanceStats = this.performanceMonitor.getPerformanceStats();
     const cacheStats = this.cache.getStats();

@@ -13,7 +13,7 @@ beforeAll(() => {
   if (typeof performance === 'undefined') {
     global.performance = {
       now: () => Date.now()
-    } as any;
+    } as typeof performance;
   }
 });
 
@@ -36,9 +36,17 @@ const originalConsole = { ...console };
 beforeAll(() => {
   // Suppress console output during tests unless explicitly enabled
   if (!process.env.DEBUG_TESTS) {
-    console.log = () => {};
-    console.warn = () => {};
-    console.error = () => {};
+    // Store original console methods
+    const noop = (): void => {
+      // Intentionally empty function for test console suppression
+    };
+    
+    // eslint-disable-next-line no-console
+    console.log = noop;
+    // eslint-disable-next-line no-console
+    console.warn = noop;
+    // eslint-disable-next-line no-console
+    console.error = noop;
   }
 });
 

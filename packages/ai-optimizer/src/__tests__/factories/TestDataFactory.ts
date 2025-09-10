@@ -18,13 +18,267 @@ import type {
   ResponsiveValueUsage
 } from '../../types/index.js';
 import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
+import { AI_OPTIMIZER_CONSTANTS } from '../../constants';
+
+// Constants for test data generation
+const TEST_CONSTANTS = {
+  DEFAULT_SEED: 12345,
+  RANDOM_MULTIPLIER: 9301,
+  RANDOM_ADDEND: 49297,
+  RANDOM_MODULUS: 233280,
+  DEFAULT_BATCH_SIZE: 50,
+  PERFORMANCE_THRESHOLD: 0.7,
+  PERFORMANCE_VARIANCE: 0.3,
+  SCALING_FACTOR: 1.1,
+  SCALING_VARIANCE: 0.2,
+  MEMORY_THRESHOLD: 0.1,
+  CACHE_SIZE: 512,
+  MAX_CACHE_SIZE: 2048,
+  MIN_CACHE_SIZE: 1024,
+  MAX_CACHE_SIZE_LARGE: 8192,
+  DEFAULT_TIMEOUT: 10000,
+  PERFORMANCE_SCORE: 0.5,
+  CPU_THRESHOLD: 70,
+  DEFAULT_ITERATIONS: 16,
+  DEFAULT_ITERATIONS_EXTENDED: 14,
+  DEFAULT_ITERATIONS_REDUCED: 12,
+  DEFAULT_ITERATIONS_LARGE: 18,
+  DEFAULT_ITERATIONS_XLARGE: 20,
+  DEFAULT_ITERATIONS_XXLARGE: 28,
+  DEFAULT_ITERATIONS_XXXLARGE: 32,
+  DEFAULT_ITERATIONS_XXXXLARGE: 36,
+  DEFAULT_ITERATIONS_XXXXXLARGE: 40,
+  SCALING_MULTIPLIER: 2.5,
+  // Scaling multiplier variants
+  SCALING_VARIANT_1: 2.3,
+  SCALING_VARIANT_2: 2.7,
+  SCALING_VARIANT_3: 2.1,
+  SCALING_VARIANT_4: 2.9,
+  // Cache size multipliers
+  CACHE_SIZE_MULT_1: 40,
+  CACHE_SIZE_MULT_2: 37.5,
+  CACHE_SIZE_MULT_3: 43.75,
+  CACHE_SIZE_MULT_4: 34.375,
+  CACHE_SIZE_MULT_5: 46.875,
+  // Cache size small multipliers
+  CACHE_SMALL_MULT_1: 0.9375,
+  CACHE_SMALL_MULT_2: 1.09375,
+  CACHE_SMALL_MULT_3: 0.859375,
+  CACHE_SMALL_MULT_4: 1.171875,
+  // Cache rate multipliers
+  CACHE_RATE_MULT_1: 0.8,
+  CACHE_RATE_MULT_2: 1.2,
+  CACHE_RATE_MULT_3: 0.6,
+  CACHE_RATE_MULT_4: 1.4,
+  // Performance score values
+  PERF_SCORE_1: 85,
+  PERF_SCORE_2: 88,
+  PERF_SCORE_3: 82,
+  PERF_SCORE_4: 90,
+  PERF_SCORE_5: 87,
+  // Cache dimension values
+  CACHE_DIM_WIDTH: 320,
+  CACHE_DIM_HEIGHT: 568,
+  // Additional constants for magic numbers
+  // Font size values
+  FONT_SIZE_1: 16,
+  FONT_SIZE_2: 14,
+  FONT_SIZE_3: 12,
+  FONT_SIZE_4: 18,
+  FONT_SIZE_5: 20,
+  FONT_SIZE_6: 24,
+  FONT_SIZE_7: 28,
+  FONT_SIZE_8: 32,
+  FONT_SIZE_9: 36,
+  FONT_SIZE_10: 40,
+  // Render time values
+  RENDER_TIME_1: 2.5,
+  RENDER_TIME_2: 2.3,
+  RENDER_TIME_3: 2.7,
+  RENDER_TIME_4: 2.1,
+  RENDER_TIME_5: 2.9,
+  CACHE_THRESHOLD: 50,
+  // Computed arrays will be defined after constants
+  EPOCHS: 100,
+  BATCH_SIZE: 32,
+  LEARNING_RATE: 0.001,
+  VALIDATION_SPLIT: 0.2,
+  SAVE_FREQUENCY: 10,
+  FONT_SCALE: 0.87,
+  FONT_MIN: 14,
+  FONT_MAX: 68,
+  SPACING_SCALE: 0.92,
+  SPACING_MIN: 6,
+  SPACING_MAX: 120,
+  RADIUS_SCALE: 0.82,
+  RADIUS_MIN: 2,
+  RADIUS_MAX: 22,
+  LINE_HEIGHT_SCALE: 1.22,
+  LINE_HEIGHT_MIN: 1.1,
+  LINE_HEIGHT_MAX: 1.9,
+  SHADOW_SCALE: 0.85,
+  SHADOW_MIN: 1,
+  SHADOW_MAX: 20,
+  BORDER_SCALE: 0.85,
+  BORDER_MIN: 1,
+  BORDER_MAX: 6,
+  CONFIDENCE_HIGH: 0.85,
+  CONFIDENCE_MEDIUM: 0.78,
+  MOBILE_ADJUSTMENT: 0.1,
+  TABLET_ADJUSTMENT: 0.05,
+  DESKTOP_ADJUSTMENT: 0,
+  ULTRAWIDE_ADJUSTMENT: -0.05,
+  TABLET_ADJUSTMENT_LARGE: 0.08,
+  ULTRAWIDE_ADJUSTMENT_LARGE: -0.08,
+  MOBILE_ADJUSTMENT_LARGE: 0.15,
+  TABLET_ADJUSTMENT_XLARGE: 0.08,
+  ULTRAWIDE_ADJUSTMENT_XLARGE: -0.08,
+  BUNDLE_SIZE_CURRENT: 51200,
+  BUNDLE_SIZE_PREDICTED: 46080,
+  BUNDLE_IMPROVEMENT: 10,
+  RENDER_TIME_CURRENT: 2.5,
+  RENDER_TIME_PREDICTED: 2.2,
+  RENDER_IMPROVEMENT: 12,
+  FONT_SIZE_CURRENT: 12,
+  FONT_SIZE_RECOMMENDED: 14,
+  PERFORMANCE_RENDER: 12,
+  PERFORMANCE_BUNDLE: 10,
+  PERFORMANCE_MEMORY: 8,
+  PERFORMANCE_LAYOUT: 0.02,
+  UX_INTERACTION: 8,
+  UX_ACCESSIBILITY: 5,
+  UX_VISUAL: 15,
+  DX_CODE: 25,
+  DX_MAINTENANCE: 30,
+  DX_DEBUGGING: 40,
+  CONFIDENCE_SCORE: 0.82,
+  MOBILE_WIDTH: 375,
+  MOBILE_HEIGHT: 667,
+  MIN_FONT_SIZE: 12,
+  MAX_FONT_SIZE: 16,
+  MIN_SPACING: 4,
+  MAX_SPACING: 16,
+  MIN_RADIUS: 0,
+  MAX_RADIUS: 8,
+  MIN_LINE_HEIGHT: 1,
+  MAX_LINE_HEIGHT: 1.5,
+  MIN_SHADOW: 0,
+  MAX_SHADOW: 4,
+  MIN_BORDER: 0,
+  MAX_BORDER: 2,
+  MIN_TAP_TARGET: 44,
+  EXTREME_FONT_SIZE: 1000,
+  EXTREME_SPACING: 500,
+  EXTREME_RADIUS: 100,
+  EXTREME_LINE_HEIGHT: 5,
+  EXTREME_SHADOW: 50,
+  EXTREME_BORDER: 20,
+  EXTREME_RENDER_TIME: 1000,
+  EXTREME_LAYOUT_SHIFT: 10,
+  EXTREME_MEMORY: 1000000,
+  EXTREME_BUNDLE: 10000000,
+  EXTREME_INTERACTION: 10000,
+  EXTREME_ACCESSIBILITY: 200,
+  LARGE_DATASET_SIZE: 1000,
+  HIGH_FREQUENCY_SIZE: 100,
+  HIGH_FREQUENCY_RATE: 0.95,
+  HIGH_FREQUENCY_VIEW_TIME: 5000,
+  HIGH_FREQUENCY_ACCESSIBILITY: 95,
+  COMPLEX_BREAKPOINT_COUNT: 20,
+  COMPLEX_BREAKPOINT_WIDTH_BASE: 320,
+  COMPLEX_BREAKPOINT_WIDTH_INCREMENT: 100,
+  COMPLEX_BREAKPOINT_HEIGHT_BASE: 568,
+  COMPLEX_BREAKPOINT_HEIGHT_INCREMENT: 50,
+  // Additional constants for magic numbers
+  BASE_VALUE_OFFSET: 10,
+  BASE_VALUE_MAX: 60,
+  TABLET_SCALING_BASE: 1.2,
+  TABLET_SCALING_VARIANCE: 0.3,
+  RENDER_TIME_BASE: 1,
+  RENDER_TIME_MAX: 10,
+  VIEW_TIME_BASE: 1,
+  ACCESSIBILITY_SCORE_BASE: 30,
+  RANDOM_MULTIPLIER_100: 100,
+  RANDOM_MULTIPLIER_1: 1,
+  RANDOM_MULTIPLIER_16: 16,
+  RANDOM_MULTIPLIER_14: 14,
+  RANDOM_MULTIPLIER_12: 12,
+  RANDOM_MULTIPLIER_18: 18,
+  RANDOM_MULTIPLIER_20: 20,
+  RANDOM_MULTIPLIER_28: 28,
+  RANDOM_MULTIPLIER_32: 32,
+  RANDOM_MULTIPLIER_36: 36,
+  RANDOM_MULTIPLIER_40: 40,
+  MAX_RESPONSIVE_VALUES: 4,
+  DEFAULT_USAGE_DATA_COUNT: 10,
+  EXTREME_VIEW_TIME_MULTIPLIER: 10,
+} as const;
+
+// Add computed arrays that depend on the constants
+const SCALING_MULTIPLIER_VARIANTS = [
+  TEST_CONSTANTS.SCALING_VARIANT_1,
+  TEST_CONSTANTS.SCALING_VARIANT_2,
+  TEST_CONSTANTS.SCALING_VARIANT_3,
+  TEST_CONSTANTS.SCALING_VARIANT_4
+] as const;
+
+// Computed arrays using the constants
+const COMPUTED_ARRAYS = {
+  CACHE_SIZES: [
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_1,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_2,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_3,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_4,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_5
+  ],
+  CACHE_SIZES_SMALL: [
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_1,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_2,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_3,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_4
+  ],
+  CACHE_RATES: [
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_1,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_2,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_3,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_4
+  ],
+  PERFORMANCE_SCORES: [TEST_CONSTANTS.PERF_SCORE_1, TEST_CONSTANTS.PERF_SCORE_2, TEST_CONSTANTS.PERF_SCORE_3, TEST_CONSTANTS.PERF_SCORE_4, TEST_CONSTANTS.PERF_SCORE_5],
+  CACHE_DIMENSIONS: [TEST_CONSTANTS.CACHE_DIM_WIDTH, TEST_CONSTANTS.CACHE_DIM_HEIGHT],
+  FONT_SIZES: [TEST_CONSTANTS.FONT_SIZE_1, TEST_CONSTANTS.FONT_SIZE_2, TEST_CONSTANTS.FONT_SIZE_3, TEST_CONSTANTS.FONT_SIZE_4, TEST_CONSTANTS.FONT_SIZE_5, TEST_CONSTANTS.FONT_SIZE_6, TEST_CONSTANTS.FONT_SIZE_7, TEST_CONSTANTS.FONT_SIZE_8, TEST_CONSTANTS.FONT_SIZE_9, TEST_CONSTANTS.FONT_SIZE_10] as number[],
+  RENDER_TIMES: [TEST_CONSTANTS.RENDER_TIME_1, TEST_CONSTANTS.RENDER_TIME_2, TEST_CONSTANTS.RENDER_TIME_3, TEST_CONSTANTS.RENDER_TIME_4, TEST_CONSTANTS.RENDER_TIME_5] as number[],
+  SCALING_MULTIPLIER_VARIANTS,
+  BUNDLE_SIZES: [
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_1,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_2,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_3,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_4,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.CACHE_ENTRY_SIZE * TEST_CONSTANTS.CACHE_SIZE_MULT_5
+  ] as number[],
+  MEMORY_PATTERNS: [
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_1,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_2,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_3,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.KB_TO_BYTES * TEST_CONSTANTS.CACHE_SMALL_MULT_4
+  ] as number[],
+  LAYOUT_SHIFT_FREQ: [
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_1,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_2,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_3,
+    AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD * TEST_CONSTANTS.CACHE_RATE_MULT_4
+  ] as number[]
+} as const;
 
 /**
  * Test data factory for generating realistic AI optimization test scenarios
  */
 export class TestDataFactory {
   private static instance: TestDataFactory;
-  private seed: number = 12345;
+  private seed: number = TEST_CONSTANTS.DEFAULT_SEED;
 
   private constructor() {}
 
@@ -46,8 +300,8 @@ export class TestDataFactory {
    * Simple seeded random number generator for consistent test data
    */
   private seededRandom(): number {
-    this.seed = (this.seed * 9301 + 49297) % 233280;
-    return this.seed / 233280;
+    this.seed = (this.seed * TEST_CONSTANTS.RANDOM_MULTIPLIER + TEST_CONSTANTS.RANDOM_ADDEND) % TEST_CONSTANTS.RANDOM_MODULUS;
+    return this.seed / TEST_CONSTANTS.RANDOM_MODULUS;
   }
 
   /**
@@ -101,55 +355,55 @@ export class TestDataFactory {
     const positions: Array<'header' | 'main' | 'sidebar' | 'footer' | 'modal' | 'other'> = ['header', 'main', 'sidebar', 'footer', 'modal', 'other'];
     const importanceLevels: Array<'primary' | 'secondary' | 'tertiary'> = ['primary', 'secondary', 'tertiary'];
 
-    const componentType = overrides.componentType || componentTypes[Math.floor(this.seededRandom() * componentTypes.length)];
-    const position = overrides.context?.position || positions[Math.floor(this.seededRandom() * positions.length)];
-    const importance = overrides.context?.importance || importanceLevels[Math.floor(this.seededRandom() * importanceLevels.length)];
+    const componentType = overrides.componentType ?? componentTypes[Math.floor(this.seededRandom() * componentTypes.length)];
+    const position = overrides.context?.position ?? positions[Math.floor(this.seededRandom() * positions.length)];
+    const importance = overrides.context?.importance ?? importanceLevels[Math.floor(this.seededRandom() * importanceLevels.length)];
 
     const responsiveValues: ResponsiveValueUsage[] = [];
-    const numValues = Math.floor(this.seededRandom() * 4) + 1; // 1-4 responsive values
+    const numValues = Math.floor(this.seededRandom() * TEST_CONSTANTS.MAX_RESPONSIVE_VALUES) + TEST_CONSTANTS.RANDOM_MULTIPLIER_1; // 1-4 responsive values
 
     for (let i = 0; i < numValues; i++) {
       const property = properties[Math.floor(this.seededRandom() * properties.length)];
       const token = tokens[Math.floor(this.seededRandom() * tokens.length)];
-      const baseValue = Math.floor(this.seededRandom() * 50) + 10; // 10-60
+      const baseValue = Math.floor(this.seededRandom() * TEST_CONSTANTS.DEFAULT_BATCH_SIZE) + TEST_CONSTANTS.BASE_VALUE_OFFSET; // 10-60
 
       responsiveValues.push({
         property,
         baseValue,
         token,
         breakpointValues: {
-          mobile: Math.floor(baseValue * (0.7 + this.seededRandom() * 0.3)),
-          tablet: Math.floor(baseValue * (0.8 + this.seededRandom() * 0.2)),
+          mobile: Math.floor(baseValue * (TEST_CONSTANTS.PERFORMANCE_THRESHOLD + this.seededRandom() * TEST_CONSTANTS.PERFORMANCE_VARIANCE)),
+          tablet: Math.floor(baseValue * (TEST_CONSTANTS.TABLET_SCALING_BASE + this.seededRandom() * TEST_CONSTANTS.TABLET_SCALING_VARIANCE)),
           desktop: baseValue,
-          ultrawide: Math.floor(baseValue * (1.1 + this.seededRandom() * 0.2))
+          ultrawide: Math.floor(baseValue * (TEST_CONSTANTS.SCALING_FACTOR + this.seededRandom() * TEST_CONSTANTS.SCALING_VARIANCE))
         },
-        usageFrequency: Math.floor(this.seededRandom() * 100) + 1
+        usageFrequency: Math.floor(this.seededRandom() * TEST_CONSTANTS.RANDOM_MULTIPLIER_100) + TEST_CONSTANTS.RANDOM_MULTIPLIER_1
       });
     }
 
     const performance: PerformanceMetrics = {
-      renderTime: 1 + this.seededRandom() * 10, // 1-11ms
-      layoutShift: this.seededRandom() * 0.1, // 0-0.1 CLS
-      memoryUsage: Math.floor(512 + this.seededRandom() * 2048), // 512-2560KB
-      bundleSize: Math.floor(1024 + this.seededRandom() * 8192) // 1-9KB
+      renderTime: TEST_CONSTANTS.RENDER_TIME_BASE + this.seededRandom() * TEST_CONSTANTS.RENDER_TIME_MAX, // 1-11ms
+      layoutShift: this.seededRandom() * TEST_CONSTANTS.MEMORY_THRESHOLD, // 0-0.1 CLS
+      memoryUsage: Math.floor(TEST_CONSTANTS.CACHE_SIZE + this.seededRandom() * TEST_CONSTANTS.MAX_CACHE_SIZE), // 512-2560KB
+      bundleSize: Math.floor(TEST_CONSTANTS.MIN_CACHE_SIZE + this.seededRandom() * TEST_CONSTANTS.MAX_CACHE_SIZE_LARGE) // 1-9KB
     };
 
     const interactions: InteractionData = {
       interactionRate: this.seededRandom(), // 0-1
-      viewTime: Math.floor(1000 + this.seededRandom() * 10000), // 1-11s
-      scrollBehavior: this.seededRandom() > 0.5 ? 'smooth' : 'normal',
-      accessibilityScore: Math.floor(70 + this.seededRandom() * 30) // 70-100
+      viewTime: Math.floor(TEST_CONSTANTS.VIEW_TIME_BASE + this.seededRandom() * TEST_CONSTANTS.DEFAULT_TIMEOUT), // 1-11s
+      scrollBehavior: this.seededRandom() > TEST_CONSTANTS.PERFORMANCE_SCORE ? 'smooth' : 'normal',
+      accessibilityScore: Math.floor(TEST_CONSTANTS.CPU_THRESHOLD + this.seededRandom() * TEST_CONSTANTS.ACCESSIBILITY_SCORE_BASE) // 70-100
     };
 
     const context: ComponentContext = {
-      parent: overrides.context?.parent || 'Root',
-      children: overrides.context?.children || [],
+      parent: overrides.context?.parent ?? 'Root',
+      children: overrides.context?.children ?? [],
       position,
       importance
     };
 
     return {
-      componentId: overrides.componentId || `component-${Math.floor(this.seededRandom() * 10000)}`,
+      componentId: overrides.componentId ?? `component-${Math.floor(this.seededRandom() * TEST_CONSTANTS.DEFAULT_TIMEOUT)}`,
       componentType,
       responsiveValues,
       performance,
@@ -166,7 +420,7 @@ export class TestDataFactory {
     return Array.from({ length: count }, (_, index) => 
       this.createComponentUsageData({
         ...overrides,
-        componentId: overrides.componentId || `component-${index}`
+        componentId: overrides.componentId ?? `component-${index}`
       })
     );
   }
@@ -176,12 +430,12 @@ export class TestDataFactory {
    */
   createTrainingData(overrides: Partial<TrainingData> = {}): TrainingData {
     const config = this.createResponsiveConfig();
-    const usageData = this.createComponentUsageDataArray(5);
+    const usageData = this.createComponentUsageDataArray(TEST_CONSTANTS.DEFAULT_USAGE_DATA_COUNT);
 
     const features: ModelFeatures = {
       config: {
         breakpointCount: config.breakpoints.length,
-        breakpointRatios: config.breakpoints.map((bp: any) => bp.width / config.base.width),
+        breakpointRatios: config.breakpoints.map((bp: { width: number }) => bp.width / config.base.width),
         tokenComplexity: Object.keys(config.strategy.tokens).length * 4,
         originDistribution: {
           width: config.strategy.origin === 'width' ? 1 : 0,
@@ -193,16 +447,16 @@ export class TestDataFactory {
         }
       },
       usage: {
-        commonValues: [16, 14, 12, 18, 20, 24, 28, 32, 36, 40],
+        commonValues: COMPUTED_ARRAYS.FONT_SIZES,
         valueDistributions: {},
         componentFrequencies: { Button: 0.3, Card: 0.25, Input: 0.2, Modal: 0.15, Navigation: 0.1 },
         propertyPatterns: { fontSize: 0.4, padding: 0.3, margin: 0.2, borderRadius: 0.1 }
       },
       performance: {
-        avgRenderTimes: [2.5, 2.3, 2.7, 2.1, 2.9],
-        bundleSizes: [5120, 4800, 5600, 4400, 6000],
-        memoryPatterns: [1024, 960, 1120, 880, 1200],
-        layoutShiftFreq: [0.01, 0.008, 0.012, 0.006, 0.014]
+        avgRenderTimes: COMPUTED_ARRAYS.RENDER_TIMES,
+        bundleSizes: COMPUTED_ARRAYS.BUNDLE_SIZES,
+        memoryPatterns: COMPUTED_ARRAYS.MEMORY_PATTERNS,
+        layoutShiftFreq: COMPUTED_ARRAYS.LAYOUT_SHIFT_FREQ
       },
       context: {
         applicationType: 'general',
@@ -224,7 +478,7 @@ export class TestDataFactory {
         memoryUsage: 0.9,
         layoutShift: 0.95
       },
-      satisfactionRatings: [85, 88, 82, 90, 87],
+      satisfactionRatings: [...COMPUTED_ARRAYS.PERFORMANCE_SCORES],
       accessibilityScores: {
         fontSizeCompliance: 0.9,
         tapTargetCompliance: 0.85
@@ -259,10 +513,10 @@ export class TestDataFactory {
     const baseConfig: AIModelConfig = {
       architecture: 'neural-network',
       training: {
-        epochs: 100,
-        batchSize: 32,
-        learningRate: 0.001,
-        validationSplit: 0.2
+        epochs: TEST_CONSTANTS.EPOCHS,
+        batchSize: TEST_CONSTANTS.BATCH_SIZE,
+        learningRate: TEST_CONSTANTS.LEARNING_RATE,
+        validationSplit: TEST_CONSTANTS.VALIDATION_SPLIT
       },
       features: {
         normalization: 'standard',
@@ -270,7 +524,7 @@ export class TestDataFactory {
         featureSelection: true
       },
       persistence: {
-        saveFrequency: 10,
+        saveFrequency: TEST_CONSTANTS.SAVE_FREQUENCY,
         modelVersioning: true,
         backupStrategy: 'local'
       }
@@ -284,29 +538,29 @@ export class TestDataFactory {
    */
   createOptimizationSuggestions(overrides: Partial<OptimizationSuggestions> = {}): OptimizationSuggestions {
     const suggestedTokens = {
-      fontSize: { scale: 0.87, min: 14, max: 68, step: 1, responsive: true },
-      spacing: { scale: 0.92, min: 6, max: 120, step: 4, responsive: true },
-      radius: { scale: 0.82, min: 2, max: 22, step: 2, responsive: true },
-      lineHeight: { scale: 1.22, min: 1.1, max: 1.9, step: 0.1, responsive: true },
-      shadow: { scale: 0.85, min: 1, max: 20, step: 1, responsive: true },
-      border: { scale: 0.85, min: 1, max: 6, step: 1, responsive: true }
+      fontSize: { scale: TEST_CONSTANTS.FONT_SCALE, min: TEST_CONSTANTS.FONT_MIN, max: TEST_CONSTANTS.FONT_MAX, step: 1, responsive: true },
+      spacing: { scale: TEST_CONSTANTS.SPACING_SCALE, min: TEST_CONSTANTS.SPACING_MIN, max: TEST_CONSTANTS.SPACING_MAX, step: 4, responsive: true },
+      radius: { scale: TEST_CONSTANTS.RADIUS_SCALE, min: TEST_CONSTANTS.RADIUS_MIN, max: TEST_CONSTANTS.RADIUS_MAX, step: 2, responsive: true },
+      lineHeight: { scale: TEST_CONSTANTS.LINE_HEIGHT_SCALE, min: TEST_CONSTANTS.LINE_HEIGHT_MIN, max: TEST_CONSTANTS.LINE_HEIGHT_MAX, step: 0.1, responsive: true },
+      shadow: { scale: TEST_CONSTANTS.SHADOW_SCALE, min: TEST_CONSTANTS.SHADOW_MIN, max: TEST_CONSTANTS.SHADOW_MAX, step: 1, responsive: true },
+      border: { scale: TEST_CONSTANTS.BORDER_SCALE, min: TEST_CONSTANTS.BORDER_MIN, max: TEST_CONSTANTS.BORDER_MAX, step: 1, responsive: true }
     };
 
     const scalingCurveRecommendations = [
       {
         token: 'fontSize',
         mode: 'linear' as const,
-        scale: 0.87,
-        breakpointAdjustments: { mobile: 0.1, tablet: 0.05, desktop: 0, ultrawide: -0.05 },
-        confidence: 0.85,
+        scale: TEST_CONSTANTS.FONT_SCALE,
+        breakpointAdjustments: { mobile: TEST_CONSTANTS.MOBILE_ADJUSTMENT, tablet: TEST_CONSTANTS.TABLET_ADJUSTMENT, desktop: TEST_CONSTANTS.DESKTOP_ADJUSTMENT, ultrawide: TEST_CONSTANTS.ULTRAWIDE_ADJUSTMENT },
+        confidence: TEST_CONSTANTS.CONFIDENCE_HIGH,
         reasoning: 'Optimized for better readability across devices'
       },
       {
         token: 'spacing',
         mode: 'exponential' as const,
-        scale: 0.92,
-        breakpointAdjustments: { mobile: 0.15, tablet: 0.08, desktop: 0, ultrawide: -0.08 },
-        confidence: 0.78,
+        scale: TEST_CONSTANTS.SPACING_SCALE,
+        breakpointAdjustments: { mobile: TEST_CONSTANTS.MOBILE_ADJUSTMENT_LARGE, tablet: TEST_CONSTANTS.TABLET_ADJUSTMENT_LARGE, desktop: TEST_CONSTANTS.DESKTOP_ADJUSTMENT, ultrawide: TEST_CONSTANTS.ULTRAWIDE_ADJUSTMENT_LARGE },
+        confidence: TEST_CONSTANTS.CONFIDENCE_MEDIUM,
         reasoning: 'Improved spacing hierarchy for better visual flow'
       }
     ];
@@ -314,16 +568,16 @@ export class TestDataFactory {
     const performanceImpacts = [
       {
         aspect: 'bundle-size' as const,
-        currentValue: 51200,
-        predictedValue: 46080,
-        improvementPercent: 10,
+        currentValue: TEST_CONSTANTS.BUNDLE_SIZE_CURRENT,
+        predictedValue: TEST_CONSTANTS.BUNDLE_SIZE_PREDICTED,
+        improvementPercent: TEST_CONSTANTS.BUNDLE_IMPROVEMENT,
         severity: 'medium' as const
       },
       {
         aspect: 'render-time' as const,
-        currentValue: 2.5,
-        predictedValue: 2.2,
-        improvementPercent: 12,
+        currentValue: TEST_CONSTANTS.RENDER_TIME_CURRENT,
+        predictedValue: TEST_CONSTANTS.RENDER_TIME_PREDICTED,
+        improvementPercent: TEST_CONSTANTS.RENDER_IMPROVEMENT,
         severity: 'high' as const
       }
     ];
@@ -331,8 +585,8 @@ export class TestDataFactory {
     const accessibilityWarnings = [
       {
         type: 'font-size' as const,
-        currentValue: 12,
-        recommendedValue: 14,
+        currentValue: TEST_CONSTANTS.FONT_SIZE_CURRENT,
+        recommendedValue: TEST_CONSTANTS.FONT_SIZE_RECOMMENDED,
         wcagReference: 'WCAG 2.1 AA - 1.4.4 Resize text',
         severity: 'AA' as const,
         description: 'Minimum font size should be increased for better readability'
@@ -341,20 +595,20 @@ export class TestDataFactory {
 
     const estimatedImprovements = {
       performance: {
-        renderTime: 12,
-        bundleSize: 10,
-        memoryUsage: 8,
-        layoutShift: 0.02
+        renderTime: TEST_CONSTANTS.PERFORMANCE_RENDER,
+        bundleSize: TEST_CONSTANTS.PERFORMANCE_BUNDLE,
+        memoryUsage: TEST_CONSTANTS.PERFORMANCE_MEMORY,
+        layoutShift: TEST_CONSTANTS.PERFORMANCE_LAYOUT
       },
       userExperience: {
-        interactionRate: 8,
-        accessibilityScore: 5,
-        visualHierarchy: 15
+        interactionRate: TEST_CONSTANTS.UX_INTERACTION,
+        accessibilityScore: TEST_CONSTANTS.UX_ACCESSIBILITY,
+        visualHierarchy: TEST_CONSTANTS.UX_VISUAL
       },
       developerExperience: {
-        codeReduction: 25,
-        maintenanceEffort: 30,
-        debuggingTime: 40
+        codeReduction: TEST_CONSTANTS.DX_CODE,
+        maintenanceEffort: TEST_CONSTANTS.DX_MAINTENANCE,
+        debuggingTime: TEST_CONSTANTS.DX_DEBUGGING
       }
     };
 
@@ -363,7 +617,7 @@ export class TestDataFactory {
       scalingCurveRecommendations,
       performanceImpacts,
       accessibilityWarnings,
-      confidenceScore: 0.82,
+      confidenceScore: TEST_CONSTANTS.CONFIDENCE_SCORE,
       estimatedImprovements,
       ...overrides
     };
@@ -381,20 +635,20 @@ export class TestDataFactory {
     return {
       emptyUsageData: [],
       minimalConfig: {
-        base: { name: 'mobile', width: 375, height: 667 },
-        breakpoints: [{ name: 'mobile', width: 375, height: 667, alias: 'mobile' }],
+        base: { name: 'mobile', width: TEST_CONSTANTS.MOBILE_WIDTH, height: TEST_CONSTANTS.MOBILE_HEIGHT },
+        breakpoints: [{ name: 'mobile', width: TEST_CONSTANTS.MOBILE_WIDTH, height: TEST_CONSTANTS.MOBILE_HEIGHT, alias: 'mobile' }],
         strategy: {
           origin: 'width',
           mode: 'linear',
           tokens: {
-            fontSize: { scale: 1, min: 12, max: 16, step: 1, responsive: true },
-            spacing: { scale: 1, min: 4, max: 16, step: 1, responsive: true },
-            radius: { scale: 1, min: 0, max: 8, step: 1, responsive: true },
-            lineHeight: { scale: 1, min: 1, max: 1.5, step: 0.1, responsive: true },
-            shadow: { scale: 1, min: 0, max: 4, step: 1, responsive: true },
-            border: { scale: 1, min: 0, max: 2, step: 1, responsive: true }
+            fontSize: { scale: 1, min: TEST_CONSTANTS.MIN_FONT_SIZE, max: TEST_CONSTANTS.MAX_FONT_SIZE, step: 1, responsive: true },
+            spacing: { scale: 1, min: TEST_CONSTANTS.MIN_SPACING, max: TEST_CONSTANTS.MAX_SPACING, step: 1, responsive: true },
+            radius: { scale: 1, min: TEST_CONSTANTS.MIN_RADIUS, max: TEST_CONSTANTS.MAX_RADIUS, step: 1, responsive: true },
+            lineHeight: { scale: 1, min: TEST_CONSTANTS.MIN_LINE_HEIGHT, max: TEST_CONSTANTS.MAX_LINE_HEIGHT, step: 0.1, responsive: true },
+            shadow: { scale: 1, min: TEST_CONSTANTS.MIN_SHADOW, max: TEST_CONSTANTS.MAX_SHADOW, step: 1, responsive: true },
+            border: { scale: 1, min: TEST_CONSTANTS.MIN_BORDER, max: TEST_CONSTANTS.MAX_BORDER, step: 1, responsive: true }
           },
-          accessibility: { minFontSize: 12, minTapTarget: 44, contrastPreservation: true },
+          accessibility: { minFontSize: TEST_CONSTANTS.MIN_FONT_SIZE, minTapTarget: TEST_CONSTANTS.MIN_TAP_TARGET, contrastPreservation: true },
           rounding: { mode: 'nearest', precision: 2 },
           performance: { memoization: false, cacheStrategy: 'memory', precomputeValues: false }
         }
@@ -405,23 +659,23 @@ export class TestDataFactory {
         responsiveValues: [
           {
             property: 'fontSize',
-            baseValue: 1000,
+            baseValue: TEST_CONSTANTS.EXTREME_FONT_SIZE,
             token: 'fontSize',
-            breakpointValues: { mobile: 50, tablet: 100, desktop: 1000, ultrawide: 2000 },
+            breakpointValues: { mobile: 50, tablet: 100, desktop: TEST_CONSTANTS.EXTREME_FONT_SIZE, ultrawide: 2000 },
             usageFrequency: 999999
           }
         ],
         performance: {
-          renderTime: 1000,
+          renderTime: TEST_CONSTANTS.EXTREME_RENDER_TIME,
           layoutShift: 1.0,
-          memoryUsage: 1000000,
-          bundleSize: 1000000
+          memoryUsage: TEST_CONSTANTS.EXTREME_MEMORY,
+          bundleSize: TEST_CONSTANTS.EXTREME_MEMORY
         },
         interactions: {
           interactionRate: 1.0,
-          viewTime: 60000,
+          viewTime: TEST_CONSTANTS.DEFAULT_TIMEOUT * TEST_CONSTANTS.EXTREME_VIEW_TIME_MULTIPLIER,
           scrollBehavior: 'smooth',
-          accessibilityScore: 100
+          accessibilityScore: TEST_CONSTANTS.EXTREME_ACCESSIBILITY
         },
         context: {
           parent: 'ExtremeParent',
@@ -433,7 +687,7 @@ export class TestDataFactory {
       malformedData: {
         componentId: 'malformed-component',
         componentType: 'MalformedComponent',
-        responsiveValues: null as any,
+        responsiveValues: undefined as ResponsiveValueUsage[] | undefined,
         performance: {
           renderTime: -1,
           layoutShift: -0.1,
@@ -443,14 +697,14 @@ export class TestDataFactory {
         interactions: {
           interactionRate: 1.5,
           viewTime: -1000,
-          scrollBehavior: 'invalid' as any,
+          scrollBehavior: 'invalid' as 'smooth' | 'normal',
           accessibilityScore: 150
         },
         context: {
-          parent: null as any,
-          children: null as any,
-          position: null as any,
-          importance: null as any
+          parent: undefined as string | undefined,
+          children: [] as string[],
+          position: 'other' as 'header' | 'main' | 'sidebar' | 'footer' | 'modal' | 'other',
+          importance: 'primary' as 'primary' | 'secondary' | 'tertiary'
         }
       }
     };
@@ -465,20 +719,20 @@ export class TestDataFactory {
     complexConfiguration: ResponsiveConfig;
   } {
     return {
-      largeDataset: this.createComponentUsageDataArray(1000),
-      highFrequencyComponents: this.createComponentUsageDataArray(100, {
+      largeDataset: this.createComponentUsageDataArray(TEST_CONSTANTS.LARGE_DATASET_SIZE),
+      highFrequencyComponents: this.createComponentUsageDataArray(TEST_CONSTANTS.HIGH_FREQUENCY_SIZE, {
         interactions: {
-          interactionRate: 0.95,
-          viewTime: 5000,
+          interactionRate: TEST_CONSTANTS.HIGH_FREQUENCY_RATE,
+          viewTime: TEST_CONSTANTS.HIGH_FREQUENCY_VIEW_TIME,
           scrollBehavior: 'smooth',
-          accessibilityScore: 95
+          accessibilityScore: TEST_CONSTANTS.HIGH_FREQUENCY_ACCESSIBILITY
         }
       }),
       complexConfiguration: this.createResponsiveConfig({
-        breakpoints: Array.from({ length: 20 }, (_, i) => ({
+        breakpoints: Array.from({ length: TEST_CONSTANTS.COMPLEX_BREAKPOINT_COUNT }, (_, i) => ({
           name: `breakpoint-${i}`,
-          width: 320 + i * 100,
-          height: 568 + i * 50,
+          width: TEST_CONSTANTS.COMPLEX_BREAKPOINT_WIDTH_BASE + i * TEST_CONSTANTS.COMPLEX_BREAKPOINT_WIDTH_INCREMENT,
+          height: TEST_CONSTANTS.COMPLEX_BREAKPOINT_HEIGHT_BASE + i * TEST_CONSTANTS.COMPLEX_BREAKPOINT_HEIGHT_INCREMENT,
           alias: `bp-${i}`
         }))
       })

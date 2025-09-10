@@ -36,7 +36,7 @@ export interface StreamingMessage {
   id: string;
   type: 'request' | 'response' | 'event' | 'error' | 'heartbeat';
   timestamp: number;
-  data: any;
+  data: unknown;
   metadata?: {
     userId?: string;
     sessionId?: string;
@@ -88,8 +88,8 @@ export class StreamingAPIManager extends EventEmitter {
   private messageBuffer: Map<string, StreamingMessage> = new Map();
   private rateLimiter: RateLimitInfo;
   private performanceMetrics: PerformanceMetrics;
-  private reconnectTimer?: NodeJS.Timeout;
-  private heartbeatTimer?: NodeJS.Timeout;
+  private reconnectTimer?: ReturnType<typeof setTimeout>;
+  private heartbeatTimer?: ReturnType<typeof setInterval>;
   private isConnecting = false;
   private messageIdCounter = 0;
   private compressionWorker?: Worker;
@@ -153,7 +153,7 @@ export class StreamingAPIManager extends EventEmitter {
           await this.connectSSE();
           break;
         case 'polling':
-          await this.connectPolling();
+          this.connectPolling();
           break;
         default:
           throw new Error(`Unsupported protocol: ${this.config.protocol}`);
@@ -205,7 +205,7 @@ export class StreamingAPIManager extends EventEmitter {
    */
   async sendMessage(
     type: StreamingMessage['type'],
-    data: any,
+    data: unknown,
     metadata?: StreamingMessage['metadata']
   ): Promise<string> {
     const message: StreamingMessage = {
@@ -223,7 +223,7 @@ export class StreamingAPIManager extends EventEmitter {
       return message.id;
     }
 
-    return await this.sendMessageImmediate(message);
+    return this.sendMessageImmediate(message);
   }
 
   /**
@@ -235,9 +235,9 @@ export class StreamingAPIManager extends EventEmitter {
     }
 
     try {
-      const serializedMessage = await this.serializeMessage(message);
+      const serializedMessage = this.serializeMessage(message);
       const compressedMessage = this.config.compressionEnabled 
-        ? await this.compressMessage(serializedMessage)
+        ? this.compressMessage(serializedMessage)
         : serializedMessage;
 
       if (this.connection instanceof WebSocket) {
@@ -262,7 +262,7 @@ export class StreamingAPIManager extends EventEmitter {
   /**
    * Subscribe to specific message types
    */
-  subscribe(messageTypes: string[], callback: (message: StreamingMessage) => void): void {
+  subscribe(messageTypes: string[], callback: (_message: StreamingMessage) => void): void {
     for (const messageType of messageTypes) {
       this.on(`message:${messageType}`, callback);
     }
@@ -271,7 +271,7 @@ export class StreamingAPIManager extends EventEmitter {
   /**
    * Unsubscribe from message types
    */
-  unsubscribe(messageTypes: string[], callback: (message: StreamingMessage) => void): void {
+  unsubscribe(messageTypes: string[], callback: (_message: StreamingMessage) => void): void {
     for (const messageType of messageTypes) {
       this.off(`message:${messageType}`, callback);
     }
@@ -305,9 +305,11 @@ export class StreamingAPIManager extends EventEmitter {
     this.config = { ...this.config, ...newConfig };
     
     // Reconnect if URL or protocol changed
-    if (newConfig.url || newConfig.protocol) {
+    if (newConfig.url ?? newConfig.protocol) {
       this.disconnect();
-      this.connect();
+      this.connect().catch(() => {
+        // Handle connection error silently
+      });
     }
   }
 
@@ -364,9 +366,9 @@ export class StreamingAPIManager extends EventEmitter {
   /**
    * Connect using polling
    */
-  private async connectPolling(): Promise<void> {
+  private connectPolling(): void {
     // Mock implementation for polling
-    this.connection = {} as any; // Placeholder
+    this.connection = {} as WebSocket; // Placeholder
     this.startPolling();
   }
 
@@ -374,38 +376,42 @@ export class StreamingAPIManager extends EventEmitter {
    * Start polling for messages
    */
   private startPolling(): void {
-    setInterval(async () => {
-      try {
-        const response = await fetch(this.config.url, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${this.config.authentication.credentials}`,
-            'Content-Type': 'application/json'
-          }
-        });
+    setInterval(() => {
+      (async () => {
+        try {
+          const response = await fetch(this.config.url, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${this.config.authentication.credentials}`,
+              'Content-Type': 'application/json'
+            }
+          });
 
-        if (response.ok) {
-          const data = await response.text();
-          if (data) {
-            this.handleMessage(data);
+          if (response.ok) {
+            const data = await response.text();
+            if (data) {
+              this.handleMessage(data);
+            }
           }
+        } catch (error) {
+          this.handleConnectionError(error as Error);
         }
-      } catch (error) {
-        this.handleConnectionError(error as Error);
-      }
+      })().catch(() => {
+        // Handle polling error silently
+      });
     }, 1000); // Poll every second
   }
 
   /**
    * Handle incoming message
    */
-  private async handleMessage(data: string): Promise<void> {
+  private handleMessage(data: string): void {
     try {
       const decompressedData = this.config.compressionEnabled 
-        ? await this.decompressMessage(data)
+        ? this.decompressMessage(data)
         : data;
 
-      const message = await this.deserializeMessage(decompressedData);
+      const message = this.deserializeMessage(decompressedData);
       
       this.updatePerformanceMetrics('received', data.length);
       this.performanceMetrics.messagesReceived++;
@@ -468,7 +474,9 @@ export class StreamingAPIManager extends EventEmitter {
     const delay = this.config.reconnectInterval * Math.pow(2, this.status.reconnectAttempts - 1);
     
     this.reconnectTimer = setTimeout(() => {
-      this.connect();
+      this.connect().catch(() => {
+        // Handle connection error silently
+      });
     }, delay);
 
     this.emit('reconnecting', { 
@@ -483,7 +491,9 @@ export class StreamingAPIManager extends EventEmitter {
    */
   private startHeartbeat(): void {
     this.heartbeatTimer = setInterval(() => {
-      this.sendMessage('heartbeat', { timestamp: Date.now() });
+      this.sendMessage('heartbeat', { timestamp: Date.now() }).catch(() => {
+        // Handle send error silently
+      });
     }, this.config.heartbeatInterval);
   }
 
@@ -491,7 +501,8 @@ export class StreamingAPIManager extends EventEmitter {
    * Handle heartbeat response
    */
   private handleHeartbeat(message: StreamingMessage): void {
-    const latency = Date.now() - message.data.timestamp;
+    const data = message.data as { timestamp: number };
+    const latency = Date.now() - data.timestamp;
     this.status.latency = latency;
     this.updateAverageLatency(latency);
   }
@@ -584,21 +595,21 @@ export class StreamingAPIManager extends EventEmitter {
   /**
    * Serialize message
    */
-  private async serializeMessage(message: StreamingMessage): Promise<string> {
+  private serializeMessage(message: StreamingMessage): string {
     return JSON.stringify(message);
   }
 
   /**
    * Deserialize message
    */
-  private async deserializeMessage(data: string): Promise<StreamingMessage> {
+  private deserializeMessage(data: string): StreamingMessage {
     return JSON.parse(data);
   }
 
   /**
    * Compress message
    */
-  private async compressMessage(data: string): Promise<string> {
+  private compressMessage(data: string): string {
     if (!this.compressionWorker) {
       return data;
     }
@@ -610,7 +621,7 @@ export class StreamingAPIManager extends EventEmitter {
   /**
    * Decompress message
    */
-  private async decompressMessage(data: string): Promise<string> {
+  private decompressMessage(data: string): string {
     if (!this.compressionWorker) {
       return data;
     }
@@ -694,7 +705,7 @@ export class StreamingAPIManager extends EventEmitter {
  * Real-time Optimization Stream
  */
 export class OptimizationStream extends StreamingAPIManager {
-  private optimizationCallbacks: Map<string, (result: any) => void> = new Map();
+  private optimizationCallbacks: Map<string, (_result: unknown) => void> = new Map();
 
   constructor(config: StreamingConfig) {
     super(config);
@@ -706,9 +717,9 @@ export class OptimizationStream extends StreamingAPIManager {
    */
   async streamOptimization(
     requestId: string,
-    config: any,
-    usageData: any[],
-    callback: (result: any) => void
+    config: unknown,
+    usageData: unknown[],
+    callback: (_result: unknown) => void
   ): Promise<void> {
     this.optimizationCallbacks.set(requestId, callback);
 
@@ -728,13 +739,14 @@ export class OptimizationStream extends StreamingAPIManager {
    */
   private setupOptimizationHandlers(): void {
     this.subscribe(['response', 'event'], (message) => {
-      if (message.data.requestId && this.optimizationCallbacks.has(message.data.requestId)) {
-        const callback = this.optimizationCallbacks.get(message.data.requestId)!;
+      const data = message.data as { requestId?: string; completed?: boolean };
+      if (data.requestId && this.optimizationCallbacks.has(data.requestId)) {
+        const callback = this.optimizationCallbacks.get(data.requestId)!;
         callback(message.data);
         
         // Remove callback if this is the final result
-        if (message.data.completed) {
-          this.optimizationCallbacks.delete(message.data.requestId);
+        if (data.completed) {
+          this.optimizationCallbacks.delete(data.requestId);
         }
       }
     });

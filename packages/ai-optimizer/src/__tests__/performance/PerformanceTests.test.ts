@@ -6,29 +6,23 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AIOptimizer, createAIOptimizer } from '../../index.js';
+import { AIOptimizer } from '../../index.js';
 import { testDataFactory } from '../factories/TestDataFactory.js';
-import type { ComponentUsageData, AIModelConfig } from '../../types/index.js';
+import type { ComponentUsageData } from '../../types/index.js';
 import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 /**
  * Performance test utilities
  */
 class PerformanceTestUtils {
-  static measureExecutionTime<T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
-    return new Promise(async (resolve, reject) => {
-      const startTime = performance.now();
-      try {
-        const result = await fn();
-        const endTime = performance.now();
-        resolve({
-          result,
-          duration: endTime - startTime
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
+  static async measureExecutionTime<T>(fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
+    const startTime = performance.now();
+    const result = await fn();
+    const endTime = performance.now();
+    return {
+      result,
+      duration: endTime - startTime
+    };
   }
 
   static measureMemoryUsage(): number {
@@ -46,14 +40,16 @@ class PerformanceTestUtils {
 
     const initialMemory = this.measureMemoryUsage();
     
-    for (let i = 0; i < iterations; i++) {
+    const promises = Array.from({ length: iterations }, async (_, i) => {
       await testFn();
       
       // Force garbage collection every 10 iterations
       if (i % 10 === 0 && (global as any).gc) {
         (global as any).gc();
       }
-    }
+    });
+    
+    await Promise.all(promises);
 
     // Force final garbage collection
     if ((global as any).gc) {
@@ -92,7 +88,7 @@ describe('AI Optimizer Performance Tests', () => {
   describe('Optimization Performance', () => {
     it('should complete optimization within acceptable time limits', async () => {
       const { duration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await optimizer.optimizeScaling(baseConfig, baseUsageData);
+        return optimizer.optimizeScaling(baseConfig, baseUsageData);
       });
 
       // Should complete within 2 seconds for small dataset
@@ -103,13 +99,17 @@ describe('AI Optimizer Performance Tests', () => {
       const datasetSizes = [10, 50, 100];
       const durations: number[] = [];
 
-      for (const size of datasetSizes) {
-        const usageData = PerformanceTestUtils.generateLoadTestData(size);
-        const { duration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-          return await optimizer.optimizeScaling(baseConfig, usageData);
-        });
-        durations.push(duration);
-      }
+      const results = await Promise.all(
+        datasetSizes.map(async (size) => {
+          const usageData = PerformanceTestUtils.generateLoadTestData(size);
+          const { duration } = await PerformanceTestUtils.measureExecutionTime(async () => {
+            return optimizer.optimizeScaling(baseConfig, usageData);
+          });
+          return duration;
+        })
+      );
+      
+      durations.push(...results);
 
       // Performance should scale reasonably (not exponentially)
       const ratio = durations[2] / durations[0]; // 100 items vs 10 items
@@ -120,7 +120,7 @@ describe('AI Optimizer Performance Tests', () => {
       const largeDataset = PerformanceTestUtils.generateLoadTestData(1000);
       
       const { duration, result } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await optimizer.optimizeScaling(baseConfig, largeDataset);
+        return optimizer.optimizeScaling(baseConfig, largeDataset);
       });
 
       // Should complete within 10 seconds for large dataset
@@ -133,7 +133,7 @@ describe('AI Optimizer Performance Tests', () => {
       const complexConfig = testDataFactory.createPerformanceTestScenarios().complexConfiguration;
       
       const { duration, result } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await optimizer.optimizeScaling(complexConfig, baseUsageData);
+        return optimizer.optimizeScaling(complexConfig, baseUsageData);
       });
 
       // Should complete within 5 seconds for complex configuration
@@ -194,7 +194,7 @@ describe('AI Optimizer Performance Tests', () => {
       const trainingData = testDataFactory.createTrainingDataArray(50);
       
       const { duration, result } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await optimizer.trainModel(trainingData);
+        return optimizer.trainModel(trainingData);
       });
 
       // Should complete within 30 seconds for medium dataset
@@ -208,11 +208,11 @@ describe('AI Optimizer Performance Tests', () => {
       const largeTrainingData = testDataFactory.createTrainingDataArray(100);
       
       const { duration: smallDuration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await optimizer.trainModel(smallTrainingData);
+        return optimizer.trainModel(smallTrainingData);
       });
       
       const { duration: largeDuration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await optimizer.trainModel(largeTrainingData);
+        return optimizer.trainModel(largeTrainingData);
       });
 
       // Large dataset should not take more than 10x longer than small dataset
@@ -238,13 +238,13 @@ describe('AI Optimizer Performance Tests', () => {
   describe('Concurrent Operations', () => {
     it('should handle concurrent optimizations efficiently', async () => {
       const concurrentOperations = 5;
-      const promises = Array.from({ length: concurrentOperations }, async (_, index) => {
+      const promises = Array.from({ length: concurrentOperations }, async () => {
         const testData = PerformanceTestUtils.generateLoadTestData(10);
-        return await optimizer.optimizeScaling(baseConfig, testData);
+        return optimizer.optimizeScaling(baseConfig, testData);
       });
 
       const { duration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await Promise.all(promises);
+        return Promise.all(promises);
       });
 
       // Concurrent operations should complete within reasonable time
@@ -259,7 +259,7 @@ describe('AI Optimizer Performance Tests', () => {
       ];
 
       const { duration, result } = await PerformanceTestUtils.measureExecutionTime(async () => {
-        return await Promise.all(operations);
+        return Promise.all(operations);
       });
 
       expect(duration).toBeLessThan(15000);
@@ -276,10 +276,12 @@ describe('AI Optimizer Performance Tests', () => {
       const operations = 50;
       const startTime = performance.now();
       
-      for (let i = 0; i < operations; i++) {
+      const operationPromises = Array.from({ length: operations }, () => {
         const testData = PerformanceTestUtils.generateLoadTestData(5);
-        await optimizer.optimizeScaling(baseConfig, testData);
-      }
+        return optimizer.optimizeScaling(baseConfig, testData);
+      });
+      
+      await Promise.all(operationPromises);
       
       const endTime = performance.now();
       const totalDuration = endTime - startTime;
@@ -295,18 +297,19 @@ describe('AI Optimizer Performance Tests', () => {
     it('should maintain performance under memory pressure', async () => {
       // Create memory pressure by running many operations
       const memoryPressureOperations = 100;
-      const results = [];
-      
-      for (let i = 0; i < memoryPressureOperations; i++) {
+      const operationPromises = Array.from({ length: memoryPressureOperations }, async (_, i) => {
         const testData = PerformanceTestUtils.generateLoadTestData(10);
         const result = await optimizer.optimizeScaling(baseConfig, testData);
-        results.push(result);
         
         // Force garbage collection every 20 operations
         if (i % 20 === 0 && (global as any).gc) {
           (global as any).gc();
         }
-      }
+        
+        return result;
+      });
+      
+      const results = await Promise.all(operationPromises);
       
       // All operations should complete successfully
       expect(results).toHaveLength(memoryPressureOperations);
@@ -319,18 +322,20 @@ describe('AI Optimizer Performance Tests', () => {
     it('should handle extreme dataset sizes gracefully', async () => {
       const extremeSizes = [1, 2000, 5000];
       
-      for (const size of extremeSizes) {
-        const testData = PerformanceTestUtils.generateLoadTestData(size);
-        
-        const { duration, result } = await PerformanceTestUtils.measureExecutionTime(async () => {
-          return await optimizer.optimizeScaling(baseConfig, testData);
-        });
-        
-        // Should complete within reasonable time regardless of size
-        expect(duration).toBeLessThan(60000); // 1 minute max
-        expect(result).toBeDefined();
-        expect(result.confidenceScore).toBeGreaterThanOrEqual(0);
-      }
+      await Promise.all(
+        extremeSizes.map(async (size) => {
+          const testData = PerformanceTestUtils.generateLoadTestData(size);
+          
+          const { duration, result } = await PerformanceTestUtils.measureExecutionTime(async () => {
+            return optimizer.optimizeScaling(baseConfig, testData);
+          });
+          
+          // Should complete within reasonable time regardless of size
+          expect(duration).toBeLessThan(60000); // 1 minute max
+          expect(result).toBeDefined();
+          expect(result.confidenceScore).toBeGreaterThanOrEqual(0);
+        })
+      );
     });
   });
 
@@ -339,10 +344,12 @@ describe('AI Optimizer Performance Tests', () => {
       const initialMemory = PerformanceTestUtils.measureMemoryUsage();
       
       // Run multiple optimizations
-      for (let i = 0; i < 10; i++) {
+      const optimizationPromises = Array.from({ length: 10 }, () => {
         const testData = PerformanceTestUtils.generateLoadTestData(20);
-        await optimizer.optimizeScaling(baseConfig, testData);
-      }
+        return optimizer.optimizeScaling(baseConfig, testData);
+      });
+      
+      await Promise.all(optimizationPromises);
       
       // Force garbage collection
       if ((global as any).gc) {
@@ -362,13 +369,13 @@ describe('AI Optimizer Performance Tests', () => {
       try {
         // Attempt operations that will fail
         await optimizer.optimizeScaling(null as any, baseUsageData);
-      } catch (error) {
+      } catch {
         // Expected to fail
       }
       
       try {
         await optimizer.optimizeScaling(baseConfig, null as any);
-      } catch (error) {
+      } catch {
         // Expected to fail
       }
       
@@ -388,14 +395,16 @@ describe('AI Optimizer Performance Tests', () => {
   describe('Performance Regression Testing', () => {
     it('should maintain consistent performance across runs', async () => {
       const runs = 5;
-      const durations: number[] = [];
       
-      for (let i = 0; i < runs; i++) {
-        const { duration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-          return await optimizer.optimizeScaling(baseConfig, baseUsageData);
-        });
-        durations.push(duration);
-      }
+      const results = await Promise.all(
+        Array.from({ length: runs }, () => 
+          PerformanceTestUtils.measureExecutionTime(async () => {
+            return optimizer.optimizeScaling(baseConfig, baseUsageData);
+          })
+        )
+      );
+      
+      const durations = results.map(result => result.duration);
       
       // Calculate coefficient of variation (CV) for consistency
       const mean = durations.reduce((sum, d) => sum + d, 0) / durations.length;
@@ -415,14 +424,15 @@ describe('AI Optimizer Performance Tests', () => {
         testDataFactory.createResponsiveConfig({ breakpoints: baseConfig.breakpoints.slice(0, 2) })
       ];
       
-      const durations: number[] = [];
+      const results = await Promise.all(
+        configs.map(config => 
+          PerformanceTestUtils.measureExecutionTime(async () => {
+            return optimizer.optimizeScaling(config, baseUsageData);
+          })
+        )
+      );
       
-      for (const config of configs) {
-        const { duration } = await PerformanceTestUtils.measureExecutionTime(async () => {
-          return await optimizer.optimizeScaling(config, baseUsageData);
-        });
-        durations.push(duration);
-      }
+      const durations = results.map(result => result.duration);
       
       // All configurations should perform within reasonable bounds
       durations.forEach(duration => {

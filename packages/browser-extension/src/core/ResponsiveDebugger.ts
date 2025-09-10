@@ -327,7 +327,7 @@ export class ResponsiveDebugger {
     overlay.className = 'rre-element-overlay';
     overlay.dataset.targetElement = this.getElementSelector(element);
     
-    const color = options.color || '#00ff88';
+    const color = options.color ?? '#00ff88';
     
     overlay.style.cssText = `
       position: fixed;
@@ -594,7 +594,7 @@ export class ResponsiveDebugger {
   private estimateMemoryUsage(element: HTMLElement): number {
     // Simplified estimation based on element complexity
     const children = element.getElementsByTagName('*').length;
-    const styles = element.getAttribute('style')?.length || 0;
+    const styles = element.getAttribute('style')?.length ?? 0;
     return (children * 50) + styles + 100; // Base estimation
   }
 
@@ -638,7 +638,7 @@ export class ResponsiveDebugger {
     
     if (reactKey) {
       const fiber = (element as any)[reactKey];
-      if (fiber && fiber.type && fiber.type.name) {
+      if (fiber?.type?.name) {
         return fiber.type.name;
       }
     }
@@ -791,7 +791,7 @@ export class ResponsiveDebugger {
     // Look for hook signatures that match our responsive hooks
     let hook = fiber.memoizedState;
     while (hook) {
-      if (hook.queue && hook.queue._dispatchSetState) {
+      if (hook.queue?._dispatchSetState) {
         // This is a simplified check - in reality, we'd need more sophisticated detection
         return true;
       }

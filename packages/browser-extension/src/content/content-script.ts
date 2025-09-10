@@ -92,22 +92,22 @@ class ContentScript {
           await this.toggleDebugger();
           __sendResponse({ 
             success: true, 
-            enabled: this.debugger?.isDebuggerEnabled() || false 
+            enabled: this.debugger?.isDebuggerEnabled() ?? false 
           });
           break;
 
         case 'get-status':
           __sendResponse({
             success: true,
-            enabled: this.debugger?.isDebuggerEnabled() || false,
+            enabled: this.debugger?.isDebuggerEnabled() ?? false,
             hasResponsiveEasy: this.hasResponsiveEasy(),
-            elementCount: this.debugger?.getResponsiveElements().length || 0,
+            elementCount: this.debugger?.getResponsiveElements().length ?? 0,
             currentBreakpoint: this.debugger?.getCurrentBreakpoint()
           });
           break;
 
         case 'get-responsive-elements': {
-          const elements = this.debugger?.getResponsiveElements() || [];
+          const elements = this.debugger?.getResponsiveElements() ?? [];
           __sendResponse({
             success: true,
             elements: elements.map(el => ({
@@ -263,13 +263,13 @@ class ContentScript {
       let elementCount = 0;
       try {
         const elements = document.querySelectorAll('[data-responsive]');
-        elementCount = elements && elements.length ? elements.length : 0;
+        elementCount = elements?.length ?? 0;
       } catch (error) {
         console.warn('Failed to query responsive elements in periodic check:', error);
         elementCount = 0;
       }
       
-      const previousCount = this.debugger?.getResponsiveElements().length || 0;
+      const previousCount = this.debugger?.getResponsiveElements().length ?? 0;
       
       if (elementCount !== previousCount) {
         console.log(`🔍 Responsive elements changed: ${previousCount} → ${elementCount}`);

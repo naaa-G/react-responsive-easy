@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AIOptimizer, createAIOptimizer, optimizeConfiguration } from '../../index.js';
 import { testDataFactory } from '../factories/TestDataFactory.js';
-import type { ComponentUsageData, AIModelConfig } from '../../types/index.js';
+import type { ComponentUsageData } from '../../types/index.js';
 import type { ResponsiveConfig } from '@yaseratiar/react-responsive-easy-core';
 
 describe('AI Optimizer Error Handling Tests', () => {
@@ -111,7 +111,14 @@ describe('AI Optimizer Error Handling Tests', () => {
         ...validConfig,
         strategy: {
           ...validConfig.strategy,
-          tokens: {}
+          tokens: {
+            fontSize: { scale: 0.85, min: 12, max: 72, step: 1, responsive: true },
+            spacing: { scale: 0.9, min: 4, max: 128, step: 4, responsive: true },
+            radius: { scale: 0.8, min: 0, max: 24, step: 1, responsive: true },
+            lineHeight: { scale: 1.1, min: 1, max: 2, step: 0.1, responsive: true },
+            shadow: { scale: 0.9, min: 0, max: 16, step: 1, responsive: true },
+            border: { scale: 0.8, min: 0, max: 8, step: 1, responsive: true }
+          }
         }
       };
       
@@ -285,10 +292,46 @@ describe('AI Optimizer Error Handling Tests', () => {
         {
           ...testDataFactory.createTrainingData(),
           features: {
-            config: null,
-            usage: null,
-            performance: null,
-            context: null
+            config: {
+              breakpointCount: 0,
+              breakpointRatios: [],
+              tokenComplexity: 0,
+              originDistribution: { width: 0, height: 0, min: 0, max: 0, diagonal: 0, area: 0 },
+              modeDistribution: { linear: 0, exponential: 0, logarithmic: 0, 'golden-ratio': 0, custom: 0 },
+              roundingDistribution: { nearest: 0, up: 0, down: 0, custom: 0 },
+              accessibilityFeatures: { minFontSize: 0, minTapTarget: 0, contrastRatio: 0 }
+            },
+            usage: {
+              componentCount: 0,
+              interactionRate: 0,
+              viewTime: 0,
+              scrollBehavior: 'normal' as 'smooth' | 'normal',
+              accessibilityScore: 0,
+              commonValues: [],
+              valueDistributions: {},
+              componentFrequencies: {},
+              propertyPatterns: {}
+            },
+            performance: {
+              renderTime: 0,
+              layoutShift: 0,
+              memoryUsage: 0,
+              bundleSize: 0,
+              avgRenderTimes: [],
+              bundleSizes: [],
+              memoryPatterns: [],
+              layoutShiftFreq: []
+            },
+            context: {
+              parent: 'test',
+              children: [],
+              position: 'other' as 'header' | 'main' | 'sidebar' | 'footer' | 'modal' | 'other',
+              importance: 'primary' as 'primary' | 'secondary' | 'tertiary',
+              applicationType: 'web',
+              deviceDistribution: {},
+              userBehavior: {},
+              industry: 'technology'
+            }
           }
         }
       ];
@@ -433,7 +476,7 @@ describe('AI Optimizer Error Handling Tests', () => {
       try {
         // Attempt operations that will fail
         await optimizer.optimizeScaling(null as any, validUsageData);
-      } catch (error) {
+      } catch {
         // Expected to fail
       }
       
@@ -481,7 +524,7 @@ describe('AI Optimizer Error Handling Tests', () => {
       // First, cause a failure
       try {
         await optimizer.optimizeScaling(null as any, validUsageData);
-      } catch (error) {
+      } catch {
         // Expected to fail
       }
       
@@ -495,7 +538,7 @@ describe('AI Optimizer Error Handling Tests', () => {
       
       try {
         await optimizer.optimizeScaling(null as any, validUsageData);
-      } catch (error) {
+      } catch {
         // Expected to fail
       }
       

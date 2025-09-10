@@ -87,8 +87,20 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       monitor.stop();
       setIsMonitoring(false);
     } else {
-      monitor.start();
-      setIsMonitoring(true);
+      // Handle async start operation without blocking the UI
+      monitor.start()
+        .then(() => {
+          setIsMonitoring(true);
+        })
+        .catch((error: Error) => {
+          // Log error for debugging in development
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error('Failed to start performance monitoring:', error);
+          }
+          // Reset state on error
+          setIsMonitoring(false);
+        });
     }
   }, [monitor, isMonitoring]);
 

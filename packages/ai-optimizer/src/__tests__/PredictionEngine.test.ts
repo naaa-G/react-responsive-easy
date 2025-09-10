@@ -222,9 +222,11 @@ describe('PredictionEngine', () => {
       const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
       
       // Make multiple predictions
-      for (let i = 0; i < 3; i++) {
-        await predictionEngine.predict(mockModel as any, mockFeatures as any);
-      }
+      await Promise.all(
+        Array.from({ length: 3 }, () => 
+          predictionEngine.predict(mockModel as any, mockFeatures as any)
+        )
+      );
       
       const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
       const memoryIncrease = finalMemory - initialMemory;

@@ -27,6 +27,23 @@ export interface TensorPoolConfig {
 export class TensorPool {
   private pools: Map<string, tf.Tensor[]> = new Map();
   private config: TensorPoolConfig;
+  // Constants for magic numbers
+  public static readonly DEFAULT_MAX_POOL_SIZE = 50;
+  public static readonly DEFAULT_CLEANUP_THRESHOLD = 0.8;
+  public static readonly DEFAULT_MONITORING_INTERVAL = 5000;
+  public static readonly CLEANUP_TARGET_MULTIPLIER = 0.5;
+  public static readonly BYTES_PER_KB = 1024;
+  public static readonly BYTES_PER_MB = TensorPool.BYTES_PER_KB * TensorPool.BYTES_PER_KB; // 1MB in bytes
+  public static readonly MEMORY_50MB = 50;
+  public static readonly MEMORY_100MB = 100;
+  public static readonly MEMORY_200MB = 200;
+  public static readonly MEMORY_500MB = 500;
+  public static readonly DEFAULT_BATCH_SIZE = 10;
+  public static readonly SNAPSHOT_INTERVAL = 10000;
+  public static readonly MAX_SNAPSHOTS = 100;
+  public static readonly MIN_SNAPSHOTS_FOR_ANALYSIS = 10;
+  public static readonly MEMORY_LEAK_THRESHOLD = TensorPool.BYTES_PER_MB; // 1MB threshold
+
   private stats = {
     created: 0,
     reused: 0,
@@ -35,9 +52,9 @@ export class TensorPool {
 
   constructor(config: Partial<TensorPoolConfig> = {}) {
     this.config = {
-      maxPoolSize: 50,
-      cleanupThreshold: 0.8,
-      monitoringInterval: 5000,
+      maxPoolSize: TensorPool.DEFAULT_MAX_POOL_SIZE,
+      cleanupThreshold: TensorPool.DEFAULT_CLEANUP_THRESHOLD,
+      monitoringInterval: TensorPool.DEFAULT_MONITORING_INTERVAL,
       ...config
     };
   }
@@ -47,7 +64,7 @@ export class TensorPool {
    */
   getTensor(shape: number[], dtype: tf.DataType = 'float32', type: string = 'default'): tf.Tensor {
     const key = this.generateKey(shape, dtype, type);
-    const pool = this.pools.get(key) || [];
+    const pool = this.pools.get(key) ?? [];
     
     if (pool.length > 0) {
       const tensor = pool.pop()!;
@@ -65,7 +82,7 @@ export class TensorPool {
    */
   returnTensor(tensor: tf.Tensor, type: string = 'default'): void {
     const key = this.generateKey(tensor.shape, tensor.dtype, type);
-    const pool = this.pools.get(key) || [];
+    const pool = this.pools.get(key) ?? [];
     
     if (pool.length < this.config.maxPoolSize) {
       pool.push(tensor);
@@ -80,9 +97,9 @@ export class TensorPool {
    * Clean up excess tensors when memory pressure is high
    */
   cleanup(aggressive: boolean = false): void {
-    const targetSize = aggressive ? 0 : Math.floor(this.config.maxPoolSize * 0.5);
+    const targetSize = aggressive ? 0 : Math.floor(this.config.maxPoolSize * TensorPool.CLEANUP_TARGET_MULTIPLIER);
     
-    for (const [key, pool] of this.pools.entries()) {
+    for (const [, pool] of this.pools.entries()) {
       while (pool.length > targetSize) {
         const tensor = pool.pop()!;
         tensor.dispose();
@@ -127,14 +144,14 @@ export class TensorPool {
 export class MemoryMonitor {
   private static instance: MemoryMonitor;
   private tensorPool: TensorPool;
-  private monitoringInterval: NodeJS.Timeout | null = null;
+  private monitoringInterval: ReturnType<typeof setInterval> | null = null;
   private memoryThresholds = {
-    low: 50 * 1024 * 1024,    // 50MB
-    medium: 100 * 1024 * 1024, // 100MB
-    high: 200 * 1024 * 1024,   // 200MB
-    critical: 500 * 1024 * 1024 // 500MB
+    low: TensorPool.MEMORY_50MB * TensorPool.BYTES_PER_MB,    // 50MB
+    medium: TensorPool.MEMORY_100MB * TensorPool.BYTES_PER_MB, // 100MB
+    high: TensorPool.MEMORY_200MB * TensorPool.BYTES_PER_MB,   // 200MB
+    critical: TensorPool.MEMORY_500MB * TensorPool.BYTES_PER_MB // 500MB
   };
-  private callbacks: Array<(stats: MemoryStats) => void> = [];
+  private callbacks: Array<(_stats: MemoryStats) => void> = [];
 
   private constructor() {
     this.tensorPool = new TensorPool();
@@ -150,7 +167,7 @@ export class MemoryMonitor {
   /**
    * Start monitoring memory usage
    */
-  startMonitoring(interval: number = 5000): void {
+  startMonitoring(interval: number = TensorPool.DEFAULT_MONITORING_INTERVAL): void {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
     }
@@ -174,7 +191,7 @@ export class MemoryMonitor {
    * Get current memory statistics
    */
   getMemoryStats(): MemoryStats {
-    const memory = (performance as any).memory;
+    const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
     const tensorCount = tf.memory().numTensors;
     
     let memoryPressure: MemoryStats['memoryPressure'] = 'low';
@@ -189,9 +206,9 @@ export class MemoryMonitor {
     }
 
     return {
-      usedJSHeapSize: memory?.usedJSHeapSize || 0,
-      totalJSHeapSize: memory?.totalJSHeapSize || 0,
-      jsHeapSizeLimit: memory?.jsHeapSizeLimit || 0,
+      usedJSHeapSize: memory?.usedJSHeapSize ?? 0,
+      totalJSHeapSize: memory?.totalJSHeapSize ?? 0,
+      jsHeapSizeLimit: memory?.jsHeapSizeLimit ?? 0,
       tensorCount,
       memoryPressure
     };
@@ -215,6 +232,7 @@ export class MemoryMonitor {
       case 'critical':
         this.tensorPool.cleanup(true);
         this.forceGarbageCollection();
+        // eslint-disable-next-line no-console
         console.warn('🚨 Critical memory usage detected, aggressive cleanup performed');
         break;
     }
@@ -225,7 +243,7 @@ export class MemoryMonitor {
   /**
    * Register a callback for memory events
    */
-  onMemoryEvent(callback: (stats: MemoryStats) => void): void {
+  onMemoryEvent(callback: (_stats: MemoryStats) => void): void {
     this.callbacks.push(callback);
   }
 
@@ -240,8 +258,8 @@ export class MemoryMonitor {
    * Force garbage collection if available
    */
   private forceGarbageCollection(): void {
-    if ((global as any).gc) {
-      (global as any).gc();
+    if ((global as typeof globalThis & { gc?: () => void }).gc) {
+      (global as typeof globalThis & { gc: () => void }).gc();
     }
   }
 
@@ -273,6 +291,7 @@ export class MemoryAwareTensorOps {
   createTensor(values: number[], shape?: number[], dtype: tf.DataType = 'float32'): tf.Tensor {
     // Check memory before creating
     if (!this.memoryMonitor.checkMemoryUsage()) {
+      // eslint-disable-next-line no-console
       console.warn('⚠️ High memory usage, creating tensor anyway');
     }
     
@@ -292,6 +311,7 @@ export class MemoryAwareTensorOps {
       // Clean up any leaked tensors
       const finalTensorCount = tf.memory().numTensors;
       if (finalTensorCount > initialTensorCount) {
+        // eslint-disable-next-line no-console
         console.warn(`⚠️ Potential tensor leak detected: ${finalTensorCount - initialTensorCount} tensors not disposed`);
       }
     }
@@ -302,30 +322,46 @@ export class MemoryAwareTensorOps {
    */
   async batchOperations<T>(
     operations: Array<() => Promise<T>>,
-    batchSize: number = 10
+    batchSize: number = TensorPool.DEFAULT_BATCH_SIZE
   ): Promise<T[]> {
-    const results: T[] = [];
+    // Create batches
+    const batches: Array<() => Promise<T[]>> = [];
     
     for (let i = 0; i < operations.length; i += batchSize) {
       const batch = operations.slice(i, i + batchSize);
-      
-      // Check memory before each batch
-      if (!this.memoryMonitor.checkMemoryUsage()) {
-        console.warn('⚠️ High memory usage, reducing batch size');
-        // Process one at a time if memory is high
-        for (const operation of batch) {
-          results.push(await this.withCleanup(operation));
-        }
-      } else {
-        // Process batch normally
-        const batchResults = await Promise.all(
-          batch.map(operation => this.withCleanup(operation))
-        );
-        results.push(...batchResults);
-      }
+      batches.push(() => this.processBatch(batch));
     }
     
-    return results;
+    // Process all batches in parallel
+    const batchResults = await Promise.all(
+      batches.map(batchProcessor => batchProcessor())
+    );
+    
+    // Flatten results
+    return batchResults.flat();
+  }
+
+  /**
+   * Process a single batch of operations
+   */
+  private async processBatch<T>(batch: Array<() => Promise<T>>): Promise<T[]> {
+    // Check memory before processing batch
+    if (!this.memoryMonitor.checkMemoryUsage()) {
+      // eslint-disable-next-line no-console
+      console.warn('⚠️ High memory usage, processing sequentially');
+      // Process one at a time if memory is high - use reduce to avoid await in loop
+      return batch.reduce(async (accPromise, operation) => {
+        const acc = await accPromise;
+        const result = await this.withCleanup(operation);
+        acc.push(result);
+        return acc;
+      }, Promise.resolve([] as T[]));
+    } else {
+      // Process batch normally
+      return Promise.all(
+        batch.map(operation => this.withCleanup(operation))
+      );
+    }
   }
 }
 
@@ -334,13 +370,13 @@ export class MemoryAwareTensorOps {
  */
 export class MemoryLeakDetector {
   private snapshots: Array<{ timestamp: number; stats: MemoryStats }> = [];
-  private maxSnapshots = 100;
+  private maxSnapshots = TensorPool.MAX_SNAPSHOTS;
 
   constructor() {
     // Take snapshot every 10 seconds
     setInterval(() => {
       this.takeSnapshot();
-    }, 10000);
+    }, TensorPool.SNAPSHOT_INTERVAL);
   }
 
   private takeSnapshot(): void {
@@ -367,7 +403,7 @@ export class MemoryLeakDetector {
     averageGrowth: number;
     recommendations: string[];
   } {
-    if (this.snapshots.length < 10) {
+    if (this.snapshots.length < TensorPool.MIN_SNAPSHOTS_FOR_ANALYSIS) {
       return {
         isLeaking: false,
         trend: 'stable',
@@ -376,14 +412,14 @@ export class MemoryLeakDetector {
       };
     }
 
-    const recent = this.snapshots.slice(-10);
+    const recent = this.snapshots.slice(-TensorPool.MIN_SNAPSHOTS_FOR_ANALYSIS);
     const growth = recent.map((snapshot, index) => {
       if (index === 0) return 0;
       return snapshot.stats.usedJSHeapSize - recent[index - 1].stats.usedJSHeapSize;
     });
 
     const averageGrowth = growth.reduce((sum, g) => sum + g, 0) / growth.length;
-    const isLeaking = averageGrowth > 1024 * 1024; // 1MB growth per snapshot
+    const isLeaking = averageGrowth > TensorPool.MEMORY_LEAK_THRESHOLD; // 1MB growth per snapshot
     const trend = averageGrowth > 0 ? 'increasing' : averageGrowth < 0 ? 'decreasing' : 'stable';
 
     const recommendations: string[] = [];

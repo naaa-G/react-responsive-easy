@@ -13,6 +13,23 @@ import {
  * that can be used by developers and stakeholders.
  */
 export class OptimizationReporter {
+  // Constants for magic numbers
+  private static readonly HIGH_CONFIDENCE_THRESHOLD = 0.8;
+  private static readonly MODERATE_CONFIDENCE_THRESHOLD = 0.6;
+  private static readonly LOW_CONFIDENCE_THRESHOLD = 0.7;
+  private static readonly SCALE_AGGRESSIVE_THRESHOLD = 0.8;
+  private static readonly SCALE_CONSERVATIVE_THRESHOLD = 1.2;
+  private static readonly SCALE_HIGH_PRIORITY_MIN = 0.7;
+  private static readonly SCALE_HIGH_PRIORITY_MAX = 1.3;
+  private static readonly FONT_SIZE_MEDIUM_PRIORITY_MIN = 16;
+  private static readonly FONT_SIZE_MEDIUM_PRIORITY_MAX = 32;
+  private static readonly TIMELINE_TOKEN_MULTIPLIER = 0.5;
+  private static readonly TIMELINE_ACCESSIBILITY_MULTIPLIER = 0.5;
+  private static readonly SCALE_BASELINE = 0.85;
+  private static readonly SCALE_VARIANCE_THRESHOLD = 0.2;
+  private static readonly MIN_FONT_SIZE_ACCESSIBILITY = 12;
+  private static readonly MAX_FONT_SIZE_LIMIT = 48;
+
   /**
    * Generate a comprehensive optimization report
    */
@@ -52,9 +69,9 @@ export class OptimizationReporter {
     summary += `${performanceImpacts} performance improvements, `;
     summary += `and ${accessibilityWarnings} accessibility enhancements.`;
     
-    if (suggestions.confidenceScore > 0.8) {
+    if (suggestions.confidenceScore > OptimizationReporter.HIGH_CONFIDENCE_THRESHOLD) {
       summary += ' High confidence recommendations ready for implementation.';
-    } else if (suggestions.confidenceScore > 0.6) {
+    } else if (suggestions.confidenceScore > OptimizationReporter.MODERATE_CONFIDENCE_THRESHOLD) {
       summary += ' Moderate confidence recommendations require validation.';
     } else {
       summary += ' Low confidence recommendations need further analysis.';
@@ -66,20 +83,23 @@ export class OptimizationReporter {
   /**
    * Format token recommendations
    */
-  private formatTokenRecommendations(suggestedTokens: Record<string, any>): TokenRecommendation[] {
-    return Object.entries(suggestedTokens).map(([tokenName, token]) => ({
-      token: tokenName,
-      currentConfig: 'N/A', // Would be populated with current values
-      suggestedConfig: {
-        scale: token.scale,
-        min: token.min,
-        max: token.max,
-        step: token.step
-      },
-      reasoning: this.generateTokenReasoning(tokenName, token),
-      priority: this.calculateTokenPriority(token),
-      estimatedImpact: this.estimateTokenImpact(tokenName, token)
-    }));
+  private formatTokenRecommendations(suggestedTokens: Record<string, unknown>): TokenRecommendation[] {
+    return Object.entries(suggestedTokens).map(([tokenName, token]) => {
+      const tokenConfig = token as { scale: number; min: number; max: number; step: number; responsive: boolean };
+      return {
+        token: tokenName,
+        currentConfig: 'N/A', // Would be populated with current values
+        suggestedConfig: {
+          scale: tokenConfig.scale,
+          min: tokenConfig.min,
+          max: tokenConfig.max,
+          step: tokenConfig.step
+        },
+        reasoning: this.generateTokenReasoning(tokenName, token as { scale: number; min: number; max: number }),
+        priority: this.calculateTokenPriority(token as { scale: number; min: number; max: number }),
+        estimatedImpact: this.estimateTokenImpact(tokenName, token)
+      };
+    });
   }
 
   /**
@@ -204,20 +224,20 @@ export class OptimizationReporter {
   /**
    * Generate token reasoning
    */
-  private generateTokenReasoning(tokenName: string, token: any): string {
+  private generateTokenReasoning(tokenName: string, token: { scale: number; min: number; max: number }): string {
     const reasons = [];
     
-    if (token.scale < 0.8) {
+    if (token.scale < OptimizationReporter.SCALE_AGGRESSIVE_THRESHOLD) {
       reasons.push(`More aggressive scaling for better mobile adaptation`);
-    } else if (token.scale > 1.2) {
+    } else if (token.scale > OptimizationReporter.SCALE_CONSERVATIVE_THRESHOLD) {
       reasons.push(`Conservative scaling to maintain desktop readability`);
     }
     
-    if (token.min > 12) {
+    if (token.min > OptimizationReporter.MIN_FONT_SIZE_ACCESSIBILITY) {
       reasons.push(`Higher minimum for accessibility compliance`);
     }
     
-    if (token.max < 48) {
+    if (token.max < OptimizationReporter.MAX_FONT_SIZE_LIMIT) {
       reasons.push(`Lower maximum to prevent oversized elements`);
     }
     
@@ -229,16 +249,16 @@ export class OptimizationReporter {
   /**
    * Calculate token priority
    */
-  private calculateTokenPriority(token: any): 'high' | 'medium' | 'low' {
-    if (token.scale < 0.7 || token.scale > 1.3) return 'high';
-    if (token.min > 16 || token.max < 32) return 'medium';
+  private calculateTokenPriority(token: { scale: number; min: number; max: number }): 'high' | 'medium' | 'low' {
+    if (token.scale < OptimizationReporter.SCALE_HIGH_PRIORITY_MIN || token.scale > OptimizationReporter.SCALE_HIGH_PRIORITY_MAX) return 'high';
+    if (token.min > OptimizationReporter.FONT_SIZE_MEDIUM_PRIORITY_MIN || token.max < OptimizationReporter.FONT_SIZE_MEDIUM_PRIORITY_MAX) return 'medium';
     return 'low';
   }
 
   /**
    * Estimate token impact
    */
-  private estimateTokenImpact(tokenName: string, token: any): string {
+  private estimateTokenImpact(tokenName: string, _token: unknown): string {
     const impactAreas = [];
     
     if (tokenName === 'fontSize') impactAreas.push('readability', 'accessibility');
@@ -343,7 +363,7 @@ export class OptimizationReporter {
   /**
    * Create implementation phases
    */
-  private createImplementationPhases(suggestions: OptimizationSuggestions): ImplementationPhase[] {
+  private createImplementationPhases(_suggestions: OptimizationSuggestions): ImplementationPhase[] {
     return [
       {
         phase: 1,
@@ -374,10 +394,10 @@ export class OptimizationReporter {
    */
   private estimateTimeline(suggestions: OptimizationSuggestions): string {
     const tokenCount = Object.keys(suggestions.suggestedTokens).length;
-    const complexChanges = suggestions.scalingCurveRecommendations.filter(r => r.confidence > 0.8).length;
+    const complexChanges = suggestions.scalingCurveRecommendations.filter(r => r.confidence > OptimizationReporter.HIGH_CONFIDENCE_THRESHOLD).length;
     const accessibilityIssues = suggestions.accessibilityWarnings.filter(w => w.severity === 'AA').length;
     
-    const estimatedWeeks = Math.ceil((tokenCount * 0.5) + (complexChanges * 1) + (accessibilityIssues * 0.5));
+    const estimatedWeeks = Math.ceil((tokenCount * OptimizationReporter.TIMELINE_TOKEN_MULTIPLIER) + (complexChanges * 1) + (accessibilityIssues * OptimizationReporter.TIMELINE_ACCESSIBILITY_MULTIPLIER));
     
     return `${estimatedWeeks}-${estimatedWeeks + 2} weeks`;
   }
@@ -407,7 +427,7 @@ export class OptimizationReporter {
   private identifyRisks(suggestions: OptimizationSuggestions): Risk[] {
     const risks: Risk[] = [];
     
-    if (suggestions.confidenceScore < 0.7) {
+    if (suggestions.confidenceScore < OptimizationReporter.LOW_CONFIDENCE_THRESHOLD) {
       risks.push({
         risk: 'Low confidence predictions',
         impact: 'medium',
@@ -416,7 +436,7 @@ export class OptimizationReporter {
     }
     
     const majorChanges = suggestions.scalingCurveRecommendations.filter(r => 
-      r.mode !== 'linear' || Math.abs(r.scale - 0.85) > 0.2
+      r.mode !== 'linear' || Math.abs(r.scale - OptimizationReporter.SCALE_BASELINE) > OptimizationReporter.SCALE_VARIANCE_THRESHOLD
     ).length;
     
     if (majorChanges > 2) {

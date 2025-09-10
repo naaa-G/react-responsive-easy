@@ -279,7 +279,7 @@ describe('ModelTrainer', () => {
   });
 
   describe('Data Preprocessing', () => {
-    it('should preprocess training data correctly', async () => {
+    it('should preprocess training data correctly', () => {
       const preprocessedData = modelTrainer.preprocessTrainingData(mockTrainingData);
       
       expect(preprocessedData).toBeDefined();

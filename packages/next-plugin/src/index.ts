@@ -9,6 +9,85 @@ import type { NextConfig } from 'next';
 import path from 'path';
 import fs from 'fs';
 
+// Webpack and compiler types
+interface WebpackRule {
+  test: RegExp;
+  exclude?: RegExp;
+  use: string | {
+    loader: string;
+    options?: Record<string, unknown>;
+  } | Array<string | {
+    loader: string;
+    options?: Record<string, unknown>;
+  }>;
+}
+
+interface WebpackPlugin {
+  // eslint-disable-next-line no-unused-vars
+  apply: (compiler: Compiler) => void;
+}
+
+interface WebpackConfig {
+  module: {
+    rules: WebpackRule[];
+  };
+  plugins: WebpackPlugin[];
+  resolve: {
+    alias: Record<string, string>;
+  };
+}
+
+interface WebpackContext {
+  dev: boolean;
+  isServer: boolean;
+}
+
+interface Compilation {
+  assets: Record<string, {
+    source: () => string;
+    size: () => number;
+  }>;
+}
+
+interface Compiler {
+  hooks: {
+    emit: {
+      // eslint-disable-next-line no-unused-vars
+      tapAsync: (name: string, callback: (compilation: Compilation, callback: () => void) => void) => void;
+    };
+  };
+}
+
+// Logger interface for enterprise use
+interface Logger {
+  // eslint-disable-next-line no-unused-vars
+  warn: (message: string) => void;
+  // eslint-disable-next-line no-unused-vars
+  error: (message: string) => void;
+  // eslint-disable-next-line no-unused-vars
+  info: (message: string) => void;
+}
+
+// Simple logger implementation
+const logger: Logger = {
+  warn: (message: string) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn(`[react-responsive-easy] ${message}`);
+    }
+  },
+  error: (message: string) => {
+    // eslint-disable-next-line no-console
+    console.error(`[react-responsive-easy] ${message}`);
+  },
+  info: (message: string) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.info(`[react-responsive-easy] ${message}`);
+    }
+  }
+};
+
 // Plugin options interface
 interface NextPluginOptions {
   /** Path to the RRE configuration file */
@@ -57,14 +136,14 @@ export function withReactResponsiveEasy(
     const hasConfig = fs.existsSync(configPath);
     
     if (!hasConfig && options.development) {
-      console.warn(`[react-responsive-easy] Configuration file not found: ${configPath}`);
+      logger.warn(`Configuration file not found: ${configPath}`);
     }
 
     return {
       ...nextConfig,
       
       // Webpack configuration
-      webpack: (config: any, { dev, isServer }: any) => {
+      webpack: (config: WebpackConfig, { dev, isServer }: WebpackContext) => {
         // Update development mode
         options.development = dev;
         
@@ -137,6 +216,9 @@ export function withReactResponsiveEasy(
         
         // Call original webpack config if it exists
         if (typeof nextConfig.webpack === 'function') {
+          // Use type assertion for webpack context to avoid complex type issues
+          // This is safe as we're providing all required properties
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return nextConfig.webpack(config, { dev, isServer } as any);
         }
         
@@ -156,17 +238,21 @@ export function withReactResponsiveEasy(
         ...nextConfig.experimental,
         // Enable CSS-in-JS for responsive styles
         // Conditionally add appDir if it exists (for backward compatibility)
-        ...((nextConfig.experimental as any)?.appDir !== undefined && { appDir: (nextConfig.experimental as any).appDir }),
+        // Note: appDir is deprecated in newer Next.js versions, but we keep it for backward compatibility
+        ...(nextConfig.experimental && 'appDir' in nextConfig.experimental && { 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          appDir: (nextConfig.experimental as any).appDir 
+        }),
         // Enable server components optimization
         serverComponentsExternalPackages: [
-          ...(nextConfig.experimental?.serverComponentsExternalPackages || []),
+          ...(nextConfig.experimental?.serverComponentsExternalPackages ?? []),
           '@react-responsive-easy/core'
         ]
       },
       
       // Headers for development
       async headers() {
-        const headers = await nextConfig.headers?.() || [];
+        const headers = await nextConfig.headers?.() ?? [];
         
         if (options.development) {
           headers.push({
@@ -189,7 +275,7 @@ export function withReactResponsiveEasy(
       
       // API routes for development
       async rewrites() {
-        const rewrites = await nextConfig.rewrites?.() || [];
+        const rewrites = await nextConfig.rewrites?.() ?? [];
         
         if (options.development) {
           const devRewrites = [
@@ -229,8 +315,8 @@ class RREDevPlugin {
     this.options = options;
   }
   
-  apply(compiler: any) {
-    compiler.hooks.emit.tapAsync('RREDevPlugin', (compilation: any, callback: any) => {
+  apply(compiler: Compiler) {
+    compiler.hooks.emit.tapAsync('RREDevPlugin', (compilation: Compilation, callback: () => void) => {
       // Generate virtual config module
       const configContent = this.generateVirtualConfig();
       
@@ -265,7 +351,7 @@ class RREDevPlugin {
         return `module.exports = ${JSON.stringify(config)};`;
       }
     } catch (error) {
-      console.warn('[react-responsive-easy] Failed to load config:', error);
+      logger.warn(`Failed to load config: ${error instanceof Error ? error.message : String(error)}`);
     }
     
     return `module.exports = ${JSON.stringify(this.getMockConfig())};`;
@@ -362,17 +448,21 @@ loadConfig();
     `.trim();
   }
   
-  private extractConfigFromFile(content: string): any {
+  private extractConfigFromFile(content: string): Record<string, unknown> {
     // Simple config extraction - in production this would be more robust
     const match = content.match(/export default\s+defineConfig\s*\(\s*({[\s\S]*?})\s*\)/);
     if (match) {
       try {
         return JSON.parse(match[1]);
       } catch {
-        // Fallback to eval (not recommended for production)
+        // Fallback to safer parsing (avoiding eval)
         try {
-          return eval(`(${match[1]})`);
+          // Use a more secure approach for config parsing
+          // This is a simplified parser - in production, use a proper AST parser
+          const configString = match[1].replace(/([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '"$1":');
+          return JSON.parse(configString);
         } catch {
+          logger.warn('Failed to parse config, using mock config');
           return this.getMockConfig();
         }
       }
@@ -380,7 +470,7 @@ loadConfig();
     return this.getMockConfig();
   }
   
-  private getMockConfig() {
+  private getMockConfig(): Record<string, unknown> {
     return {
       base: { name: 'desktop', width: 1920, height: 1080, alias: 'base' },
       breakpoints: [

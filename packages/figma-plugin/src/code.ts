@@ -26,54 +26,59 @@ let extractedTokens: DesignTokens = {
 let responsiveConfig: ResponsiveConfig | null = null;
 
 // Message handler for UI communication
-figma.ui.onmessage = async (msg: PluginMessage) => {
+figma.ui.onmessage = (msg: PluginMessage) => {
   console.log('Plugin received message:', msg.type);
 
-  try {
-    switch (msg.type) {
-      case 'extract-tokens':
-        await handleExtractTokens();
-        break;
+  const handleMessage = async (): Promise<void> => {
+    try {
+      switch (msg.type) {
+        case 'extract-tokens':
+          await handleExtractTokens();
+          break;
 
-      case 'generate-responsive-config':
-        await handleGenerateResponsiveConfig(msg.data);
-        break;
+        case 'generate-responsive-config':
+          await handleGenerateResponsiveConfig(msg.data);
+          break;
 
-      case 'preview-breakpoints':
-        await handlePreviewBreakpoints(msg.data);
-        break;
+        case 'preview-breakpoints':
+          await handlePreviewBreakpoints(msg.data);
+          break;
 
-      case 'export-tokens':
-        await handleExportTokens(msg.data);
-        break;
+        case 'export-tokens':
+          await handleExportTokens(msg.data);
+          break;
 
-      case 'import-config':
-        await handleImportConfig(msg.data);
-        break;
+        case 'import-config':
+          await handleImportConfig(msg.data);
+          break;
 
-      case 'analyze-selection':
-        await handleAnalyzeSelection();
-        break;
+        case 'analyze-selection':
+          await handleAnalyzeSelection();
+          break;
 
-      case 'create-responsive-component':
-        await handleCreateResponsiveComponent(msg.data);
-        break;
+        case 'create-responsive-component':
+          await handleCreateResponsiveComponent(msg.data);
+          break;
 
-      case 'close-plugin':
-        figma.closePlugin();
-        break;
+        case 'close-plugin':
+          figma.closePlugin();
+          break;
 
-      default:
-        console.warn('Unknown message type:', msg.type);
+        default:
+          console.warn('Unknown message type:', msg.type);
+      }
+    } catch (error) {
+      console.error('Plugin error:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      figma.ui.postMessage({
+        type: 'error',
+        data: { message: errorMessage }
+      });
     }
-  } catch (error) {
-    console.error('Plugin error:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    figma.ui.postMessage({
-      type: 'error',
-      data: { message: errorMessage }
-    });
-  }
+  };
+
+  // Execute async handler without awaiting to avoid blocking
+  void handleMessage();
 };
 
 // Handle selection changes
@@ -150,7 +155,7 @@ async function extractTokensFromNode(node: SceneNode, tokens: DesignTokens): Pro
 
   // Extract typography
   if (node.type === 'TEXT') {
-    const textNode = node as TextNode;
+    const textNode = node;
     const fontName = textNode.fontName !== figma.mixed ? textNode.fontName : { family: 'Unknown', style: 'Regular' };
     const fontSize = textNode.fontSize !== figma.mixed ? textNode.fontSize : 16;
     const lineHeight = textNode.lineHeight !== figma.mixed ? textNode.lineHeight : { value: 1.2, unit: 'PERCENT' };
@@ -225,7 +230,7 @@ async function extractTokensFromNode(node: SceneNode, tokens: DesignTokens): Pro
 /**
  * Generate responsive configuration based on extracted tokens
  */
-async function handleGenerateResponsiveConfig(data: any): Promise<void> {
+function handleGenerateResponsiveConfig(data: any): void {
   const { baseBreakpoint, targetBreakpoints } = data;
   
   if (!extractedTokens || Object.keys(extractedTokens).length === 0) {
@@ -331,7 +336,7 @@ function generateScalingTokens(tokens: DesignTokens): any {
 /**
  * Preview breakpoints by creating frames
  */
-async function handlePreviewBreakpoints(data: any): Promise<void> {
+function handlePreviewBreakpoints(data: any): void {
   const { breakpoints } = data;
   
   if (figma.currentPage.selection.length === 0) {
@@ -344,7 +349,7 @@ async function handlePreviewBreakpoints(data: any): Promise<void> {
 
   const selection = figma.currentPage.selection[0];
   const originalX = selection.x;
-  let currentX = originalX + (selection.width as number) + 100;
+  let currentX = originalX + selection.width + 100;
 
   // Create preview frames for each breakpoint
   for (const breakpoint of breakpoints) {
@@ -366,15 +371,15 @@ async function handlePreviewBreakpoints(data: any): Promise<void> {
     
     // Calculate scale factor
     const scale = Math.min(
-      breakpoint.width / (selection.width as number),
-      breakpoint.height / (selection.height as number)
+      breakpoint.width / selection.width,
+      breakpoint.height / selection.height
     ) * 0.8; // Leave some padding
 
     // Apply scaling - only if the clone supports resize
     if ('resize' in clone) {
-      (clone as any).resize(
-        (selection.width as number) * scale,
-        (selection.height as number) * scale
+      (clone as { resize: (w: number, h: number) => void }).resize(
+        selection.width * scale,
+        selection.height * scale
       );
     }
     
@@ -402,7 +407,7 @@ async function handlePreviewBreakpoints(data: any): Promise<void> {
 /**
  * Export tokens in various formats
  */
-async function handleExportTokens(data: any): Promise<void> {
+function handleExportTokens(data: any): void {
   const { format } = data;
   
   if (!extractedTokens || Object.keys(extractedTokens).length === 0) {
@@ -453,7 +458,7 @@ async function handleExportTokens(data: any): Promise<void> {
 /**
  * Import responsive configuration
  */
-async function handleImportConfig(data: any): Promise<void> {
+function handleImportConfig(data: any): void {
   const { config } = data;
   
   try {
@@ -466,7 +471,7 @@ async function handleImportConfig(data: any): Promise<void> {
         config: responsiveConfig
       }
     });
-  } catch (error) {
+  } catch (_error) {
     figma.ui.postMessage({
       type: 'error',
       data: { message: 'Invalid configuration format.' }
@@ -477,7 +482,7 @@ async function handleImportConfig(data: any): Promise<void> {
 /**
  * Analyze selected elements for responsive potential
  */
-async function handleAnalyzeSelection(): Promise<void> {
+function handleAnalyzeSelection(): void {
   const selection = figma.currentPage.selection;
   
   if (selection.length === 0) {
@@ -553,7 +558,7 @@ function analyzeNode(node: SceneNode): { isResponsiveCandidate: boolean; recomme
 /**
  * Create responsive component template
  */
-async function handleCreateResponsiveComponent(data: any): Promise<void> {
+function handleCreateResponsiveComponent(data: any): void {
   const { componentName, breakpoints } = data;
   
   // Create main component frame

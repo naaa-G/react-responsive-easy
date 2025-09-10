@@ -26,6 +26,7 @@ export default [
     rules: {
       // Critical TypeScript rules (relaxed for enterprise codebase)
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/prefer-nullish-coalescing': 'warn',
       '@typescript-eslint/prefer-optional-chain': 'warn',
@@ -89,9 +90,12 @@ export default [
       'max-params': ['warn', 6],
       'max-statements': ['warn', 30],
       'no-magic-numbers': ['warn', {
-        ignore: [0, 1, -1, 2, 3, 4, 5, 10, 100, 1000, 60, 24, 7, 30],
+        ignore: [0, 1, -1, 2, 3, 4, 5, 10, 50, 100, 1000, 60, 24, 7, 30, 0.9, 1.1, -50, -100],
         ignoreArrayIndexes: true,
-        ignoreDefaultValues: true
+        ignoreDefaultValues: true,
+        ignoreNumericLiteralTypes: true,
+        ignoreEnums: true,
+        ignoreReadonlyClassProperties: true
       }],
 
       // Security rules

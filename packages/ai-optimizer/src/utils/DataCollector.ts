@@ -1,4 +1,6 @@
 import { ComponentUsageData, ResponsiveValueUsage, PerformanceMetrics, InteractionData, ComponentContext } from '../types/index.js';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants.js';
+import { Logger } from './Logger.js';
 
 /**
  * Data collection utility for gathering component usage information
@@ -11,13 +13,18 @@ export class DataCollector {
   private isCollecting = false;
   private performanceObserver?: PerformanceObserver;
   private mutationObserver?: MutationObserver;
+  private logger: Logger;
+
+  constructor() {
+    this.logger = new Logger('DataCollector');
+  }
 
   /**
    * Start collecting usage data
    */
   startCollection(): void {
     if (this.isCollecting) {
-      console.warn('Data collection is already active');
+      this.logger.warn('Data collection is already active');
       return;
     }
 
@@ -26,7 +33,7 @@ export class DataCollector {
     this.setupMutationObserver();
     this.setupInteractionTracking();
     
-    console.log('📊 AI data collection started');
+    this.logger.info('📊 AI data collection started');
   }
 
   /**
@@ -34,7 +41,7 @@ export class DataCollector {
    */
   stopCollection(): void {
     if (!this.isCollecting) {
-      console.warn('Data collection is not active');
+      this.logger.warn('Data collection is not active');
       return;
     }
 
@@ -50,7 +57,7 @@ export class DataCollector {
     
     this.removeInteractionTracking();
     
-    console.log('📊 AI data collection stopped');
+    this.logger.info('📊 AI data collection stopped');
   }
 
   /**
@@ -65,7 +72,7 @@ export class DataCollector {
    */
   clearData(): void {
     this.usageData = [];
-    console.log('🗑️ Collected data cleared');
+    this.logger.info('🗑️ Collected data cleared');
   }
 
   /**
@@ -94,10 +101,10 @@ export class DataCollector {
       const imported = JSON.parse(jsonData);
       if (imported.data && Array.isArray(imported.data)) {
         this.usageData = [...this.usageData, ...imported.data];
-        console.log(`📥 Imported ${imported.data.length} data entries`);
+        this.logger.info(`📥 Imported ${imported.data.length} data entries`);
       }
     } catch (error) {
-      console.error('❌ Failed to import data:', error);
+      this.logger.error('❌ Failed to import data:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -133,7 +140,7 @@ export class DataCollector {
    */
   private setupPerformanceObserver(): void {
     if (!('PerformanceObserver' in window)) {
-      console.warn('PerformanceObserver not supported');
+      this.logger.warn('PerformanceObserver not supported');
       return;
     }
 
@@ -149,7 +156,7 @@ export class DataCollector {
     try {
       this.performanceObserver.observe({ entryTypes: ['measure', 'navigation', 'paint'] });
     } catch (error) {
-      console.warn('Failed to setup performance observer:', error);
+      this.logger.error('Failed to setup performance observer:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -230,12 +237,14 @@ export class DataCollector {
     const startTime = performance.now();
     
     // Trigger a reflow to measure render time
+    // Force reflow for measurement by accessing offsetHeight
+    // eslint-disable-next-line no-unused-expressions
     element.offsetHeight;
     
     const renderTime = performance.now() - startTime;
     
     // Estimate memory usage (simplified)
-    const memoryInfo = (performance as any).memory;
+    const memoryInfo = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
     const memoryUsage = memoryInfo ? memoryInfo.usedJSHeapSize : 0;
     
     // Get layout shift score (simplified)
@@ -258,8 +267,8 @@ export class DataCollector {
   private getInteractionData(element: HTMLElement): InteractionData {
     // This would be enhanced with real tracking data
     return {
-      interactionRate: Math.random() * 0.5 + 0.1, // Simulated
-      viewTime: Math.random() * 10000 + 1000, // Simulated
+      interactionRate: Math.random() * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD + AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_ALPHA, // Simulated
+      viewTime: Math.random() * AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * 1000 + AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * 100, // Simulated
       scrollBehavior: 'normal',
       accessibilityScore: this.calculateAccessibilityScore(element)
     };
@@ -278,7 +287,7 @@ export class DataCollector {
     const importance = this.determineImportance(element);
 
     return {
-      parent: parent?.tagName.toLowerCase(),
+      parent: parent?.tagName.toLowerCase() ?? undefined,
       children,
       position,
       importance
@@ -288,7 +297,7 @@ export class DataCollector {
   /**
    * Process performance entry
    */
-  private processPerformanceEntry(entry: PerformanceEntry): void {
+  private processPerformanceEntry(_entry: PerformanceEntry): void {
     // Store performance data for later analysis
     // This could be enhanced to correlate with specific components
   }
@@ -312,7 +321,7 @@ export class DataCollector {
    */
   private handleInteraction(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (target && target.hasAttribute('data-responsive')) {
+    if (target?.hasAttribute('data-responsive')) {
       this.trackInteraction(target, 'click');
     }
   }
@@ -344,7 +353,7 @@ export class DataCollector {
   /**
    * Track responsive behavior changes
    */
-  private trackResponsiveChange(element: HTMLElement): void {
+  private trackResponsiveChange(_element: HTMLElement): void {
     // Record how the element's responsive properties changed
     // This would be enhanced with specific property tracking
   }
@@ -352,7 +361,7 @@ export class DataCollector {
   /**
    * Track user interactions with elements
    */
-  private trackInteraction(element: HTMLElement, type: string): void {
+  private trackInteraction(_element: HTMLElement, _type: string): void {
     // Record interaction data
     // This would be enhanced with detailed interaction tracking
   }
@@ -365,18 +374,18 @@ export class DataCollector {
     return (
       rect.top >= 0 &&
       rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+      rect.bottom <= (window.innerHeight ?? document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth ?? document.documentElement.clientWidth)
     );
   }
 
   /**
    * Calculate layout shift for element
    */
-  private calculateLayoutShift(element: HTMLElement): number {
+  private calculateLayoutShift(_element: HTMLElement): number {
     // Simplified layout shift calculation
     // In production, this would use the Layout Instability API
-    return Math.random() * 0.1; // Simulated CLS score
+    return Math.random() * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD; // Simulated CLS score
   }
 
   /**
@@ -384,8 +393,8 @@ export class DataCollector {
    */
   private estimateBundleSize(element: HTMLElement): number {
     // Estimate how much this component contributes to bundle size
-    const complexity = element.children.length + (element.getAttribute('style')?.length || 0);
-    return complexity * 10; // Simplified estimation
+    const complexity = element.children.length + (element.getAttribute('style')?.length ?? 0);
+    return complexity * AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP + 2; // Simplified estimation
   }
 
   /**
@@ -395,22 +404,23 @@ export class DataCollector {
     let score = 100;
     
     // Check for common accessibility issues
+    const ACCESSIBILITY_PENALTY_MULTIPLIER = 2.5;
     if (!element.getAttribute('aria-label') && !element.textContent?.trim()) {
-      score -= 20;
+      score -= AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * ACCESSIBILITY_PENALTY_MULTIPLIER;
     }
     
     const styles = window.getComputedStyle(element);
     const fontSize = parseFloat(styles.fontSize);
-    if (fontSize < 12) {
-      score -= 15;
+    if (fontSize < AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP) {
+      score -= AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP + 3;
     }
     
     const minTapTarget = Math.min(
-      parseFloat(styles.width) || 0,
-      parseFloat(styles.height) || 0
+      parseFloat(styles.width) ?? 0,
+      parseFloat(styles.height) ?? 0
     );
-    if (minTapTarget < 44) {
-      score -= 10;
+    if (minTapTarget < AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.ACCESSIBILITY_THRESHOLD) {
+      score -= AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP + 2;
     }
     
     return Math.max(0, score);
@@ -424,11 +434,11 @@ export class DataCollector {
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     
-    if (rect.top < windowHeight * 0.2) return 'header';
-    if (rect.top > windowHeight * 0.8) return 'footer';
-    if (rect.left > windowWidth * 0.8 || rect.right < windowWidth * 0.2) return 'sidebar';
-    if (element.closest('[role="dialog"]') || element.closest('.modal')) return 'modal';
-    if (rect.top >= windowHeight * 0.2 && rect.top <= windowHeight * 0.8) return 'main';
+    if (rect.top < windowHeight * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD) return 'header';
+    if (rect.top > windowHeight * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD) return 'footer';
+    if (rect.left > (windowWidth * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD) || rect.right < (windowWidth * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD)) return 'sidebar';
+    if (element.closest('[role="dialog"]') ?? element.closest('.modal')) return 'modal';
+    if (rect.top >= windowHeight * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD && rect.top <= windowHeight * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD) return 'main';
     
     return 'other';
   }

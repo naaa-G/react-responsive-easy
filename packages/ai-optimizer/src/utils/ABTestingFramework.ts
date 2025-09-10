@@ -12,6 +12,8 @@
  */
 
 import { EventEmitter } from 'events';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants';
+import { Logger } from './Logger';
 
 export interface ExperimentConfig {
   id: string;
@@ -21,7 +23,7 @@ export interface ExperimentConfig {
     id: string;
     name: string;
     weight: number;
-    config: any;
+    config: Record<string, unknown>;
   }>;
   metrics: Array<{
     name: string;
@@ -42,13 +44,20 @@ export interface ExperimentConfig {
   };
 }
 
+export interface VariantResult {
+  conversionRate: number;
+  sampleSize: number;
+  confidenceInterval: [number, number];
+  isWinner?: boolean;
+}
+
 export interface ExperimentResult {
   experimentId: string;
   variant: string;
   userId: string;
   timestamp: number;
   metrics: Record<string, number>;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface StatisticalTest {
@@ -100,6 +109,7 @@ export class ABTestingFramework extends EventEmitter {
   private analyses: Map<string, ExperimentAnalysis> = new Map();
   private activeExperiments: Set<string> = new Set();
   private userAssignments: Map<string, Map<string, string>> = new Map(); // userId -> experimentId -> variantId
+  private logger: Logger;
   private statistics: {
     totalExperiments: number;
     activeExperiments: number;
@@ -112,8 +122,11 @@ export class ABTestingFramework extends EventEmitter {
     successfulExperiments: 0
   };
 
+  private readonly MONITORING_INTERVAL_MS = 60000; // 60 seconds
+
   constructor() {
     super();
+    this.logger = new Logger('ABTestingFramework');
     this.startExperimentMonitoring();
   }
 
@@ -195,7 +208,7 @@ export class ABTestingFramework extends EventEmitter {
     }
 
     // Check if user is already assigned
-    const userExperiments = this.userAssignments.get(userId) || new Map();
+    const userExperiments = this.userAssignments.get(userId) ?? new Map();
     if (userExperiments.has(experimentId)) {
       return userExperiments.get(experimentId)!;
     }
@@ -221,7 +234,7 @@ export class ABTestingFramework extends EventEmitter {
       return;
     }
 
-    const results = this.results.get(result.experimentId) || [];
+    const results = this.results.get(result.experimentId) ?? [];
     results.push(result);
     this.results.set(result.experimentId, results);
 
@@ -244,7 +257,7 @@ export class ABTestingFramework extends EventEmitter {
    */
   analyzeExperiment(experimentId: string): ExperimentAnalysis {
     const experiment = this.experiments.get(experimentId);
-    const results = this.results.get(experimentId) || [];
+    const results = this.results.get(experimentId) ?? [];
     
     if (!experiment || results.length === 0) {
       throw new Error(`No data available for experiment ${experimentId}`);
@@ -275,7 +288,7 @@ export class ABTestingFramework extends EventEmitter {
     }
 
     // Determine winner and recommendation
-    const winner = this.determineWinner(variantResults, experiment.successCriteria);
+    // const _winner = this.determineWinner(variantResults, experiment.successCriteria); // Winner determination logic
     const recommendation = this.generateRecommendation(variantResults, statisticalTests, experiment);
     const confidence = this.calculateOverallConfidence(statisticalTests);
     const expectedLift = this.calculateExpectedLift(variantResults, experiment.successCriteria.primaryMetric);
@@ -297,7 +310,7 @@ export class ABTestingFramework extends EventEmitter {
    */
   private analyzeVariant(
     data: ExperimentResult[],
-    metrics: ExperimentConfig['metrics']
+    _metrics: ExperimentConfig['metrics']
   ): {
     sampleSize: number;
     conversionRate: number;
@@ -319,11 +332,11 @@ export class ABTestingFramework extends EventEmitter {
     }
 
     // Calculate conversion rate (assuming binary metric)
-    const conversions = data.filter(d => d.metrics.conversion > 0).length;
+    const conversions = data.filter(d => d.metrics.conversion > AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.MIN_SCORE).length;
     const conversionRate = conversions / sampleSize;
 
     // Calculate average value
-    const totalValue = data.reduce((sum, d) => sum + (d.metrics.value || 0), 0);
+    const totalValue = data.reduce((sum, d) => sum + (d.metrics.value ?? 0), 0);
     const averageValue = totalValue / sampleSize;
 
     // Calculate confidence interval
@@ -346,13 +359,13 @@ export class ABTestingFramework extends EventEmitter {
    * Perform statistical test
    */
   private performStatisticalTest(experimentId: string, metricName: string): StatisticalTest {
-    const results = this.results.get(experimentId) || [];
+    const results = this.results.get(experimentId) ?? [];
     const experiment = this.experiments.get(experimentId)!;
     
     // Group results by variant
     const variantGroups = new Map<string, number[]>();
     for (const result of results) {
-      const value = result.metrics[metricName] || 0;
+      const value = result.metrics[metricName] ?? AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.MIN_SCORE;
       if (!variantGroups.has(result.variant)) {
         variantGroups.set(result.variant, []);
       }
@@ -444,7 +457,7 @@ export class ABTestingFramework extends EventEmitter {
    */
   private calculatePower(effectSize: number, n1: number, n2: number): number {
     // Simplified power calculation
-    const alpha = 0.05;
+    const alpha = AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_ALPHA;
     const n = Math.min(n1, n2);
     const power = 1 - this.normalCDF(this.normalQuantile(1 - alpha/2) - effectSize * Math.sqrt(n/2));
     return Math.max(0, Math.min(1, power));
@@ -454,7 +467,7 @@ export class ABTestingFramework extends EventEmitter {
    * Calculate confidence interval for conversion rate
    */
   private calculateConfidenceInterval(rate: number, sampleSize: number): [number, number] {
-    const z = 1.96; // 95% confidence
+    const z = AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.ROUNDING_FACTOR * 4; // 95% confidence
     const margin = z * Math.sqrt((rate * (1 - rate)) / sampleSize);
     return [Math.max(0, rate - margin), Math.min(1, rate + margin)];
   }
@@ -464,7 +477,7 @@ export class ABTestingFramework extends EventEmitter {
    */
   private calculatePValue(rate: number, sampleSize: number): number {
     // Simplified p-value calculation
-    const expectedRate = 0.5; // Null hypothesis
+    const expectedRate = AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.MIN_SCORE; // Null hypothesis
     const z = (rate - expectedRate) / Math.sqrt((expectedRate * (1 - expectedRate)) / sampleSize);
     return 2 * (1 - this.normalCDF(Math.abs(z)));
   }
@@ -473,7 +486,7 @@ export class ABTestingFramework extends EventEmitter {
    * Determine winning variant
    */
   private determineWinner(
-    variantResults: Map<string, any>,
+    variantResults: Map<string, VariantResult>,
     successCriteria: ExperimentConfig['successCriteria']
   ): string | null {
     let winner: string | null = null;
@@ -501,7 +514,7 @@ export class ABTestingFramework extends EventEmitter {
    * Generate recommendation
    */
   private generateRecommendation(
-    variantResults: Map<string, any>,
+    variantResults: Map<string, VariantResult>,
     statisticalTests: Map<string, StatisticalTest>,
     experiment: ExperimentConfig
   ): 'continue' | 'stop' | 'extend' | 'implement' {
@@ -511,12 +524,12 @@ export class ABTestingFramework extends EventEmitter {
       return 'continue';
     }
 
-    if (primaryTest.isSignificant && primaryTest.pValue < 0.05) {
+    if (primaryTest.isSignificant && primaryTest.pValue < AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_ALPHA) {
       const winner = this.determineWinner(variantResults, experiment.successCriteria);
       return winner ? 'implement' : 'stop';
     }
 
-    if (primaryTest.power < 0.8) {
+    if (primaryTest.power < AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD) {
       return 'extend';
     }
 
@@ -538,8 +551,8 @@ export class ABTestingFramework extends EventEmitter {
    * Calculate expected lift
    */
   private calculateExpectedLift(
-    variantResults: Map<string, any>,
-    primaryMetric: string
+    variantResults: Map<string, VariantResult>,
+    _primaryMetric: string
   ): number {
     const results = Array.from(variantResults.values());
     if (results.length < 2) return 0;
@@ -554,7 +567,7 @@ export class ABTestingFramework extends EventEmitter {
    * Assess risk
    */
   private assessRisk(
-    variantResults: Map<string, any>,
+    variantResults: Map<string, VariantResult>,
     statisticalTests: Map<string, StatisticalTest>
   ): {
     riskLevel: 'low' | 'medium' | 'high';
@@ -573,7 +586,7 @@ export class ABTestingFramework extends EventEmitter {
 
     // Check statistical power
     for (const [metricName, test] of statisticalTests.entries()) {
-      if (test.power < 0.8) {
+      if (test.power < AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD) {
         factors.push(`Low statistical power for metric ${metricName}`);
         riskScore += 1;
       }
@@ -583,7 +596,7 @@ export class ABTestingFramework extends EventEmitter {
     for (const [variantId, results] of variantResults.entries()) {
       const ci = results.confidenceInterval;
       const width = ci[1] - ci[0];
-      if (width > 0.1) {
+      if (width > AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_THRESHOLD) {
         factors.push(`Wide confidence interval for variant ${variantId}`);
         riskScore += 1;
       }
@@ -606,8 +619,8 @@ export class ABTestingFramework extends EventEmitter {
    */
   performPowerAnalysis(
     effectSize: number,
-    alpha: number = 0.05,
-    power: number = 0.8
+    alpha: number = AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MIN_ALPHA,
+    power: number = AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD
   ): PowerAnalysis {
     const zAlpha = this.normalQuantile(1 - alpha/2);
     const zBeta = this.normalQuantile(power);
@@ -644,7 +657,7 @@ export class ABTestingFramework extends EventEmitter {
    * Get experiment results
    */
   getExperimentResults(experimentId: string): ExperimentResult[] {
-    return this.results.get(experimentId) || [];
+    return this.results.get(experimentId) ?? [];
   }
 
   /**
@@ -657,13 +670,16 @@ export class ABTestingFramework extends EventEmitter {
   // Private helper methods
 
   private generateExperimentId(): string {
-    return `exp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const RADIX_36 = 36;
+    const RANDOM_LENGTH = 9;
+    return `exp_${Date.now()}_${Math.random().toString(RADIX_36).substr(2, RANDOM_LENGTH)}`;
   }
 
   private validateExperiment(experiment: ExperimentConfig): boolean {
     // Check if variants sum to 1.0
     const totalWeight = experiment.variants.reduce((sum, v) => sum + v.weight, 0);
-    if (Math.abs(totalWeight - 1.0) > 0.01) {
+    const WEIGHT_TOLERANCE = 0.01;
+    if (Math.abs(totalWeight - 1.0) > WEIGHT_TOLERANCE) {
       return false;
     }
 
@@ -695,7 +711,7 @@ export class ABTestingFramework extends EventEmitter {
   }
 
   private shouldPerformInterimAnalysis(experimentId: string): boolean {
-    const results = this.results.get(experimentId) || [];
+    const results = this.results.get(experimentId) ?? [];
     return results.length % 100 === 0; // Analyze every 100 results
   }
 
@@ -711,13 +727,14 @@ export class ABTestingFramework extends EventEmitter {
           this.stopExperiment(experimentId, 'duration_completed');
         }
       }
-    }, 60000); // Check every minute
+    }, this.MONITORING_INTERVAL_MS); // Check every minute - 60 seconds * 1000ms
   }
 
   // Statistical helper functions (simplified implementations)
 
   private normalCDF(x: number): number {
-    return 0.5 * (1 + this.erf(x / Math.sqrt(2)));
+    const NORMAL_CDF_FACTOR = 0.5;
+    return NORMAL_CDF_FACTOR * (1 + this.erf(x / Math.sqrt(2)));
   }
 
   private normalQuantile(p: number): number {
@@ -725,7 +742,7 @@ export class ABTestingFramework extends EventEmitter {
     return Math.sqrt(2) * this.inverseErf(2 * p - 1);
   }
 
-  private tDistributionCDF(t: number, df: number): number {
+  private tDistributionCDF(t: number, _df: number): number {
     // Simplified implementation - in real scenario, use proper t-distribution
     return this.normalCDF(t);
   }
@@ -740,10 +757,10 @@ export class ABTestingFramework extends EventEmitter {
     const p = 0.3275911;
 
     const sign = x >= 0 ? 1 : -1;
-    x = Math.abs(x);
+    const absX = Math.abs(x);
 
-    const t = 1.0 / (1.0 + p * x);
-    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    const t = 1.0 / (1.0 + p * absX);
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
 
     return sign * y;
   }
@@ -755,7 +772,8 @@ export class ABTestingFramework extends EventEmitter {
 
   private calculateEffectConfidenceInterval(effectSize: number, n1: number, n2: number): [number, number] {
     const se = Math.sqrt(1/n1 + 1/n2);
-    const margin = 1.96 * se;
+    const CONFIDENCE_95_MULTIPLIER = 1.96;
+    const margin = CONFIDENCE_95_MULTIPLIER * se;
     return [effectSize - margin, effectSize + margin];
   }
 }

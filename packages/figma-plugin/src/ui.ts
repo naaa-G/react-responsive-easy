@@ -111,7 +111,7 @@ function setupEventListeners(): void {
   // Copy export content
   const copyButton = document.getElementById('copy-export');
   copyButton?.addEventListener('click', () => {
-    navigator.clipboard.writeText(exportContent).then(() => {
+    void navigator.clipboard.writeText(exportContent).then(() => {
       showStatus('Copied to clipboard!', 'success');
     });
   });
@@ -312,11 +312,14 @@ function handleGenerateConfig(): void {
 
   const targetBreakpoints = Array.from(document.querySelectorAll('.breakpoint-item')).map(item => {
     const inputs = item.querySelectorAll('input');
+    const nameInput = inputs[0];
+    const widthInput = inputs[1];
+    const heightInput = inputs[2];
     return {
-      name: (inputs[0] as HTMLInputElement).value,
-      width: parseInt((inputs[1] as HTMLInputElement).value),
-      height: parseInt((inputs[2] as HTMLInputElement).value),
-      alias: (inputs[0] as HTMLInputElement).value.toLowerCase()
+      name: nameInput.value,
+      width: parseInt(widthInput.value),
+      height: parseInt(heightInput.value),
+      alias: nameInput.value.toLowerCase()
     };
   });
 

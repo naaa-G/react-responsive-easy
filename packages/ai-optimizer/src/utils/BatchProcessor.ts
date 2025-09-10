@@ -12,15 +12,17 @@
  */
 
 import { EventEmitter } from 'events';
+import { AI_OPTIMIZER_CONSTANTS } from '../constants.js';
+import { Logger } from './Logger.js';
 
-export interface BatchItem<T = any> {
+export interface BatchItem<T = unknown> {
   id: string;
   data: T;
   priority: number;
   timestamp: number;
   retryCount: number;
   maxRetries: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface BatchConfig {
@@ -34,7 +36,7 @@ export interface BatchConfig {
   memoryThreshold: number;
 }
 
-export interface BatchResult<T = any> {
+export interface BatchResult<T = unknown> {
   id: string;
   success: boolean;
   data?: T;
@@ -67,7 +69,17 @@ export interface ProcessingStats {
 /**
  * Advanced Batch Processor with intelligent queuing and processing
  */
-export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
+export class AdvancedBatchProcessor<T = unknown, R = unknown> extends EventEmitter {
+  // Constants for magic numbers
+  public static readonly RADIX_36 = 36;
+  public static readonly RANDOM_LENGTH = 9;
+  public static readonly CONFIDENCE_THRESHOLD = 0.95;
+  public static readonly BATCH_SIZE_DIVISOR = 10;
+  public static readonly BATCH_SIZE_DIVISOR_SMALL = 100;
+  public static readonly TIME_DIVISOR = 60;
+  public static readonly MEMORY_DIVISOR = 2;
+  public static readonly POLLING_INTERVAL_MS = 100;
+
   private queue: BatchItem<T>[] = [];
   private processingBatches: Map<string, BatchItem<T>[]> = new Map();
   private results: Map<string, BatchResult<R>> = new Map();
@@ -79,22 +91,23 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
   private workerPool: Worker[] = [];
   private memoryMonitor: MemoryMonitor;
   private progressTracker: ProgressTracker;
+  private logger: Logger;
 
   constructor(
-    private processor: (batch: T[]) => Promise<R[]>,
+    private _processor: (_batch: T[]) => Promise<R[]>,
     config: Partial<BatchConfig> = {}
   ) {
     super();
     
     this.config = {
-      maxBatchSize: 100,
-      minBatchSize: 10,
-      maxWaitTime: 5000, // 5 seconds
+      maxBatchSize: AI_OPTIMIZER_CONSTANTS.BATCH_PROCESSING.DEFAULT_BATCH_SIZE / AdvancedBatchProcessor.BATCH_SIZE_DIVISOR,
+      minBatchSize: AI_OPTIMIZER_CONSTANTS.BATCH_PROCESSING.DEFAULT_BATCH_SIZE / AdvancedBatchProcessor.BATCH_SIZE_DIVISOR_SMALL,
+      maxWaitTime: AI_OPTIMIZER_CONSTANTS.BATCH_PROCESSING.PROCESSING_INTERVAL / AdvancedBatchProcessor.TIME_DIVISOR, // 5 seconds
       maxConcurrentBatches: 4,
-      retryDelay: 1000,
+      retryDelay: AI_OPTIMIZER_CONSTANTS.BATCH_PROCESSING.RETRY_DELAY,
       enablePriority: true,
       enableProgressTracking: true,
-      memoryThreshold: 100 * 1024 * 1024, // 100MB
+      memoryThreshold: AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MEMORY_200MB / AdvancedBatchProcessor.MEMORY_DIVISOR, // 100MB
       ...config
     };
 
@@ -111,9 +124,12 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
 
     this.memoryMonitor = new MemoryMonitor();
     this.progressTracker = new ProgressTracker();
+    this.logger = new Logger('AdvancedBatchProcessor');
     
     this.initializeWorkerPool();
-    this.startProcessing();
+    this.startProcessing().catch((error) => {
+      this.logger.error('Failed to start batch processing:', error instanceof Error ? error : new Error(String(error)));
+    });
   }
 
   /**
@@ -124,16 +140,16 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
     options: {
       priority?: number;
       maxRetries?: number;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     } = {}
   ): string {
     const item: BatchItem<T> = {
       id: this.generateId(),
       data,
-      priority: options.priority || 0,
+      priority: options.priority ?? 0,
       timestamp: Date.now(),
       retryCount: 0,
-      maxRetries: options.maxRetries || 3,
+      maxRetries: options.maxRetries ?? 3,
       metadata: options.metadata
     };
 
@@ -159,7 +175,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
       data: T;
       priority?: number;
       maxRetries?: number;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }>
   ): string[] {
     const ids: string[] = [];
@@ -183,7 +199,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Batch processing timeout'));
-      }, 300000); // 5 minutes timeout
+      }, AI_OPTIMIZER_CONSTANTS.BATCH_PROCESSING.PROCESSING_INTERVAL); // 5 minutes timeout
 
       this.once('processingComplete', () => {
         clearTimeout(timeout);
@@ -195,7 +211,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
         reject(error);
       });
 
-      this.startProcessing();
+      this.startProcessing().catch(reject);
     });
   }
 
@@ -265,8 +281,10 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
     this.emit('processingStarted');
 
     try {
+       
       while (this.isProcessing && (this.queue.length > 0 || this.processingBatches.size > 0)) {
-        await this.processNextBatch();
+        this.processNextBatch();
+        // eslint-disable-next-line no-await-in-loop
         await this.waitForBatchCompletion();
       }
 
@@ -280,7 +298,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
     }
   }
 
-  private async processNextBatch(): Promise<void> {
+  private processNextBatch(): void {
     if (this.processingBatches.size >= this.config.maxConcurrentBatches) {
       return;
     }
@@ -304,14 +322,13 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
 
     // Process batch
     this.processBatch(batchId, batch).catch(error => {
-      console.error(`Batch ${batchId} processing error:`, error);
+      this.logger.error(`Batch ${batchId} processing error:`, error instanceof Error ? error : new Error(String(error)));
       this.handleBatchError(batchId, batch, error);
     });
   }
 
   private createBatch(): BatchItem<T>[] {
     const batch: BatchItem<T>[] = [];
-    const now = Date.now();
 
     // Check if we should create a batch based on size or time
     const shouldCreateBatch = 
@@ -325,7 +342,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
       // Reduce batch size under memory pressure
       const reducedMaxSize = Math.max(
         this.config.minBatchSize,
-        Math.floor(this.config.maxBatchSize * 0.5)
+        Math.floor(this.config.maxBatchSize * AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.POOR_THRESHOLD)
       );
       
       for (let i = 0; i < Math.min(reducedMaxSize, this.queue.length); i++) {
@@ -349,7 +366,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
       const data = batch.map(item => item.data);
       
       // Process batch
-      const results = await this.processor(data);
+      const results = await this._processor(data);
       
       // Handle results
       batch.forEach((item, index) => {
@@ -412,7 +429,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
           clearInterval(checkInterval);
           resolve();
         }
-      }, 100);
+      }, AdvancedBatchProcessor.POLLING_INTERVAL_MS);
     });
   }
 
@@ -442,7 +459,7 @@ export class AdvancedBatchProcessor<T = any, R = any> extends EventEmitter {
   }
 
   private generateId(): string {
-    return `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `item_${Date.now()}_${Math.random().toString(AdvancedBatchProcessor.RADIX_36).substr(2, AdvancedBatchProcessor.RANDOM_LENGTH)}`;
   }
 
   private generateBatchId(): string {
@@ -559,7 +576,7 @@ export class BatchProcessingOptimizer {
    * Optimize batch size based on historical performance
    */
   optimizeBatchSize(currentBatchSize: number): number {
-    if (this.historicalData.length < 10) {
+    if (this.historicalData.length < AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP) {
       return currentBatchSize;
     }
 
@@ -568,7 +585,7 @@ export class BatchProcessingOptimizer {
     
     this.historicalData.forEach(data => {
       const throughput = data.batchSize / data.processingTime;
-      const existing = throughputBySize.get(data.batchSize) || 0;
+      const existing = throughputBySize.get(data.batchSize) ?? 0;
       throughputBySize.set(data.batchSize, (existing + throughput) / 2);
     });
 
@@ -597,8 +614,8 @@ export class BatchProcessingOptimizer {
     this.historicalData.push(data);
     
     // Keep only recent data
-    if (this.historicalData.length > 100) {
-      this.historicalData = this.historicalData.slice(-50);
+    if (this.historicalData.length > AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * 10) {
+      this.historicalData = this.historicalData.slice(-AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.DEFAULT_STEP * 5);
     }
   }
 
@@ -616,16 +633,16 @@ export class BatchProcessingOptimizer {
 
     const recommendations = {
       optimalBatchSize: Math.round(avgBatchSize),
-      recommendedConcurrency: avgSuccessRate > 0.95 ? 4 : 2,
+      recommendedConcurrency: avgSuccessRate > AdvancedBatchProcessor.CONFIDENCE_THRESHOLD ? 4 : 2,
       memoryOptimization: [] as string[]
     };
 
-    if (avgMemoryUsage > 100 * 1024 * 1024) { // 100MB
+    if (avgMemoryUsage > AI_OPTIMIZER_CONSTANTS.ADDITIONAL_CONSTANTS.MEMORY_200MB / 2) { // 100MB
       recommendations.memoryOptimization.push('Consider reducing batch size');
       recommendations.memoryOptimization.push('Enable memory-aware processing');
     }
 
-    if (avgSuccessRate < 0.9) {
+    if (avgSuccessRate < AI_OPTIMIZER_CONSTANTS.PERFORMANCE_THRESHOLDS.EXCELLENT_THRESHOLD) {
       recommendations.memoryOptimization.push('Increase retry attempts');
       recommendations.memoryOptimization.push('Implement circuit breaker pattern');
     }

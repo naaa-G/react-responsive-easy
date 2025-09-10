@@ -46,7 +46,9 @@ export { AdvancedBatchProcessor, BatchProcessingOptimizer } from './utils/BatchP
 export { DynamicConfigManager } from './utils/DynamicConfig.js';
 
 // Low priority enterprise utilities
-export { AdvancedAIManager, HyperparameterTuner, FeatureEngineer } from './utils/AdvancedAI.js';
+export { AdvancedAIManager } from './utils/AdvancedAI.js';
+export { HyperparameterTuner } from './utils/HyperparameterTuner.js';
+export { FeatureEngineer } from './utils/FeatureEngineer.js';
 export { ABTestingFramework } from './utils/ABTestingFramework.js';
 export { StreamingAPIManager, OptimizationStream } from './utils/StreamingAPI.js';
 
