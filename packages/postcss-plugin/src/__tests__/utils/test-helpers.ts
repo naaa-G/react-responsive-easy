@@ -6,6 +6,11 @@ import postcss from 'postcss';
 import plugin from '../../index';
 import type { PostCSSPluginOptions } from '../../index';
 
+// Cross-platform line ending normalization
+export function normalizeLineEndings(text: string): string {
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
 export interface TransformOptions extends PostCSSPluginOptions {
   filename?: string;
   sourceMap?: boolean;
@@ -35,7 +40,7 @@ export async function processCss(
       to: filename.replace('.css', '.processed.css')
     });
   
-  return result.css;
+  return normalizeLineEndings(result.css);
 }
 
 /**
@@ -62,7 +67,7 @@ export async function processCssWithWarnings(
     });
     
     return {
-      css: result.css,
+      css: normalizeLineEndings(result.css),
       warnings,
       errors
     };
