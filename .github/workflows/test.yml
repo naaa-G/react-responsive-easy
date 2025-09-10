@@ -10,9 +10,10 @@ jobs:
   # Unit Tests
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1, 22]
       fail-fast: false  # Don't cancel other jobs if one fails
     
@@ -37,16 +38,19 @@ jobs:
       run: |
         # Run tests with better error handling
         pnpm test --reporter=verbose --bail=1
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
       continue-on-error: false  # Unit tests are critical
     
     - name: Run type checking
       run: |
         pnpm type-check
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
       continue-on-error: false  # Type checking is critical
     
     - name: Run linting
       run: |
         pnpm lint
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
       continue-on-error: false  # Linting is critical for code quality
     
     - name: Upload test results
@@ -62,9 +66,10 @@ jobs:
   # Build Tests
   build-tests:
     name: Build Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1, 22]
       fail-fast: false
     
@@ -100,6 +105,7 @@ jobs:
           done
           exit 1
         }
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
       continue-on-error: false  # Build is critical
     
     - name: Verify build outputs
@@ -121,6 +127,7 @@ jobs:
         [ -f "packages/postcss-plugin/dist/index.js" ] && echo "✅ PostCSS plugin built" || echo "⚠️ PostCSS plugin not found"
         [ -f "packages/vite-plugin/dist/index.js" ] && echo "✅ Vite plugin built" || echo "⚠️ Vite plugin not found"
         [ -f "packages/next-plugin/dist/index.js" ] && echo "✅ Next plugin built" || echo "⚠️ Next plugin not found"
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -133,9 +140,10 @@ jobs:
   # E2E Tests
   e2e-tests:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1]
       fail-fast: false  # Don't cancel other jobs if one fails
     
@@ -180,6 +188,7 @@ jobs:
         }
         
         echo "Dev server started successfully"
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Run E2E tests
       run: |
@@ -196,6 +205,7 @@ jobs:
           echo "No test results found - tests may not have run"
           exit 1
         fi
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -221,13 +231,15 @@ jobs:
         if [ -f dev-server.pid ]; then
           kill $(cat dev-server.pid) 2>/dev/null || true
         fi
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
 
   # Cross-browser Tests
   cross-browser:
     name: Cross-browser Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         browser: [chromium, firefox, webkit]
     
     steps:
@@ -257,16 +269,19 @@ jobs:
       run: |
         pnpm dev &
         sleep 30
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Run cross-browser tests
       run: npx playwright test --project=${{ matrix.browser }} --reporter=html
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
 
   # Performance Tests
   performance-tests:
     name: Performance Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1]
     
     steps:
@@ -296,9 +311,11 @@ jobs:
       run: |
         pnpm dev &
         sleep 30
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Run performance tests
       run: npx playwright test tests/e2e/performance.spec.ts --reporter=html
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Generate performance report
       run: |
@@ -307,6 +324,7 @@ jobs:
         echo "=========================" >> performance-report.txt
         echo "Node Version: ${{ matrix.node-version }}" >> performance-report.txt
         echo "Timestamp: $(date)" >> performance-report.txt
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Upload performance report
       uses: actions/upload-artifact@v4
@@ -317,9 +335,10 @@ jobs:
   # Bundle Size Analysis
   bundle-analysis:
     name: Bundle Size Analysis
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1]
     
     steps:
@@ -380,6 +399,7 @@ jobs:
           echo "WARNING: CLI package exceeds 100KB limit" >> bundle-analysis.txt
           exit 1
         fi
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Upload bundle analysis
       uses: actions/upload-artifact@v4
@@ -390,9 +410,10 @@ jobs:
   # Security Audit
   security-audit:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1]
     
     steps:
@@ -425,9 +446,10 @@ jobs:
   # Test Coverage
   coverage:
     name: Test Coverage
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest]
         node-version: [20.18.1]
     
     steps:
@@ -449,6 +471,7 @@ jobs:
     
     - name: Run tests with coverage
       run: pnpm test:coverage
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
@@ -484,6 +507,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "This test suite focuses on functionality and basic quality checks." >> $GITHUB_STEP_SUMMARY
         echo "For comprehensive error analysis, check the Error Collection workflow." >> $GITHUB_STEP_SUMMARY
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
 
   # Final Status
   status:
@@ -537,6 +561,7 @@ jobs:
           echo "🚫 Build not ready for production - please fix failing tests"
           exit 1
         fi
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Generate Test Report
       run: |
@@ -552,6 +577,7 @@ jobs:
         echo "| Bundle Analysis | ${{ needs.bundle-analysis.result }} |" >> test-summary.md
         echo "| Security Audit | ${{ needs.security-audit.result }} |" >> test-summary.md
         echo "| Coverage | ${{ needs.coverage.result }} |" >> test-summary.md
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
     
     - name: Upload Test Summary
       uses: actions/upload-artifact@v4
