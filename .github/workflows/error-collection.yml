@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20.18.1, 22]
       fail-fast: false  # Don't cancel other jobs if one fails
     
     steps:
@@ -165,11 +165,11 @@ jobs:
         echo "# Consolidated Error Report" > consolidated-error-report.md
         echo "" >> consolidated-error-report.md
         echo "**Generated:** $(date)" >> consolidated-error-report.md
-        echo "**Node.js Versions Tested:** 18, 20, 22" >> consolidated-error-report.md
+        echo "**Node.js Versions Tested:** 20.18.1, 22" >> consolidated-error-report.md
         echo "" >> consolidated-error-report.md
         
         # Process each Node.js version
-        for version in 18 20 22; do
+        for version in 20.18.1 22; do
           if [ -d "error-reports/error-reports-node-$version" ]; then
             echo "## Node.js $version" >> consolidated-error-report.md
             echo "" >> consolidated-error-report.md
@@ -207,7 +207,7 @@ jobs:
         echo "| Node.js Version | Total Errors | Total Warnings | Packages with Errors |" >> consolidated-error-report.md
         echo "|----------------|--------------|----------------|---------------------|" >> consolidated-error-report.md
         
-        for version in 18 20 22; do
+        for version in 20.18.1 22; do
           if [ -f "error-reports/error-reports-node-$version/error-report.json" ]; then
             errors=$(jq '.summary.totalErrors' "error-reports/error-reports-node-$version/error-report.json")
             warnings=$(jq '.summary.totalWarnings' "error-reports/error-reports-node-$version/error-report.json")
@@ -231,7 +231,7 @@ jobs:
         echo "# 🔍 Consolidated Error Collection Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Generated:** $(date)" >> $GITHUB_STEP_SUMMARY
-        echo "**Node.js Versions Tested:** 18, 20, 22" >> $GITHUB_STEP_SUMMARY
+        echo "**Node.js Versions Tested:** 20.18.1, 22" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # Create a summary table
@@ -244,7 +244,7 @@ jobs:
         total_warnings=0
         total_packages=0
         
-        for version in 18 20 22; do
+        for version in 20.18.1 22; do
           if [ -f "error-reports/error-reports-node-$version/error-report.json" ]; then
             errors=$(jq '.summary.totalErrors' "error-reports/error-reports-node-$version/error-report.json")
             warnings=$(jq '.summary.totalWarnings' "error-reports/error-reports-node-$version/error-report.json")
