@@ -32,6 +32,10 @@
     "test:vite-plugin": "pnpm --filter=@yaseratiar/react-responsive-easy-vite-plugin test",
     "test:next-plugin": "pnpm --filter=@yaseratiar/react-responsive-easy-next-plugin test",
     "test:coverage": "pnpm --filter=./packages/* test:coverage",
+    "collect-errors": "node tools/enhanced-error-collector.js",
+    "collect-errors:legacy": "node tools/error-collector.js",
+    "collect-errors:ci": "node tools/error-collector.js --skip-e2e",
+    "collect-errors:full": "node tools/error-collector.js",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:visual": "playwright test tests/e2e/visual-regression.spec.ts",
@@ -41,10 +45,7 @@
     "type-check": "pnpm --filter=@yaseratiar/react-responsive-easy-core --filter=@yaseratiar/react-responsive-easy-ai-optimizer --filter=@yaseratiar/react-responsive-easy-babel-plugin --filter=@yaseratiar/react-responsive-easy-cli --filter=@yaseratiar/react-responsive-easy-performance-dashboard --filter=@yaseratiar/react-responsive-easy-postcss-plugin --filter=@yaseratiar/react-responsive-easy-storybook-addon --filter=@yaseratiar/react-responsive-easy-vite-plugin --filter=@yaseratiar/react-responsive-easy-next-plugin type-check",
     "type-check:extensions": "pnpm --filter=@yaseratiar/react-responsive-easy-browser-extension --filter=@yaseratiar/react-responsive-easy-figma-plugin type-check",
     "type-check:all": "pnpm type-check && pnpm type-check:extensions && pnpm --filter=@react-responsive-easy/docs type-check",
-    "clean": "pnpm --filter=./packages/* clean",
-    "collect-errors": "node scripts/collect-errors.js",
-    "collect-errors:ci": "node tools/error-collector.js --skip-e2e",
-    "collect-errors:full": "node tools/error-collector.js"
+    "clean": "pnpm --filter=./packages/* clean"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
