@@ -189,7 +189,7 @@ class EnhancedErrorCollector {
     return new Promise((resolve) => {
       this.log(`Running: ${command}`, 'info');
       
-      const child = spawn('cmd', ['/c', command], {
+      const child = spawn(command, [], {
         cwd: cwd || process.cwd(),
         shell: true,
         stdio: 'pipe'
@@ -685,9 +685,17 @@ class EnhancedErrorCollector {
   async run() {
     try {
       this.log('Starting enhanced error collection...', 'info');
+      this.log(`Platform: ${process.platform}`, 'info');
+      this.log(`Node version: ${process.version}`, 'info');
+      this.log(`Working directory: ${process.cwd()}`, 'info');
       
       // Get all packages
       const packagesDir = path.join(process.cwd(), 'packages');
+      
+      if (!fs.existsSync(packagesDir)) {
+        throw new Error(`Packages directory not found: ${packagesDir}`);
+      }
+      
       const packageDirs = fs.readdirSync(packagesDir, { withFileTypes: true })
         .filter(dirent => dirent.isDirectory())
         .map(dirent => ({
@@ -720,6 +728,40 @@ class EnhancedErrorCollector {
       return report;
     } catch (error) {
       this.log(`Error collection failed: ${error.message}`, 'error');
+      this.log(`Stack trace: ${error.stack}`, 'error');
+      
+      // Create a minimal error report
+      const errorReport = {
+        summary: {
+          startTime: new Date(this.startTime).toISOString(),
+          endTime: new Date().toISOString(),
+          duration: Date.now() - this.startTime,
+          totalErrorLines: 1,
+          totalTestErrors: 0,
+          packagesChecked: 0,
+          packagesWithErrors: 0,
+          error: error.message
+        },
+        environment: {
+          nodeVersion: process.version,
+          platform: process.platform,
+          arch: process.arch,
+          cwd: process.cwd()
+        },
+        errorLines: [{ source: 'error-collector', line: error.message }],
+        testErrors: []
+      };
+      
+      // Ensure errors directory exists
+      const errorsDir = path.dirname(this.reportPath);
+      if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir, { recursive: true });
+      }
+      
+      // Write error report
+      fs.writeFileSync(this.reportPath, JSON.stringify(errorReport, null, 2));
+      this.log(`Error report written to: ${this.reportPath}`, 'info');
+      
       throw error;
     }
   }
