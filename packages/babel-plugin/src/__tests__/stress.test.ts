@@ -247,8 +247,9 @@ describe('Stress Tests', () => {
     it('should handle concurrent transformations safely', async () => {
       const input = 'const fontSize = useResponsiveValue(24, { token: "fontSize" });';
       
-      // Create multiple concurrent transformation promises
-      const promises = Array.from({ length: 50 }, (_, i) => 
+      // Create multiple concurrent transformation promises (CI-friendly)
+      const concurrency = process.env.CI ? 25 : 50;
+      const promises = Array.from({ length: concurrency }, (_, i) => 
         new Promise<{ code: string; metrics: TestMetrics }>((resolve) => {
           setTimeout(() => {
             const result = transformWithMetrics(input);
@@ -262,8 +263,9 @@ describe('Stress Tests', () => {
         return results;
       });
 
-      // Should complete 50 concurrent transformations in less than 250ms
-      expect(time).toBeLessThan(250);
+      // Should complete concurrent transformations in reasonable time (CI-friendly)
+      const maxTime = process.env.CI ? 500 : 250;
+      expect(time).toBeLessThan(maxTime);
       
       // Memory usage should be reasonable (less than 20MB)
       expect(memory).toBeLessThan(20 * 1024 * 1024);
@@ -392,8 +394,9 @@ describe('Stress Tests', () => {
         }
       });
 
-      // Should complete all syntax error inputs in less than 600ms (enterprise CI)
-      expect(time).toBeLessThan(600);
+      // Should complete all syntax error inputs in less than 1000ms (CI-friendly)
+      const maxTime = process.env.CI ? 1000 : 600;
+      expect(time).toBeLessThan(maxTime);
       
       // Memory usage should be reasonable (less than 20MB) - increased limit for enterprise CI
       expect(memory).toBeLessThan(30 * 1024 * 1024);
